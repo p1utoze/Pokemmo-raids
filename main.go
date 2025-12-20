@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"strings"
-
 	"github.com/flosch/pongo2/v4"
 )
 
@@ -25,10 +24,31 @@ type Variation struct {
 	TableHTML       string              `json:"-"`
 }
 
+type PhaseEffect struct {
+	Health uint8 `json:"health"`
+	Effect  string `json:"effect"`
+}
+type RaidBossMove struct {
+	Name        string `json:"name"`
+	Type        string `json:"type"`
+}
+type BaseStats struct {
+	Speed   int `json:"speed,omitempty"`
+	Def int `json:"defense,omitempty"`
+	SpDef   int `json:"sp_def,omitempty"`
+}
+
 type RaidBoss struct {
-	Name        string      `json:"name"`
-	Description string      `json:"description"`
-	Variations  []Variation `json:"variations"`
+	Name         string        	`json:"name"`
+	Description  string        	`json:"description"`
+	Ability      string        	`json:"ability,omitempty"`
+	HeldItem     string         `json:"held_item,omitempty"`
+	Stars        int            `json:"stars,omitempty"`
+	SpeedEVs     int           	`json:"speed_evs,omitempty"`
+	BaseStats    BaseStats     	`json:"base_stats,omitempty"`
+	Moves        []RaidBossMove `json:"moves,omitempty"`
+	PhaseEffects []PhaseEffect  `json:"phase_effects,omitempty"`
+	Variations   []Variation    `json:"variations"`
 }
 
 type Season struct {

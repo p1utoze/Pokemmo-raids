@@ -10,12 +10,12 @@
 {% block content %}
 <div class="boss-page">
     <h2>{{ boss.Name }}</h2>
-    <p class="boss-desc">{{ boss.Description }}</p>
-
+    <p class="boss-desc">{{ boss.Description }}</p><button class="view-more" id="viewMoreBtn">View more</button>
     <!-- All variations are shown below; dropdown removed per user request -->
-
+    
     <div class="tables-area">
         {% for var in boss.Variations %}
+        <h3 class="variation-title">Variation {{ loop.index0 + 1 }}</h3>
         <div class="variation-table" data-variation-index="{{ loop.index0 }}">
             <table class="plan-table">
                 <thead>
@@ -39,4 +39,42 @@
 </div>
 
 <script type="application/json" id="boss-data">{{ bossJSON|safe }}</script>
+<aside class="right-sidebar" id="rightSidebar" aria-hidden="true">
+    <button class="close-sidebar" id="closeSidebar">✕</button>
+    <div class="sidebar-inner">
+        <h3>General Info</h3>
+        <ul class="info-list">
+            <li><strong>Ability:</strong> {{ boss.Ability}}</li>
+            <li><strong>Held Item:</strong> {{ boss.HeldItem }}</li>
+            <li><strong>Stars:</strong> {{ boss.Stars}}</li>
+            <li><strong>Speed EVs:</strong> {{ boss.SpeedEVs}}</li>
+        </ul>
+
+        <h3>Base Stats</h3>
+        <ul class="base-stats">
+            <li><strong>Speed:</strong> {{ boss.BaseStats.Speed }}</li>
+            <li><strong>Defense:</strong> {{ boss.BaseStats.Def }}</li>
+            <li><strong>Sp. Def:</strong> {{ boss.BaseStats.SpDef }}</li>
+        </ul>
+
+        {% if boss.Moves %}
+        <h3>Moves</h3>
+        <ul class="moves-list">
+            {% for mv in boss.Moves %}
+            <li>Move {{ loop.index }}: {{ mv.Name }} ({{ mv.Type }})</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+        {% if boss.PhaseEffects %}
+        <h3>Phase Effects</h3>
+        <ul class="phase-list">
+            {% for pe in boss.PhaseEffects %}
+            <li><strong>{{ pe.Health }}:</strong> {{ pe.Effect }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+    </div>
+</aside>
 {% endblock %}
