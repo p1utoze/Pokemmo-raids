@@ -141,6 +141,105 @@ body {
     color: var(--accent-2);
 }
 
+/* completed state for player cell */
+.player-cell.completed {
+    background: rgba(0, 0, 0, 0.45);
+    color: rgba(255, 255, 255, 0.45);
+}
+
+.player-cell.completed .player-name,
+.player-cell.completed .player-move,
+.player-cell.completed .player-item {
+    color: rgba(255, 255, 255, 0.45);
+}
+
+/* custom checkbox look */
+input.player-check {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    border: 2px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.02);
+    display: inline-block;
+    position: relative;
+}
+
+input.player-check:checked {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    border-color: rgba(0, 0, 0, 0.2);
+}
+
+input.player-check:checked::after {
+    content: '\2713';
+    position: absolute;
+    left: 2px;
+    top: -1px;
+    font-size: 14px;
+    color: #082018;
+}
+
+/* right sidebar */
+.right-sidebar {
+    position: fixed;
+    right: -420px;
+    top: 0;
+    width: 420px;
+    height: 100%;
+    background: linear-gradient(180deg, rgba(10, 12, 18, 0.96), rgba(6, 8, 12, 0.96));
+    color: #e6eef6;
+    box-shadow: -18px 0 40px rgba(0, 0, 0, 0.6);
+    padding: 20px;
+    transition: right 0.28s ease;
+    z-index: 60;
+    overflow: auto;
+}
+
+.right-sidebar.open {
+    right: 0;
+}
+
+.right-sidebar .close-sidebar {
+    background: none;
+    border: 0;
+    color: var(--muted);
+    font-size: 20px;
+    cursor: pointer;
+    float: right
+}
+
+.right-sidebar h3 {
+    margin-top: 6px
+}
+
+.info-list,
+.moves-list,
+.phase-list {
+    list-style: none;
+    padding: 0;
+    margin: 8px 0 18px
+}
+
+.info-list li,
+.moves-list li,
+.phase-list li {
+    padding: 6px 0;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.02);
+    color: var(--muted)
+}
+
+.view-more {
+    margin-left: 12px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    background: var(--accent-2);
+    color: #072231;
+    border: 0;
+    cursor: pointer
+}
+
+
 .note-input {
     width: 100%;
     padding: 6px;
