@@ -4,6 +4,30 @@
     {
       "name": "Glaceon 3★",
       "description": "3★ Raichu seasonal raid boss.",
+      "ability": "Ice Body",
+      "held_item": "Icy Rock",
+      "stars": 3,
+      "speed_evs": 128,
+      "base_stats": {
+        "speed": 65,
+        "defense": 110,
+        "special_defense": 95
+      },
+      "moves": [
+        {"name": "Blizzard", "type": "Ice"},
+        {"name": "Ice Beam", "type": "Ice"},
+        {"name": "Shadow Ball", "type": "Ghost"},
+        {"name": "Water Pulse🟊", "type": "Water"}
+      ],
+
+
+      "phase_effects": [
+        {"health": 100, "effect": "Snowscape"},
+        {"health": 66, "effect": "Reflect"},
+        {"health": 50, "effect": "Adaptation [Glaceon's type stays the same, it just will not take super effective damage from fire damage if that was the majority of damage up until this point]"},
+        {"health": 25, "effect": "Sing"}
+      ],    
+
       "variations": [
         {
           "players": {
