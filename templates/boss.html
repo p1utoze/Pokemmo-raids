@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block sidebar %}
+<div class="boss-list-compact">
+    <a href="/">← Back</a>
+    <h3>{{ boss.Name }}</h3>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="boss-page">
+    <h2>{{ boss.Name }}</h2>
+    <p class="boss-desc">{{ boss.Description }}</p>
+
+    <!-- All variations are shown below; dropdown removed per user request -->
+
+    <div class="tables-area">
+        {% for var in boss.Variations %}
+        <div class="variation-table" data-variation-index="{{ loop.index0 }}">
+            <table class="plan-table">
+                <thead>
+                    <tr>
+                        <th>Turn</th>
+                        <th>Player 1</th>
+                        <th>Player 2</th>
+                        <th>Player 3</th>
+                        <th>Player 4</th>
+                        <th>Boss health</th>
+                        <th>Side notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{ var.TableHTML|safe }}
+                </tbody>
+            </table>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script type="application/json" id="boss-data">{{ bossJSON|safe }}</script>
+{% endblock %}

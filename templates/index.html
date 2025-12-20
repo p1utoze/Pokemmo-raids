@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block sidebar %}
+<div class="boss-cards">
+    {% for boss in season.RaidBosses %}
+    <div class="boss-card" data-name="{{ boss.Name }}">
+        <a href="/boss?name={{ boss.Name }}" class="boss-link">
+            <div class="boss-card-title">{{ boss.Name }}</div>
+            <div class="boss-card-desc">{{ boss.Description }}</div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <h1>{{ season.SeasonName }}</h1>
+    <p class="lead">Select a boss on the left to view variations and turn-by-turn plans.</p>
+</section>
+{% endblock %}
