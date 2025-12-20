@@ -1,9 +1,151 @@
 {
   "season": "Christmas",
   "raid_bosses": [
-    {
+    {   
       "name": "Glaceon 3★",
+      "description": "3★ Glaceon seasonal raid boss.",
+      "ability": "Ice Body",
+      "held_item": "Icy Rock",
+      "stars": 3,
+      "speed_evs": 128,
+      "base_stats": {
+        "speed": 65,
+        "defense": 110,
+        "special_defense": 95
+      },
+      "moves": [
+        {"name": "Blizzard", "type": "Ice"},
+        {"name": "Ice Beam", "type": "Ice"},
+        {"name": "Shadow Ball", "type": "Ghost"},
+        {"name": "Water Pulse⭐️", "type": "Water"}
+      ],
+
+
+      "phase_effects": [
+        {"health": 100, "effect": "Snowscape"},
+        {"health": 66, "effect": "Reflect"},
+        {"health": 50, "effect": "Adaptation [Glaceon's type stays the same, it just will not take super effective damage from fire damage if that was the majority of damage up until this point]"},
+        {"health": 25, "effect": "Sing"}
+      ],    
+
+      "variations": [
+        {
+          "players": {
+            "P1": [ {"pokemon": "Golduck", "move": "skill swap cloud 9 onto Add", "item": "Rocky Helmet"},
+                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice Band"},
+                    {"pokemon": "Mienshao", "move": "Close combat", "item": "Black Belt"},
+                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
+                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
+                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"} 
+                ],
+            "P2": [ {"pokemon": "Medicham", "move": "Close combat", "item": "Fist Plate"},
+                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice Band"},
+                    {"pokemon": "Mienshao", "move": "Close combat", "item": "Black Belt"},
+                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
+                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
+                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"} 
+                ],
+            "P3": [ {"pokemon": "Medicham", "move": "Close combat", "item": "Fist Plate"},
+                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice Band"},
+                    {"pokemon": "Ninetales", "move": "Safeguard", "item": "Expert Belt"},
+                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
+                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
+                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"}
+                ],  
+            "P4": [ {"pokemon": "Medicham", "move": "Close combat", "item": "Fist plate"},
+                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice band"},
+                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"},   
+                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
+                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
+                    {"pokemon": "Darmanitan", "move": "Flare Blitz", "item": "Expert Belt"}
+                ]
+          },
+          "health_remaining": [77.5, 55, 32.5, 2.5, 0, 0],
+          "notes": ["Skill swap disables ice body healing",
+                    "Brick break for super effective damage and reflect",
+                    "Safeguard to prevent sing later",
+                    "",
+                    "",
+                    ""
+                  ]
+        }
+      ]
+    },
+    {
+      "name": "Raichu 3★",
       "description": "3★ Raichu seasonal raid boss.",
+      "ability": "Lightning Rod",
+      "held_item": "Expert Belt",
+      "stars": 3,
+      "speed_evs": 128,
+      "base_stats": {
+        "speed": 110,
+        "defense": 55,
+        "special_defense": 80
+      },
+     "moves": [
+        {"name": "Discharge ⭐️", "type": "Electric"},
+        {"name": "Thunderbolt", "type": "Electric"},
+        {"name": "Grass Knot", "type": "Grass"},
+        {"name": "Signal Beam", "type": "Bug"}
+      ],
+     "phase_effects": [
+        {"health": 100, "effect": "Ally Guard"},
+        {"health": 75, "effect": "Magnet Rise"},
+        {"health": 50, "effect": "Reflect"},
+        {"health": 20, "effect": "Agility"}
+      ],
+    "variations": [
+            {
+            "players": {
+                "P1": [
+                { "pokemon": "Golduck", "move": "Cloud 9 Skill Swap onto Add", "item": null },
+                { "pokemon": "Mamoswine", "move": "Dig", "item": null },
+                { "pokemon": null, "move": "Smack Down", "item": null },
+                { "pokemon": "Garchomp", "move": "Dig", "item": null },
+                { "pokemon": "Excadrill", "move": "Dig", "item": null },
+                { "pokemon": "Marowak", "move": "Dig", "item": null }
+                ],
+                "P2": [
+                { "pokemon": "Excadrill", "move": "Dig", "item": null },
+                { "pokemon": "Mamoswine", "move": "Dig", "item": null },
+                { "pokemon": "Garchomp", "move": "Dig", "item": null },
+                { "pokemon": "Nidoking", "move": "Brick Break", "item": null },
+                { "pokemon": "Marowak", "move": "Dig", "item": "Rocky Helmet" },
+                { "pokemon": "Marowak", "move": "Dig", "item": null }
+                ],
+                "P3": [
+                { "pokemon": null, "move": "Prankster Tailwind", "item": null },
+                { "pokemon": "Mamoswine", "move": "Dig", "item": null },
+                { "pokemon": "Excadrill", "move": "Dig", "item": null },
+                { "pokemon": "Rhyperior", "move": "Dig", "item": null },
+                { "pokemon": null, "move": "Prankster Haze", "item": "Rocky Helmet" },
+                { "pokemon": "Garchomp", "move": "Dig", "item": null }
+                ],
+                "P4": [
+                { "pokemon": "Golduck", "move": "Cloud 9 Skill Swap onto Add", "item": null },
+                { "pokemon": "Mamoswine", "move": "Dig", "item": null },
+                { "pokemon": "Excadrill", "move": "Dig", "item": null },
+                { "pokemon": "Marowak", "move": "Dig", "item": null },
+                { "pokemon": null, "move": "Prankster Tailwind", "item": "Rocky Helmet" },
+                { "pokemon": "Garchomp", "move": "Dig", "item": null }
+                ]
+            },
+            "health_remaining": [92.5, 70, 47.5, 24, 0, 0],
+            "notes": [
+                "100% ally guard",
+                "75% magnet rise",
+                "50% reflect. Smack down to counter magnet rise",
+                "",
+                "20% agility",
+                ""
+            ]
+            }
+        ]
+    },
+    {
+      "name": "Stantler 3★",
+      "description": "3★ Stantler seasonal raid boss.",
       "ability": "Ice Body",
       "held_item": "Icy Rock",
       "stars": 3,
@@ -72,8 +214,774 @@
       ]
     },
     {
-        "name": "Raichu 3★",
-        "description": "3★ Raichu seasonal raid boss."
+      "name": "Chimecho 3★",
+      "description": "3★ Chimecho seasonal raid boss.",
+      "ability": "Ice Body",
+      "held_item": "Icy Rock",
+      "stars": 3,
+      "speed_evs": 128,
+      "base_stats": {
+        "speed": 65,
+        "defense": 110,
+        "special_defense": 95
+      },
+      "moves": [
+        {"name": "Blizzard", "type": "Ice"},
+        {"name": "Ice Beam", "type": "Ice"},
+        {"name": "Shadow Ball", "type": "Ghost"},
+        {"name": "Water Pulse🟊", "type": "Water"}
+      ],
+
+
+      "phase_effects": [
+        {"health": 100, "effect": "Snowscape"},
+        {"health": 66, "effect": "Reflect"},
+        {"health": 50, "effect": "Adaptation [Glaceon's type stays the same, it just will not take super effective damage from fire damage if that was the majority of damage up until this point]"},
+        {"health": 25, "effect": "Sing"}
+      ],    
+
+      "variations": [
+        {
+          "players": {
+            "P1": [ {"pokemon": "Golduck", "move": "skill swap cloud 9 onto Add", "item": "Rocky Helmet"},
+                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice Band"},
+                    {"pokemon": "Mienshao", "move": "Close combat", "item": "Black Belt"},
+                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
+                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
+                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"} 
+                ],
+            "P2": [ {"pokemon": "Medicham", "move": "Close combat", "item": "Fist Plate"},
+                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice Band"},
+                    {"pokemon": "Mienshao", "move": "Close combat", "item": "Black Belt"},
+                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
+                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
+                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"} 
+                ],
+            "P3": [ {"pokemon": "Medicham", "move": "Close combat", "item": "Fist Plate"},
+                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice Band"},
+                    {"pokemon": "Ninetales", "move": "Safeguard", "item": "Expert Belt"},
+                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
+                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
+                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"}
+                ],  
+            "P4": [ {"pokemon": "Medicham", "move": "Close combat", "item": "Fist plate"},
+                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice band"},
+                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"},   
+                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
+                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
+                    {"pokemon": "Darmanitan", "move": "Flare Blitz", "item": "Expert Belt"}
+                ]
+          },
+          "health_remaining": [77.5, 55, 32.5, 2.5, 0, 0],
+          "notes": ["Skill swap disables ice body healing",
+                    "Brick break for super effective damage and reflect",
+                    "Safeguard to prevent sing later",
+                    "",
+                    "",
+                    ""
+                  ]
+        }
+      ]
+    },
+    {
+      "name": "Sawbuck 3★",
+      "description": "3★ Sawbuck seasonal raid boss.",
+      "ability": "Ice Body",
+      "held_item": "Icy Rock",
+      "stars": 3,
+      "speed_evs": 128,
+      "base_stats": {
+        "speed": 65,
+        "defense": 110,
+        "special_defense": 95
+      },
+      "moves": [
+        {"name": "Blizzard", "type": "Ice"},
+        {"name": "Ice Beam", "type": "Ice"},
+        {"name": "Shadow Ball", "type": "Ghost"},
+        {"name": "Water Pulse🟊", "type": "Water"}
+      ],
+
+
+      "phase_effects": [
+        {"health": 100, "effect": "Snowscape"},
+        {"health": 66, "effect": "Reflect"},
+        {"health": 50, "effect": "Adaptation [Glaceon's type stays the same, it just will not take super effective damage from fire damage if that was the majority of damage up until this point]"},
+        {"health": 25, "effect": "Sing"}
+      ],    
+
+      "variations": [
+        {
+          "players": {
+            "P1": [ {"pokemon": "Golduck", "move": "skill swap cloud 9 onto Add", "item": "Rocky Helmet"},
+                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice Band"},
+                    {"pokemon": "Mienshao", "move": "Close combat", "item": "Black Belt"},
+                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
+                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
+                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"} 
+                ],
+            "P2": [ {"pokemon": "Medicham", "move": "Close combat", "item": "Fist Plate"},
+                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice Band"},
+                    {"pokemon": "Mienshao", "move": "Close combat", "item": "Black Belt"},
+                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
+                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
+                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"} 
+                ],
+            "P3": [ {"pokemon": "Medicham", "move": "Close combat", "item": "Fist Plate"},
+                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice Band"},
+                    {"pokemon": "Ninetales", "move": "Safeguard", "item": "Expert Belt"},
+                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
+                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
+                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"}
+                ],  
+            "P4": [ {"pokemon": "Medicham", "move": "Close combat", "item": "Fist plate"},
+                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice band"},
+                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"},   
+                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
+                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
+                    {"pokemon": "Darmanitan", "move": "Flare Blitz", "item": "Expert Belt"}
+                ]
+          },
+          "health_remaining": [77.5, 55, 32.5, 2.5, 0, 0],
+          "notes": ["Skill swap disables ice body healing",
+                    "Brick break for super effective damage and reflect",
+                    "Safeguard to prevent sing later",
+                    "",
+                    "",
+                    ""
+                  ]
+        }
+      ]
+    },
+    {
+      "name": "Beartic 3★",
+      "description": "3★ Beartic seasonal raid boss.",
+      "ability": "Ice Body",
+      "held_item": "Icy Rock",
+      "stars": 3,
+      "speed_evs": 128,
+      "base_stats": {
+        "speed": 65,
+        "defense": 110,
+        "special_defense": 95
+      },
+      "moves": [
+        {"name": "Blizzard", "type": "Ice"},
+        {"name": "Ice Beam", "type": "Ice"},
+        {"name": "Shadow Ball", "type": "Ghost"},
+        {"name": "Water Pulse🟊", "type": "Water"}
+      ],
+
+
+      "phase_effects": [
+        {"health": 100, "effect": "Snowscape"},
+        {"health": 66, "effect": "Reflect"},
+        {"health": 50, "effect": "Adaptation [Glaceon's type stays the same, it just will not take super effective damage from fire damage if that was the majority of damage up until this point]"},
+        {"health": 25, "effect": "Sing"}
+      ],    
+
+      "variations": [
+        {
+          "players": {
+            "P1": [ {"pokemon": "Golduck", "move": "skill swap cloud 9 onto Add", "item": "Rocky Helmet"},
+                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice Band"},
+                    {"pokemon": "Mienshao", "move": "Close combat", "item": "Black Belt"},
+                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
+                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
+                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"} 
+                ],
+            "P2": [ {"pokemon": "Medicham", "move": "Close combat", "item": "Fist Plate"},
+                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice Band"},
+                    {"pokemon": "Mienshao", "move": "Close combat", "item": "Black Belt"},
+                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
+                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
+                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"} 
+                ],
+            "P3": [ {"pokemon": "Medicham", "move": "Close combat", "item": "Fist Plate"},
+                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice Band"},
+                    {"pokemon": "Ninetales", "move": "Safeguard", "item": "Expert Belt"},
+                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
+                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
+                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"}
+                ],  
+            "P4": [ {"pokemon": "Medicham", "move": "Close combat", "item": "Fist plate"},
+                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice band"},
+                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"},   
+                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
+                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
+                    {"pokemon": "Darmanitan", "move": "Flare Blitz", "item": "Expert Belt"}
+                ]
+          },
+          "health_remaining": [77.5, 55, 32.5, 2.5, 0, 0],
+          "notes": ["Skill swap disables ice body healing",
+                    "Brick break for super effective damage and reflect",
+                    "Safeguard to prevent sing later",
+                    "",
+                    "",
+                    ""
+                  ]
+        }
+      ]
+    },
+    {
+      "name": "Clefable 3★",
+      "description": "3★ Clefable seasonal raid boss.",
+      "ability": "Ice Body",
+      "held_item": "Icy Rock",
+      "stars": 3,
+      "speed_evs": 128,
+      "base_stats": {
+        "speed": 65,
+        "defense": 110,
+        "special_defense": 95
+      },
+      "moves": [
+        {"name": "Blizzard", "type": "Ice"},
+        {"name": "Ice Beam", "type": "Ice"},
+        {"name": "Shadow Ball", "type": "Ghost"},
+        {"name": "Water Pulse🟊", "type": "Water"}
+      ],
+
+
+      "phase_effects": [
+        {"health": 100, "effect": "Snowscape"},
+        {"health": 66, "effect": "Reflect"},
+        {"health": 50, "effect": "Adaptation [Glaceon's type stays the same, it just will not take super effective damage from fire damage if that was the majority of damage up until this point]"},
+        {"health": 25, "effect": "Sing"}
+      ],    
+
+      "variations": [
+        {
+          "players": {
+            "P1": [ {"pokemon": "Golduck", "move": "skill swap cloud 9 onto Add", "item": "Rocky Helmet"},
+                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice Band"},
+                    {"pokemon": "Mienshao", "move": "Close combat", "item": "Black Belt"},
+                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
+                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
+                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"} 
+                ],
+            "P2": [ {"pokemon": "Medicham", "move": "Close combat", "item": "Fist Plate"},
+                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice Band"},
+                    {"pokemon": "Mienshao", "move": "Close combat", "item": "Black Belt"},
+                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
+                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
+                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"} 
+                ],
+            "P3": [ {"pokemon": "Medicham", "move": "Close combat", "item": "Fist Plate"},
+                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice Band"},
+                    {"pokemon": "Ninetales", "move": "Safeguard", "item": "Expert Belt"},
+                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
+                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
+                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"}
+                ],  
+            "P4": [ {"pokemon": "Medicham", "move": "Close combat", "item": "Fist plate"},
+                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice band"},
+                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"},   
+                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
+                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
+                    {"pokemon": "Darmanitan", "move": "Flare Blitz", "item": "Expert Belt"}
+                ]
+          },
+          "health_remaining": [77.5, 55, 32.5, 2.5, 0, 0],
+          "notes": ["Skill swap disables ice body healing",
+                    "Brick break for super effective damage and reflect",
+                    "Safeguard to prevent sing later",
+                    "",
+                    "",
+                    ""
+                  ]
+        }
+      ]
+    },
+    {
+      "name": "Tangrowth 4★",
+      "description": "4★ Tangrowth seasonal raid boss.",
+      "ability": "Ice Body",
+      "held_item": "Icy Rock",
+      "stars": 3,
+      "speed_evs": 128,
+      "base_stats": {
+        "speed": 65,
+        "defense": 110,
+        "special_defense": 95
+      },
+      "moves": [
+        {"name": "Blizzard", "type": "Ice"},
+        {"name": "Ice Beam", "type": "Ice"},
+        {"name": "Shadow Ball", "type": "Ghost"},
+        {"name": "Water Pulse🟊", "type": "Water"}
+      ],
+
+
+      "phase_effects": [
+        {"health": 100, "effect": "Snowscape"},
+        {"health": 66, "effect": "Reflect"},
+        {"health": 50, "effect": "Adaptation [Glaceon's type stays the same, it just will not take super effective damage from fire damage if that was the majority of damage up until this point]"},
+        {"health": 25, "effect": "Sing"}
+      ],    
+
+      "variations": [
+        {
+          "players": {
+            "P1": [ {"pokemon": "Golduck", "move": "skill swap cloud 9 onto Add", "item": "Rocky Helmet"},
+                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice Band"},
+                    {"pokemon": "Mienshao", "move": "Close combat", "item": "Black Belt"},
+                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
+                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
+                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"} 
+                ],
+            "P2": [ {"pokemon": "Medicham", "move": "Close combat", "item": "Fist Plate"},
+                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice Band"},
+                    {"pokemon": "Mienshao", "move": "Close combat", "item": "Black Belt"},
+                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
+                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
+                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"} 
+                ],
+            "P3": [ {"pokemon": "Medicham", "move": "Close combat", "item": "Fist Plate"},
+                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice Band"},
+                    {"pokemon": "Ninetales", "move": "Safeguard", "item": "Expert Belt"},
+                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
+                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
+                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"}
+                ],  
+            "P4": [ {"pokemon": "Medicham", "move": "Close combat", "item": "Fist plate"},
+                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice band"},
+                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"},   
+                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
+                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
+                    {"pokemon": "Darmanitan", "move": "Flare Blitz", "item": "Expert Belt"}
+                ]
+          },
+          "health_remaining": [77.5, 55, 32.5, 2.5, 0, 0],
+          "notes": ["Skill swap disables ice body healing",
+                    "Brick break for super effective damage and reflect",
+                    "Safeguard to prevent sing later",
+                    "",
+                    "",
+                    ""
+                  ]
+        }
+      ]
+    },
+    {
+      "name": "Vanilluxe 4★",
+      "description": "4★ Vanilluxe seasonal raid boss.",
+      "ability": "Ice Body",
+      "held_item": "Icy Rock",
+      "stars": 3,
+      "speed_evs": 128,
+      "base_stats": {
+        "speed": 65,
+        "defense": 110,
+        "special_defense": 95
+      },
+      "moves": [
+        {"name": "Blizzard", "type": "Ice"},
+        {"name": "Ice Beam", "type": "Ice"},
+        {"name": "Shadow Ball", "type": "Ghost"},
+        {"name": "Water Pulse🟊", "type": "Water"}
+      ],
+
+
+      "phase_effects": [
+        {"health": 100, "effect": "Snowscape"},
+        {"health": 66, "effect": "Reflect"},
+        {"health": 50, "effect": "Adaptation [Glaceon's type stays the same, it just will not take super effective damage from fire damage if that was the majority of damage up until this point]"},
+        {"health": 25, "effect": "Sing"}
+      ],    
+
+      "variations": [
+        {
+          "players": {
+            "P1": [ {"pokemon": "Golduck", "move": "skill swap cloud 9 onto Add", "item": "Rocky Helmet"},
+                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice Band"},
+                    {"pokemon": "Mienshao", "move": "Close combat", "item": "Black Belt"},
+                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
+                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
+                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"} 
+                ],
+            "P2": [ {"pokemon": "Medicham", "move": "Close combat", "item": "Fist Plate"},
+                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice Band"},
+                    {"pokemon": "Mienshao", "move": "Close combat", "item": "Black Belt"},
+                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
+                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
+                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"} 
+                ],
+            "P3": [ {"pokemon": "Medicham", "move": "Close combat", "item": "Fist Plate"},
+                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice Band"},
+                    {"pokemon": "Ninetales", "move": "Safeguard", "item": "Expert Belt"},
+                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
+                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
+                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"}
+                ],  
+            "P4": [ {"pokemon": "Medicham", "move": "Close combat", "item": "Fist plate"},
+                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice band"},
+                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"},   
+                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
+                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
+                    {"pokemon": "Darmanitan", "move": "Flare Blitz", "item": "Expert Belt"}
+                ]
+          },
+          "health_remaining": [77.5, 55, 32.5, 2.5, 0, 0],
+          "notes": ["Skill swap disables ice body healing",
+                    "Brick break for super effective damage and reflect",
+                    "Safeguard to prevent sing later",
+                    "",
+                    "",
+                    ""
+                  ]
+        }
+      ]
+    },
+    {
+      "name": "Togekiss 4★",
+      "description": "4★ Togekiss seasonal raid boss.",
+      "ability": "Ice Body",
+      "held_item": "Icy Rock",
+      "stars": 4,
+      "speed_evs": 128,
+      "base_stats": {
+        "speed": 65,
+        "defense": 110,
+        "special_defense": 95
+      },
+      "moves": [
+        {"name": "Blizzard", "type": "Ice"},
+        {"name": "Ice Beam", "type": "Ice"},
+        {"name": "Shadow Ball", "type": "Ghost"},
+        {"name": "Water Pulse🟊", "type": "Water"}
+      ],
+
+
+      "phase_effects": [
+        {"health": 100, "effect": "Snowscape"},
+        {"health": 66, "effect": "Reflect"},
+        {"health": 50, "effect": "Adaptation [Glaceon's type stays the same, it just will not take super effective damage from fire damage if that was the majority of damage up until this point]"},
+        {"health": 25, "effect": "Sing"}
+      ],    
+
+      "variations": [
+        {
+          "players": {
+            "P1": [ {"pokemon": "Golduck", "move": "skill swap cloud 9 onto Add", "item": "Rocky Helmet"},
+                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice Band"},
+                    {"pokemon": "Mienshao", "move": "Close combat", "item": "Black Belt"},
+                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
+                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
+                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"} 
+                ],
+            "P2": [ {"pokemon": "Medicham", "move": "Close combat", "item": "Fist Plate"},
+                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice Band"},
+                    {"pokemon": "Mienshao", "move": "Close combat", "item": "Black Belt"},
+                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
+                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
+                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"} 
+                ],
+            "P3": [ {"pokemon": "Medicham", "move": "Close combat", "item": "Fist Plate"},
+                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice Band"},
+                    {"pokemon": "Ninetales", "move": "Safeguard", "item": "Expert Belt"},
+                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
+                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
+                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"}
+                ],  
+            "P4": [ {"pokemon": "Medicham", "move": "Close combat", "item": "Fist plate"},
+                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice band"},
+                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"},   
+                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
+                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
+                    {"pokemon": "Darmanitan", "move": "Flare Blitz", "item": "Expert Belt"}
+                ]
+          },
+          "health_remaining": [77.5, 55, 32.5, 2.5, 0, 0],
+          "notes": ["Skill swap disables ice body healing",
+                    "Brick break for super effective damage and reflect",
+                    "Safeguard to prevent sing later",
+                    "",
+                    "",
+                    ""
+                  ]
+        }
+      ]
+    },
+    {
+      "name": "Gardevoir 4★",
+      "description": "4★ Gardevoir seasonal raid boss.",
+      "ability": "Ice Body",
+      "held_item": "Icy Rock",
+      "stars": 4,
+      "speed_evs": 128,
+      "base_stats": {
+        "speed": 65,
+        "defense": 110,
+        "special_defense": 95
+      },
+      "moves": [
+        {"name": "Blizzard", "type": "Ice"},
+        {"name": "Ice Beam", "type": "Ice"},
+        {"name": "Shadow Ball", "type": "Ghost"},
+        {"name": "Water Pulse🟊", "type": "Water"}
+      ],
+
+
+      "phase_effects": [
+        {"health": 100, "effect": "Snowscape"},
+        {"health": 66, "effect": "Reflect"},
+        {"health": 50, "effect": "Adaptation [Glaceon's type stays the same, it just will not take super effective damage from fire damage if that was the majority of damage up until this point]"},
+        {"health": 25, "effect": "Sing"}
+      ],    
+
+      "variations": [
+        {
+          "players": {
+            "P1": [ {"pokemon": "Golduck", "move": "skill swap cloud 9 onto Add", "item": "Rocky Helmet"},
+                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice Band"},
+                    {"pokemon": "Mienshao", "move": "Close combat", "item": "Black Belt"},
+                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
+                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
+                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"} 
+                ],
+            "P2": [ {"pokemon": "Medicham", "move": "Close combat", "item": "Fist Plate"},
+                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice Band"},
+                    {"pokemon": "Mienshao", "move": "Close combat", "item": "Black Belt"},
+                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
+                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
+                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"} 
+                ],
+            "P3": [ {"pokemon": "Medicham", "move": "Close combat", "item": "Fist Plate"},
+                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice Band"},
+                    {"pokemon": "Ninetales", "move": "Safeguard", "item": "Expert Belt"},
+                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
+                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
+                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"}
+                ],  
+            "P4": [ {"pokemon": "Medicham", "move": "Close combat", "item": "Fist plate"},
+                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice band"},
+                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"},   
+                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
+                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
+                    {"pokemon": "Darmanitan", "move": "Flare Blitz", "item": "Expert Belt"}
+                ]
+          },
+          "health_remaining": [77.5, 55, 32.5, 2.5, 0, 0],
+          "notes": ["Skill swap disables ice body healing",
+                    "Brick break for super effective damage and reflect",
+                    "Safeguard to prevent sing later",
+                    "",
+                    "",
+                    ""
+                  ]
+        }
+      ]
+    },
+    {
+      "name": "Salamence 4★",
+      "description": "4★ Salamence seasonal raid boss.",
+      "ability": "Ice Body",
+      "held_item": "Icy Rock",
+      "stars": 4,
+      "speed_evs": 128,
+      "base_stats": {
+        "speed": 65,
+        "defense": 110,
+        "special_defense": 95
+      },
+      "moves": [
+        {"name": "Blizzard", "type": "Ice"},
+        {"name": "Ice Beam", "type": "Ice"},
+        {"name": "Shadow Ball", "type": "Ghost"},
+        {"name": "Water Pulse🟊", "type": "Water"}
+      ],
+
+
+      "phase_effects": [
+        {"health": 100, "effect": "Snowscape"},
+        {"health": 66, "effect": "Reflect"},
+        {"health": 50, "effect": "Adaptation [Glaceon's type stays the same, it just will not take super effective damage from fire damage if that was the majority of damage up until this point]"},
+        {"health": 25, "effect": "Sing"}
+      ],    
+
+      "variations": [
+        {
+          "players": {
+            "P1": [ {"pokemon": "Golduck", "move": "skill swap cloud 9 onto Add", "item": "Rocky Helmet"},
+                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice Band"},
+                    {"pokemon": "Mienshao", "move": "Close combat", "item": "Black Belt"},
+                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
+                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
+                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"} 
+                ],
+            "P2": [ {"pokemon": "Medicham", "move": "Close combat", "item": "Fist Plate"},
+                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice Band"},
+                    {"pokemon": "Mienshao", "move": "Close combat", "item": "Black Belt"},
+                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
+                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
+                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"} 
+                ],
+            "P3": [ {"pokemon": "Medicham", "move": "Close combat", "item": "Fist Plate"},
+                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice Band"},
+                    {"pokemon": "Ninetales", "move": "Safeguard", "item": "Expert Belt"},
+                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
+                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
+                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"}
+                ],  
+            "P4": [ {"pokemon": "Medicham", "move": "Close combat", "item": "Fist plate"},
+                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice band"},
+                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"},   
+                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
+                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
+                    {"pokemon": "Darmanitan", "move": "Flare Blitz", "item": "Expert Belt"}
+                ]
+          },
+          "health_remaining": [77.5, 55, 32.5, 2.5, 0, 0],
+          "notes": ["Skill swap disables ice body healing",
+                    "Brick break for super effective damage and reflect",
+                    "Safeguard to prevent sing later",
+                    "",
+                    "",
+                    ""
+                  ]
+        }
+      ]
+    },
+    {
+      "name": "Jirachi 4★",
+      "description": "4★ Jirachi seasonal raid boss.",
+      "ability": "Ice Body",
+      "held_item": "Icy Rock",
+      "stars": 4,
+      "speed_evs": 128,
+      "base_stats": {
+        "speed": 65,
+        "defense": 110,
+        "special_defense": 95
+      },
+      "moves": [
+        {"name": "Blizzard", "type": "Ice"},
+        {"name": "Ice Beam", "type": "Ice"},
+        {"name": "Shadow Ball", "type": "Ghost"},
+        {"name": "Water Pulse🟊", "type": "Water"}
+      ],
+
+
+      "phase_effects": [
+        {"health": 100, "effect": "Snowscape"},
+        {"health": 66, "effect": "Reflect"},
+        {"health": 50, "effect": "Adaptation [Glaceon's type stays the same, it just will not take super effective damage from fire damage if that was the majority of damage up until this point]"},
+        {"health": 25, "effect": "Sing"}
+      ],    
+
+      "variations": [
+        {
+          "players": {
+            "P1": [ {"pokemon": "Golduck", "move": "skill swap cloud 9 onto Add", "item": "Rocky Helmet"},
+                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice Band"},
+                    {"pokemon": "Mienshao", "move": "Close combat", "item": "Black Belt"},
+                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
+                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
+                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"} 
+                ],
+            "P2": [ {"pokemon": "Medicham", "move": "Close combat", "item": "Fist Plate"},
+                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice Band"},
+                    {"pokemon": "Mienshao", "move": "Close combat", "item": "Black Belt"},
+                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
+                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
+                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"} 
+                ],
+            "P3": [ {"pokemon": "Medicham", "move": "Close combat", "item": "Fist Plate"},
+                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice Band"},
+                    {"pokemon": "Ninetales", "move": "Safeguard", "item": "Expert Belt"},
+                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
+                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
+                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"}
+                ],  
+            "P4": [ {"pokemon": "Medicham", "move": "Close combat", "item": "Fist plate"},
+                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice band"},
+                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"},   
+                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
+                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
+                    {"pokemon": "Darmanitan", "move": "Flare Blitz", "item": "Expert Belt"}
+                ]
+          },
+          "health_remaining": [77.5, 55, 32.5, 2.5, 0, 0],
+          "notes": ["Skill swap disables ice body healing",
+                    "Brick break for super effective damage and reflect",
+                    "Safeguard to prevent sing later",
+                    "",
+                    "",
+                    ""
+                  ]
+        }
+      ]
+    },
+    {
+      "name": "Jirachi 5★",
+      "description": "5★ Jirachi seasonal raid boss.",
+      "ability": "Ice Body",
+      "held_item": "Icy Rock",
+      "stars": 5,
+      "speed_evs": 128,
+      "base_stats": {
+        "speed": 65,
+        "defense": 110,
+        "special_defense": 95
+      },
+      "moves": [
+        {"name": "Blizzard", "type": "Ice"},
+        {"name": "Ice Beam", "type": "Ice"},
+        {"name": "Shadow Ball", "type": "Ghost"},
+        {"name": "Water Pulse🟊", "type": "Water"}
+      ],
+
+
+      "phase_effects": [
+        {"health": 100, "effect": "Snowscape"},
+        {"health": 66, "effect": "Reflect"},
+        {"health": 50, "effect": "Adaptation [Glaceon's type stays the same, it just will not take super effective damage from fire damage if that was the majority of damage up until this point]"},
+        {"health": 25, "effect": "Sing"}
+      ],    
+
+      "variations": [
+        {
+          "players": {
+            "P1": [ {"pokemon": "Golduck", "move": "skill swap cloud 9 onto Add", "item": "Rocky Helmet"},
+                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice Band"},
+                    {"pokemon": "Mienshao", "move": "Close combat", "item": "Black Belt"},
+                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
+                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
+                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"} 
+                ],
+            "P2": [ {"pokemon": "Medicham", "move": "Close combat", "item": "Fist Plate"},
+                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice Band"},
+                    {"pokemon": "Mienshao", "move": "Close combat", "item": "Black Belt"},
+                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
+                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
+                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"} 
+                ],
+            "P3": [ {"pokemon": "Medicham", "move": "Close combat", "item": "Fist Plate"},
+                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice Band"},
+                    {"pokemon": "Ninetales", "move": "Safeguard", "item": "Expert Belt"},
+                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
+                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
+                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"}
+                ],  
+            "P4": [ {"pokemon": "Medicham", "move": "Close combat", "item": "Fist plate"},
+                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice band"},
+                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"},   
+                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
+                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
+                    {"pokemon": "Darmanitan", "move": "Flare Blitz", "item": "Expert Belt"}
+                ]
+          },
+          "health_remaining": [77.5, 55, 32.5, 2.5, 0, 0],
+          "notes": ["Skill swap disables ice body healing",
+                    "Brick break for super effective damage and reflect",
+                    "Safeguard to prevent sing later",
+                    "",
+                    "",
+                    ""
+                  ]
+        }
+      ]
     }
   ]
 }
