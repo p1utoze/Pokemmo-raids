@@ -22,6 +22,8 @@ type Variation struct {
 	Notes           []string            `json:"notes,omitempty"`
 	PlayersList     [][]Player          `json:"-"`
 	TableHTML       string              `json:"-"`
+	Index           int                 `json:"-"`
+	Index0          int                 `json:"-"`
 }
 
 type PhaseEffect struct {
@@ -92,6 +94,9 @@ func (a *App) loadData() error {
 func (a *App) preprocessVariations() {
 	for bi := range a.season.RaidBosses {
 		for vi := range a.season.RaidBosses[bi].Variations {
+			// set convenient indexes for templates (1-based and 0-based)
+			a.season.RaidBosses[bi].Variations[vi].Index = vi + 1
+			a.season.RaidBosses[bi].Variations[vi].Index0 = vi
 			a.season.RaidBosses[bi].Variations[vi].TableHTML = a.buildVariationTable(&a.season.RaidBosses[bi].Variations[vi])
 		}
 	}

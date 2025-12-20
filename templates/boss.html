@@ -15,8 +15,8 @@
     
     <div class="tables-area">
         {% for var in boss.Variations %}
-        <h3 class="variation-title">Variation {{ loop.index0 + 1 }}</h3>
-        <div class="variation-table" data-variation-index="{{ loop.index0 }}">
+        <h3 class="variation-title">Variation {{ var.Index }}</h3>  
+        <div class="variation-table" data-variation-index="{{ var.Index0 }}">
             <table class="plan-table">
                 <thead>
                     <tr>
