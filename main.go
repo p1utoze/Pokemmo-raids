@@ -35,7 +35,7 @@ type RaidBossMove struct {
 type BaseStats struct {
 	Speed   int `json:"speed,omitempty"`
 	Def int `json:"defense,omitempty"`
-	SpDef   int `json:"sp_def,omitempty"`
+	SpDef   int `json:"special_defense,omitempty"`
 }
 
 type RaidBoss struct {
