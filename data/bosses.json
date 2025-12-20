@@ -1,0 +1,55 @@
+{
+  "season": "Christmas",
+  "raid_bosses": [
+    {
+      "name": "Glaceon 3★",
+      "description": "3★ Raichu seasonal raid boss.",
+      "variations": [
+        {
+          "players": {
+            "P1": [ {"pokemon": "Golduck", "move": "skill swap cloud 9 onto Add", "item": "Rocky Helmet"},
+                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice Band"},
+                    {"pokemon": "Mienshao", "move": "Close combat", "item": "Black Belt"},
+                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
+                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
+                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"} 
+                ],
+            "P2": [ {"pokemon": "Medicham", "move": "Close combat", "item": "Fist Plate"},
+                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice Band"},
+                    {"pokemon": "Mienshao", "move": "Close combat", "item": "Black Belt"},
+                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
+                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
+                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"} 
+                ],
+            "P3": [ {"pokemon": "Medicham", "move": "Close combat", "item": "Fist Plate"},
+                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice Band"},
+                    {"pokemon": "Ninetales", "move": "Safeguard", "item": "Expert Belt"},
+                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
+                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
+                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"}
+                ],  
+            "P4": [ {"pokemon": "Medicham", "move": "Close combat", "item": "Fist plate"},
+                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice band"},
+                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"},   
+                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
+                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
+                    {"pokemon": "Darmanitan", "move": "Flare Blitz", "item": "Expert Belt"}
+                ]
+          },
+          "health_remaining": [77.5, 55, 32.5, 2.5, 0, 0],
+          "notes": ["Skill swap disables ice body healing",
+                    "Brick break for super effective damage and reflect",
+                    "Safeguard to prevent sing later",
+                    "",
+                    "",
+                    ""
+                  ]
+        }
+      ]
+    },
+    {
+        "name": "Raichu 3★",
+        "description": "3★ Raichu seasonal raid boss."
+    }
+  ]
+}
