@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block sidebar %}
+<div class="sidebar-builder">
+    <a href="/admin" class="back-link">← Back to Admin</a>
+    <h3 class="builder-title">{{ boss_name }}</h3>
+    <div class="builder-info">
+        <p class="variation-info">{{ mode_label }}</p>
+        <button class="save-btn" id="saveTeamBtn">Save Boss</button>
+        <button class="cancel-btn" id="cancelTeamBtn">Cancel</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="team-builder">
+    <div class="builder-header">
+        <h2>{% if action == 'create' %}Create{% else %}Edit{% endif %} Raid Boss</h2>
+        <p class="builder-subtitle">Configure the raid boss details and variations.
+        </p>
+    </div>
+
+    <form id="raidBossForm" class="team-form">
+        <input type="hidden" id="raidBossId" value="{{ boss_id }}" />
+        <input type="hidden" id="raidBossSeason" value="{{ season }}" />
+        <input type="hidden" id="raidBossAction" value="{{ action }}" />
+
+        <div class="form-group" style="max-width: 400px;">
+            <label for="bossName">Boss Name *</label>
+            <input id="bossName" name="boss_name" value="{{ boss_name }}" required />
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-width: 600px;">
+            <div class="form-group">
+                <label for="bossStars">Stars</label>
+                <input id="bossStars" name="stars" type="number" min="1" max="5" value="{{ stars }}" />
+            </div>
+            <div class="form-group">
+                <label for="bossAbility">Ability</label>
+                <input id="bossAbility" name="ability" value="{{ ability }}" />
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-width: 600px;">
+            <div class="form-group">
+                <label for="bossHeldItem">Held Item</label>
+                <input id="bossHeldItem" name="held_item" value="{{ held_item }}" />
+            </div>
+            <div class="form-group">
+                <label for="bossSpeedEVs">Speed EVs</label>
+                <input id="bossSpeedEVs" name="speed_evs" type="number" value="{{ speed_evs }}" />
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="bossDescription">Description</label>
+            <textarea id="bossDescription" name="description">{{ description }}</textarea>
+        </div>
+
+        <fieldset style="max-width: 400px;">
+            <legend>Base Stats</legend>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
+                <div class="form-group">
+                    <label for="baseSpped">Speed</label>
+                    <input id="baseSpeed" name="base_stats_speed" type="number" value="{{ base_stats_speed }}" />
+                </div>
+                <div class="form-group">
+                    <label for="baseDefense">Defense</label>
+                    <input id="baseDefense" name="base_stats_defense" type="number" value="{{ base_stats_defense }}" />
+                </div>
+                <div class="form-group">
+                    <label for="baseSpDef">Sp. Def</label>
+                    <input id="baseSpDef" name="base_stats_spdef" type="number" value="{{ base_stats_spdef }}" />
+                </div>
+            </div>
+        </fieldset>
+
+        <div class="form-group">
+            <label>Moves</label>
+            <div id="movesBuilder" class="json-builder">
+                <table class="builder-table">
+                    <thead>
+                        <tr>
+                            <th>Move Name</th>
+                            <th>Type</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="movesList"></tbody>
+                </table>
+                <button type="button" id="addMoveBtn" class="btn-secondary">+ Add Move</button>
+            </div>
+            <input type="hidden" id="movesJSON" name="moves" value="{{ moves }}" />
+        </div>
+
+        <div class="form-group">
+            <label>Phase Effects</label>
+            <div id="phaseEffectsBuilder" class="json-builder">
+                <table class="builder-table">
+                    <thead>
+                        <tr>
+                            <th>Health (%)</th>
+                            <th>Effect</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="phaseList"></tbody>
+                </table>
+                <button type="button" id="addPhaseBtn" class="btn-secondary">+ Add Phase Effect</button>
+            </div>
+            <input type="hidden" id="phaseEffectsJSON" name="phase_effects" value="{{ phase_effects }}" />
+        </div>
+
+        <div class="form-group">
+            <label>Variations</label>
+            <div id="variationsCarousel"
+                style="border: 1px solid var(--accent); border-radius: 4px; padding: 12px; background: rgba(255,255,255,0.02);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <button type="button" id="prevVariationBtn" class="btn-small" style="visibility: hidden;">←
+                        Previous</button>
+                    <span id="variationHeader" style="font-weight: bold; color: var(--accent);">Variation 1 of 1</span>
+                    <button type="button" id="nextVariationBtn" class="btn-small" style="visibility: hidden;">Next
+                        →</button>
+                </div>
+                <div id="variationTablesContainer" style="min-height: 300px;"></div>
+                <div style="margin-top: 12px; display: flex; gap: 8px;">
+                    <button type="button" id="addVariationBtn" class="btn-small"
+                        style="background-color: var(--accent); color: white;">+ Add Variation</button>
+                    <button type="button" id="deleteVariationBtn" class="btn-small btn-danger">Delete Variation</button>
+                </div>
+            </div>
+            <input type="hidden" id="bossVariations" name="variations" value="{{ variations }}" />
+            <small style="color: var(--muted); display: block; margin-top: 8px;">Navigate between variations and edit
+                player lineups for each.</small>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn-primary">Save Boss</button>
+            <button type="reset" class="btn-secondary">Reset Form</button>
+        </div>
+    </form>
+</div>
+
+<script type="application/json" id="raid-boss-data">{{ raid_boss_data|safe }}</script>
+<script src="/static/js/admin_boss_builder.js"></script>
+{% endblock %}

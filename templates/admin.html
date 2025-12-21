@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="admin-shell">
+    <h1>Admin Panel</h1>
+    <div>
+        <label for="season-select">Season</label>
+        <select id="season-select">
+            {% for s in seasons %}
+            <option value="{{ s }}">{{ s }}</option>
+            {% endfor %}
+        </select>
+        <a href="/" class="button">Public View</a>
+        <a href="/admin/logout" class="button">Logout</a>
+    </div>
+    <div>
+        <button id="tab-checklist" class="admin-tab-btn active">Checklist</button>
+        <button id="tab-raid-bosses" class="admin-tab-btn">Raid Bosses</button>
+    </div>
+    <div id="admin-app">
+        <!-- Admin UI populated by JS -->
+    </div>
+</section>
+<script src="/static/js/admin.js"></script>
+{% endblock %}

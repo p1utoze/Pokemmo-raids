@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block sidebar %}
+<div class="sidebar-builder">
+    <a href="/" class="back-link">← Back</a>
+    <h3 class="builder-title">{{ boss_name }}</h3>
+    <div class="builder-info">
+        <p class="variation-info">Variation {{ variation_index }}</p>
+        <button class="save-btn" id="saveTeamBtn">Save Team</button>
+        <button class="cancel-btn" id="cancelTeamBtn">Cancel</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="team-builder">
+    <div class="builder-header">
+        <h2>Team Builder</h2>
+        <p class="builder-subtitle">Edit your team composition. Each player needs a Pokémon, Move, Item, and Ability.
+        </p>
+    </div>
+
+    <form id="teamBuilderForm" class="team-form">
+        <div class="players-grid">
+            {% for player_index in range %}
+            <div class="player-card">
+                <div class="player-card-header">
+                    <h3>Player {{ player_index }}</h3>
+                </div>
+
+                <div class="form-group">
+                    <label for="pokemon_p{{ player_index }}">Pokémon</label>
+                    <select id="pokemon_p{{ player_index }}" class="form-control pokemon-select"
+                        data-player="{{ player_index }}">
+                        <option value="">Select Pokémon</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="move_p{{ player_index }}">Move</label>
+                    <select id="move_p{{ player_index }}" class="form-control move-select"
+                        data-player="{{ player_index }}">
+                        <option value="">Select Move</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="item_p{{ player_index }}">Item</label>
+                    <select id="item_p{{ player_index }}" class="form-control item-select"
+                        data-player="{{ player_index }}">
+                        <option value="">Select Item</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Ability</label>
+                    <div class="ability-display" id="ability_p{{ player_index }}">—</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn-primary">Save Changes</button>
+            <button type="reset" class="btn-secondary">Reset Form</button>
+        </div>
+    </form>
+
+    <div class="plan-area">
+        <h3>Planned Turns</h3>
+        <table class="plan-table" id="planTable">
+            <thead>
+                <tr>
+                    <th>Turn</th>
+                    <th>Player 1</th>
+                    <th>Player 2</th>
+                    <th>Player 3</th>
+                    <th>Player 4</th>
+                    <th>Side notes</th>
+                </tr>
+            </thead>
+            <tbody id="planTbody">
+            </tbody>
+        </table>
+        <div style="margin-top:12px; display:flex; gap:8px;">
+            <button id="addTurnBtn" class="btn-secondary">Add Turn</button>
+            <button id="clearPlanBtn" class="btn-secondary">Clear Plan</button>
+        </div>
+    </div>
+</div>
+
+<script type="application/json" id="pokemon-data">{{ pokemon_data|safe }}</script>
+<script type="application/json" id="team-data">{{ team_data|safe }}</script>
+{% endblock %}

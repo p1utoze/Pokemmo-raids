@@ -12,10 +12,17 @@
     <h2>{{ boss.Name }}</h2>
     <p class="boss-desc">{{ boss.Description }} <button class="view-more" id="viewMoreBtn">View more</button></p>
     <!-- All variations are shown below; dropdown removed per user request -->
-    
+
     <div class="tables-area">
         {% for var in boss.Variations %}
-        <h3 class="variation-title">Variation {{ var.Index }}</h3>  
+        <div class="variation-header">
+            <h3 class="variation-title">Variation {{ var.Index }}</h3>
+            <div style="display:flex;gap:8px;align-items:center">
+                <a href="/build-team?boss={{ boss.Name }}&variation={{ var.Index0 }}" class="edit-variation-btn">✏️ Edit
+                    Team</a>
+                <a href="/build-team?boss={{ boss.Name }}&variation=new" class="new-variation-btn">➕ New Variation</a>
+            </div>
+        </div>
         <div class="variation-table" data-variation-index="{{ var.Index0 }}">
             <table class="plan-table">
                 <thead>

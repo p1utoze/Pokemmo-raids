@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="auth-login">
+    <h1>Sign In</h1>
+    <form method="post" action="/auth/login">
+        <label>Username</label>
+        <input name="username" />
+        <label>Password</label>
+        <input type="password" name="password" />
+        <button type="submit">Sign In</button>
+    </form>
+</section>
+{% endblock %}
