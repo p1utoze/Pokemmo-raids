@@ -14,8 +14,8 @@ import (
 
 	"github.com/flosch/pongo2/v4"
 	"github.com/golang-jwt/jwt/v5"
-	_ "github.com/mattn/go-sqlite3"
 	"golang.org/x/crypto/bcrypt"
+	_ "modernc.org/sqlite"
 )
 
 type Player struct {
@@ -113,7 +113,7 @@ var playerPositions = [maxPlayers]string{"P1", "P2", "P3", "P4"}
 // openDatabase opens the checklist database
 func (a *App) openDatabase() error {
 	var err error
-	a.db, err = sql.Open("sqlite3", dbPath)
+	a.db, err = sql.Open("sqlite", dbPath)
 	if err != nil {
 		return fmt.Errorf("failed to open database: %w", err)
 	}
@@ -158,7 +158,7 @@ func (a *App) openDatabase() error {
 func (a *App) openAdminDatabase() error {
 	var err error
 	adminPath := "data/admin.db"
-	a.adminDB, err = sql.Open("sqlite3", adminPath)
+	a.adminDB, err = sql.Open("sqlite", adminPath)
 	if err != nil {
 		return fmt.Errorf("failed to open admin database: %w", err)
 	}
