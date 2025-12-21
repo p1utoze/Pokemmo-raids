@@ -27,12 +27,15 @@ jobs:
 
       - name: Build and push the image
         run : |
-          docker login --username p1utoze --password ${{ github.token }} ghcr.io
-          docker build . --tag ghcr.io/p1utoze/pokemmoraids:$LATEST_TAG
-          docker push ghcr.io/p1utoze/pokemmoraids:$LATEST_TAG
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io \
+            -u ${{ github.actor }} \
+            --password-stdin
+          docker build . --tag ghcr.io/${{ github.actor }}/pokemmoraids:$LATEST_TAG
+          docker push ghcr.io/${{ github.actor }}/pokemmoraids:$LATEST_TAG
 
   deploy:
     runs-on: self-hosted
+    needs: [build_and_publish]
     permissions:
       contents: read
       packages: read
@@ -57,7 +60,7 @@ jobs:
   
       - name: Pull image
         run: |
-          sudo docker pull ghcr.io/p1utoze/pokemmoraids:$LATEST_TAG
+          sudo docker pull ghcr.io/${{ github.actor }}/pokemmoraids:$LATEST_TAG
   
       - name: Stop existing container
         run: |
@@ -73,4 +76,4 @@ jobs:
             -p 80:8080 \
             -e ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }} \
             --restart unless-stopped \
-            ghcr.io/p1utoze/pokemmoraids:$LATEST_TAG
+            ghcr.io/${{ github.actor }}/pokemmoraids:$LATEST_TAG
