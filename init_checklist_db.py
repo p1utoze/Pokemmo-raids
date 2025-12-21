@@ -4,9 +4,11 @@
 import json
 import sqlite3
 import os
+from pathlib import Path
 
-DB_PATH = "data/checklist_xmas.db"
-JSON_PATH = "data/checklist_xmas.json"
+PARENT_DIR = Path(__file__).parent
+DB_PATH = PARENT_DIR / "data/checklist_xmas.db"
+JSON_PATH = PARENT_DIR / "data/checklist_xmas.json"
 
 def init_db():
     """Create SQLite database with checklist schema"""
