@@ -33,59 +33,44 @@ jobs:
 
   deploy:
     runs-on: self-hosted
-
+    permissions:
+      contents: read
+      packages: read
+  
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 1
-
+  
       - name: Fetch latest tag
         run: |
           git fetch --tags
           latest_tag="$(git tag -l --sort=-v:refname | head -n 1)"
           git checkout "$latest_tag"
           echo "LATEST_TAG=$latest_tag" >> $GITHUB_ENV
-
-      - name: Check Docker
+  
+      - name: Login to GHCR
         run: |
-          if ! command -v docker &> /dev/null; then
-            echo "Docker not found. Installing..."
-            sudo apt-get update -y
-            sudo apt-get install -y \
-              ca-certificates \
-              curl \
-              gnupg \
-              lsb-release
-          else
-            echo "Docker already installed"
-          fi
-
-      - name: Verify Docker
-        run: docker --version
-
-      - name: Login to GitHub Container Registry
-        run: docker login --username p1utoze --password ${{ github.token }} ghcr.io
-
-      - name: Pull Docker image
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io \
+            -u ${{ github.actor }} \
+            --password-stdin
+  
+      - name: Pull image
         run: |
           sudo docker pull ghcr.io/p1utoze/pokemmoraids:$LATEST_TAG
-
-      - name: Stop existing container (if running)
+  
+      - name: Stop existing container
         run: |
-          if [ "$(sudo docker ps -q -f name=raids)" ]; then
+          if sudo docker ps -q -f name=raids; then
             sudo docker stop raids
             sudo docker rm raids
           fi
-
-      - name: Run Docker container
+  
+      - name: Run container
         run: |
           sudo docker run -d \
             --name raids \
             -p 80:8080 \
-            -e "ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}" \
+            -e ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }} \
             --restart unless-stopped \
-            pokemmoraids:$LATEST_TAG
-
-      - name: Check logs
-        run: sudo docker logs raids
+            ghcr.io/p1utoze/pokemmoraids:$LATEST_TAG
