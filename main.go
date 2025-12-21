@@ -1,14 +1,21 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"html"
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
+	"time"
+
 	"github.com/flosch/pongo2/v4"
+	"github.com/golang-jwt/jwt/v5"
+	_ "github.com/mattn/go-sqlite3"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type Player struct {
@@ -27,27 +34,27 @@ type Variation struct {
 }
 
 type PhaseEffect struct {
-	Health uint8 `json:"health"`
-	Effect  string `json:"effect"`
+	Health uint8  `json:"health"`
+	Effect string `json:"effect"`
 }
 type RaidBossMove struct {
-	Name        string `json:"name"`
-	Type        string `json:"type"`
+	Name string `json:"name"`
+	Type string `json:"type"`
 }
 type BaseStats struct {
-	Speed   int `json:"speed,omitempty"`
-	Def int `json:"defense,omitempty"`
-	SpDef   int `json:"special_defense,omitempty"`
+	Speed int `json:"speed,omitempty"`
+	Def   int `json:"defense,omitempty"`
+	SpDef int `json:"special_defense,omitempty"`
 }
 
 type RaidBoss struct {
-	Name         string        	`json:"name"`
-	Description  string        	`json:"description"`
-	Ability      string        	`json:"ability,omitempty"`
+	Name         string         `json:"name"`
+	Description  string         `json:"description"`
+	Ability      string         `json:"ability,omitempty"`
 	HeldItem     string         `json:"held_item,omitempty"`
 	Stars        int            `json:"stars,omitempty"`
-	SpeedEVs     int           	`json:"speed_evs,omitempty"`
-	BaseStats    BaseStats     	`json:"base_stats,omitempty"`
+	SpeedEVs     int            `json:"speed_evs,omitempty"`
+	BaseStats    BaseStats      `json:"base_stats,omitempty"`
 	Moves        []RaidBossMove `json:"moves,omitempty"`
 	PhaseEffects []PhaseEffect  `json:"phase_effects,omitempty"`
 	Variations   []Variation    `json:"variations"`
@@ -58,9 +65,37 @@ type Season struct {
 	RaidBosses []RaidBoss `json:"raid_bosses"`
 }
 
+type PokemonChecklistEntry struct {
+	ID            int    `json:"id"`
+	TypeID        int    `json:"type_id"`
+	PokemonName   string `json:"pokemon_name"`
+	PhysSpecial   string `json:"phys_special"`
+	SecondaryType string `json:"secondary_type"`
+	HeldItem      string `json:"held_item"`
+	Ability       string `json:"ability"`
+	Moves         string `json:"moves"`
+	Notes         string `json:"notes"`
+	Completed     int    `json:"completed"`
+}
+
+type PokemonType struct {
+	ID          int                     `json:"id"`
+	TypeName    string                  `json:"type_name"`
+	MinRequired int                     `json:"min_required"`
+	Count       int                     `json:"count"`
+	Completed   int                     `json:"completed"`
+	Pokemons    []PokemonChecklistEntry `json:"pokemons"`
+}
+
+type ChecklistResponse struct {
+	Types []PokemonType `json:"types"`
+}
+
 type App struct {
 	season    Season
 	templates map[string]*pongo2.Template
+	db        *sql.DB
+	adminDB   *sql.DB
 }
 
 var app *App
@@ -68,11 +103,204 @@ var app *App
 const (
 	dataPath      = "data/bosses.json"
 	templatesPath = "templates/"
+	dbPath        = "data/checklist_xmas.db"
 	maxPlayers    = 4
 	emptyCell     = "—"
 )
 
 var playerPositions = [maxPlayers]string{"P1", "P2", "P3", "P4"}
+
+// openDatabase opens the checklist database
+func (a *App) openDatabase() error {
+	var err error
+	a.db, err = sql.Open("sqlite3", dbPath)
+	if err != nil {
+		return fmt.Errorf("failed to open database: %w", err)
+	}
+	// Test the connection
+	if err := a.db.Ping(); err != nil {
+		return fmt.Errorf("failed to ping database: %w", err)
+	}
+
+	// Ensure a case-insensitive unique index on types.type_name so we don't create duplicate type rows
+	if _, err := a.db.Exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_types_name ON types(type_name COLLATE NOCASE)"); err != nil {
+		// If index creation fails, log but continue
+		log.Printf("warning: failed to ensure unique index on types.type_name: %v", err)
+	}
+
+	// Create raid_bosses table if not exists
+	_, err = a.db.Exec(`
+		CREATE TABLE IF NOT EXISTS raid_bosses (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			season TEXT NOT NULL,
+			boss_name TEXT NOT NULL,
+			stars INTEGER DEFAULT 0,
+			description TEXT,
+			ability TEXT,
+			held_item TEXT,
+			speed_evs INTEGER DEFAULT 0,
+			base_stats_speed INTEGER DEFAULT 0,
+			base_stats_defense INTEGER DEFAULT 0,
+			base_stats_spdef INTEGER DEFAULT 0,
+			moves TEXT,
+			phase_effects TEXT,
+			variations TEXT,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		)
+	`)
+	if err != nil {
+		log.Printf("warning: failed to create raid_bosses table: %v", err)
+	}
+	return nil
+}
+
+// openAdminDatabase opens or creates the admin user database and ensures an admin user exists
+func (a *App) openAdminDatabase() error {
+	var err error
+	adminPath := "data/admin.db"
+	a.adminDB, err = sql.Open("sqlite3", adminPath)
+	if err != nil {
+		return fmt.Errorf("failed to open admin database: %w", err)
+	}
+	if err := a.adminDB.Ping(); err != nil {
+		return fmt.Errorf("failed to ping admin database: %w", err)
+	}
+
+	// create users table if not exists
+	_, err = a.adminDB.Exec(`
+		CREATE TABLE IF NOT EXISTS users (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			username TEXT NOT NULL UNIQUE,
+			password_hash TEXT NOT NULL,
+			role TEXT DEFAULT 'admin',
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		)
+	`)
+	if err != nil {
+		return fmt.Errorf("failed to ensure users table: %w", err)
+	}
+
+	// Check if any users exist; if none, create a default admin using ADMIN_PASSWORD
+	var count int
+	row := a.adminDB.QueryRow("SELECT COUNT(1) FROM users")
+	if err := row.Scan(&count); err != nil {
+		return fmt.Errorf("failed to query users count: %w", err)
+	}
+	if count == 0 {
+		pass := os.Getenv("ADMIN_PASSWORD")
+		if pass == "" {
+			pass = "adminpass"
+		}
+		// hash password
+		hash, err := bcryptGenerateHash(pass)
+		if err != nil {
+			return fmt.Errorf("failed to hash admin password: %w", err)
+		}
+		_, err = a.adminDB.Exec("INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)", "admin", hash, "admin")
+		if err != nil {
+			return fmt.Errorf("failed to insert default admin: %w", err)
+		}
+		log.Println("Default admin user created from ADMIN_PASSWORD environment variable")
+	}
+	return nil
+}
+
+// bcrypt helper wrappers
+func bcryptGenerateHash(password string) (string, error) {
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+	return string(hash), nil
+}
+
+func bcryptCompareHash(hash, password string) error {
+	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+}
+
+// Admin auth configuration
+var (
+	adminPassword = func() string {
+		p := os.Getenv("ADMIN_PASSWORD")
+		if p == "" {
+			return "adminpass"
+		}
+		return p
+	}()
+	adminSecret = func() []byte {
+		s := os.Getenv("ADMIN_SECRET")
+		if s == "" {
+			s = "devsecret"
+		}
+		return []byte(s)
+	}()
+)
+
+// generateJWT creates a signed token with role claim
+func generateJWT(subject, role string) (string, error) {
+	claims := jwt.MapClaims{
+		"sub":  subject,
+		"role": role,
+		"exp":  time.Now().Add(24 * time.Hour).Unix(),
+		"iat":  time.Now().Unix(),
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString(adminSecret)
+}
+
+// parseJWTClaims parses token and returns claims
+func parseJWTClaims(tokenStr string) (jwt.MapClaims, error) {
+	t, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return adminSecret, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	if !t.Valid {
+		return nil, fmt.Errorf("invalid token")
+	}
+	if claims, ok := t.Claims.(jwt.MapClaims); ok {
+		return claims, nil
+	}
+	return nil, fmt.Errorf("invalid claims")
+}
+
+// isAdminRequest checks cookie for a valid admin token and role
+func isAdminRequest(r *http.Request) bool {
+	c, err := r.Cookie("auth_token")
+	if err != nil {
+		return false
+	}
+	claims, err := parseJWTClaims(c.Value)
+	if err != nil {
+		return false
+	}
+	if role, ok := claims["role"].(string); ok && role == "admin" {
+		return true
+	}
+	return false
+}
+
+// isAuthRequest checks token for author/mod/admin roles
+func isAuthRequest(r *http.Request) bool {
+	c, err := r.Cookie("auth_token")
+	if err != nil {
+		return false
+	}
+	claims, err := parseJWTClaims(c.Value)
+	if err != nil {
+		return false
+	}
+	if role, ok := claims["role"].(string); ok {
+		if role == "admin" || role == "author" || role == "mod" {
+			return true
+		}
+	}
+	return false
+}
 
 // loadData reads and processes the raid season data from JSON
 func (a *App) loadData() error {
@@ -165,6 +393,14 @@ func main() {
 		log.Fatalf("Failed to load data: %v", err)
 	}
 
+	if err := app.openDatabase(); err != nil {
+		log.Fatalf("Failed to open database: %v", err)
+	}
+
+	if err := app.openAdminDatabase(); err != nil {
+		log.Fatalf("Failed to open admin database: %v", err)
+	}
+
 	if err := app.loadTemplates(); err != nil {
 		log.Fatalf("Failed to load templates: %v", err)
 	}
@@ -181,11 +417,30 @@ func setupRoutes() {
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 	http.HandleFunc("/", app.indexHandler)
 	http.HandleFunc("/boss", app.bossHandler)
+	http.HandleFunc("/build-team", app.buildTeamHandler)
+	http.HandleFunc("/api/pokemon-data", app.pokemonDataHandler)
+	http.HandleFunc("/api/pokemon-info", app.pokemonInfoHandler)
+	http.HandleFunc("/api/checklist", app.checklistHandler)
+	http.HandleFunc("/api/checklist/toggle", app.toggleChecklistHandler)
+	// Admin UI and API
+	http.HandleFunc("/admin/login", app.adminLoginHandler)
+	http.HandleFunc("/admin/logout", app.adminLogoutHandler)
+	http.HandleFunc("/admin", app.adminPageHandler)
+	http.HandleFunc("/admin/raid-boss-builder", app.adminRaidBossBuildHandler)
+	http.HandleFunc("/admin/users", app.adminUsersPageHandler) // Admin users page
+	http.HandleFunc("/api/admin/users", app.adminUsersHandler) // Admin users API
+	// auth routes for non-admin authors/mods
+	http.HandleFunc("/auth/login", app.authLoginHandler)
+	http.HandleFunc("/auth/logout", app.authLogoutHandler)
+	http.HandleFunc("/api/admin/types", app.adminTypesHandler)
+	http.HandleFunc("/api/admin/pokemon", app.adminPokemonHandler)
+	http.HandleFunc("/api/admin/extras", app.adminExtrasHandler)
+	http.HandleFunc("/api/admin/raid-bosses", app.adminRaidBossesHandler)
 }
 
 // loadTemplates loads all template files
 func (a *App) loadTemplates() error {
-	templateNames := []string{"index.html", "boss.html", "build_team.html", "base.html"}
+	templateNames := []string{"index.html", "boss.html", "build_team.html", "base.html", "admin.html", "admin_login.html", "admin_users.html", "auth_login.html"}
 	for _, name := range templateNames {
 		tpl, err := pongo2.FromFile(templatesPath + name)
 		if err != nil {
@@ -223,6 +478,262 @@ func (a *App) bossHandler(w http.ResponseWriter, r *http.Request) {
 	renderTemplate(w, a.templates["boss.html"], ctx)
 }
 
+// buildTeamHandler renders the team builder page
+func (a *App) buildTeamHandler(w http.ResponseWriter, r *http.Request) {
+	bossName := r.URL.Query().Get("boss")
+	variationIdx := r.URL.Query().Get("variation")
+
+	boss := a.findBoss(bossName)
+	if boss == nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	// If variation == "new" we present the full pokemon list (from monster.json)
+	var pokemonData map[string]interface{}
+	var teamData []byte
+	if variationIdx == "new" {
+		// build empty variation and load global pokemon + items
+		emptyVar := Variation{Players: map[string][]Player{"P1": {}, "P2": {}, "P3": {}, "P4": {}}, HealthRemaining: []float64{}, Notes: []string{}}
+		td, err := json.Marshal(emptyVar)
+		if err != nil {
+			renderError(w, "Failed to marshal team data", http.StatusInternalServerError)
+			return
+		}
+		teamData = td
+
+		// load monster.json for all pokemon names
+		monsFile, err := os.Open("data/monster.json")
+		if err != nil {
+			renderError(w, "Failed to open monster data", http.StatusInternalServerError)
+			return
+		}
+		defer monsFile.Close()
+		var mons []map[string]interface{}
+		if err := json.NewDecoder(monsFile).Decode(&mons); err != nil {
+			renderError(w, "Failed to decode monster data", http.StatusInternalServerError)
+			return
+		}
+		pokemonList := make([]string, 0, len(mons))
+		for _, m := range mons {
+			if n, ok := m["name"].(string); ok && n != "" {
+				pokemonList = append(pokemonList, n)
+			}
+		}
+
+		// load items from held_items.json
+		itemsFile, err := os.Open("data/held_items.json")
+		if err != nil {
+			renderError(w, "Failed to open items data", http.StatusInternalServerError)
+			return
+		}
+		defer itemsFile.Close()
+		var itemsRoot map[string][]string
+		if err := json.NewDecoder(itemsFile).Decode(&itemsRoot); err != nil {
+			renderError(w, "Failed to decode items data", http.StatusInternalServerError)
+			return
+		}
+		itemList := itemsRoot["items"]
+
+		pokemonData = map[string]interface{}{"pokemon": pokemonList, "moves": []string{}, "items": itemList}
+	} else {
+		// parse numeric variation index
+		var varIdx int
+		vi, err := strconv.Atoi(variationIdx)
+		if err != nil {
+			renderError(w, "Invalid variation index", http.StatusBadRequest)
+			return
+		}
+		varIdx = vi
+		if varIdx < 0 || varIdx >= len(boss.Variations) {
+			http.NotFound(w, r)
+			return
+		}
+		variation := &boss.Variations[varIdx]
+		td, err := json.Marshal(variation)
+		if err != nil {
+			renderError(w, "Failed to marshal team data", http.StatusInternalServerError)
+			return
+		}
+		teamData = td
+
+		// Get all unique Pokemon, moves, and items from this variation
+		pokemonSet := make(map[string]bool)
+		moveSet := make(map[string]bool)
+		itemSet := make(map[string]bool)
+
+		for _, players := range variation.Players {
+			for _, p := range players {
+				if p.Pokemon != "" {
+					pokemonSet[p.Pokemon] = true
+				}
+				if p.Move != "" {
+					moveSet[p.Move] = true
+				}
+				if p.Item != "" {
+					itemSet[p.Item] = true
+				}
+			}
+		}
+
+		pokemonList := make([]string, 0, len(pokemonSet))
+		for p := range pokemonSet {
+			pokemonList = append(pokemonList, p)
+		}
+		moveList := make([]string, 0, len(moveSet))
+		for m := range moveSet {
+			moveList = append(moveList, m)
+		}
+		itemList := make([]string, 0, len(itemSet))
+		for i := range itemSet {
+			itemList = append(itemList, i)
+		}
+
+		pokemonData = map[string]interface{}{"pokemon": pokemonList, "moves": moveList, "items": itemList}
+	}
+	pokemonDataJSON, _ := json.Marshal(pokemonData)
+
+	// prepare a human friendly variation display
+	var varDisplay string
+	if variationIdx == "new" {
+		varDisplay = "New"
+	} else {
+		if vi, err := strconv.Atoi(variationIdx); err == nil {
+			varDisplay = fmt.Sprintf("%d", vi+1)
+		} else {
+			varDisplay = variationIdx
+		}
+	}
+
+	ctx := pongo2.Context{
+		"boss_name":       bossName,
+		"variation_index": varDisplay,
+		"pokemon_data":    string(pokemonDataJSON),
+		"team_data":       string(teamData),
+		"range":           []int{1, 2, 3, 4},
+	}
+	renderTemplate(w, a.templates["build_team.html"], ctx)
+}
+
+// pokemonDataHandler returns available Pokemon, moves, and items as JSON
+func (a *App) pokemonDataHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	// Extract all unique Pokemon, moves, and items from all variations
+	pokemonSet := make(map[string]bool)
+	moveSet := make(map[string]bool)
+	itemSet := make(map[string]bool)
+
+	for _, boss := range a.season.RaidBosses {
+		for _, variation := range boss.Variations {
+			for _, players := range variation.Players {
+				for _, p := range players {
+					if p.Pokemon != "" {
+						pokemonSet[p.Pokemon] = true
+					}
+					if p.Move != "" {
+						moveSet[p.Move] = true
+					}
+					if p.Item != "" {
+						itemSet[p.Item] = true
+					}
+				}
+			}
+		}
+	}
+
+	pokemonList := make([]string, 0, len(pokemonSet))
+	for p := range pokemonSet {
+		pokemonList = append(pokemonList, p)
+	}
+	moveList := make([]string, 0, len(moveSet))
+	for m := range moveSet {
+		moveList = append(moveList, m)
+	}
+	itemList := make([]string, 0, len(itemSet))
+	for i := range itemSet {
+		itemList = append(itemList, i)
+	}
+
+	data := map[string][]string{
+		"pokemon": pokemonList,
+		"moves":   moveList,
+		"items":   itemList,
+	}
+	json.NewEncoder(w).Encode(data)
+}
+
+// pokemonInfoHandler returns abilities and moves for a given pokemon name by reading data/monster.json
+func (a *App) pokemonInfoHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	name := r.URL.Query().Get("name")
+	if name == "" {
+		json.NewEncoder(w).Encode(map[string][]string{"abilities": {}, "moves": {}})
+		return
+	}
+
+	f, err := os.Open("data/monster.json")
+	if err != nil {
+		json.NewEncoder(w).Encode(map[string][]string{"abilities": {}, "moves": {}})
+		return
+	}
+	defer f.Close()
+
+	var monsters []map[string]interface{}
+	if err := json.NewDecoder(f).Decode(&monsters); err != nil {
+		json.NewEncoder(w).Encode(map[string][]string{"abilities": {}, "moves": {}})
+		return
+	}
+
+	// find by name (case-insensitive)
+	for _, m := range monsters {
+		n, _ := m["name"].(string)
+		if n != "" && strings.EqualFold(n, name) {
+			abilities := []string{}
+			if arr, ok := m["abilities"].([]interface{}); ok {
+				for _, it := range arr {
+					switch v := it.(type) {
+					case string:
+						abilities = append(abilities, v)
+					case map[string]interface{}:
+						if s, ok := v["name"].(string); ok {
+							abilities = append(abilities, s)
+						} else if s2, ok := v["ability"].(map[string]interface{}); ok {
+							if s3, ok := s2["name"].(string); ok {
+								abilities = append(abilities, s3)
+							}
+						}
+					}
+				}
+			}
+
+			moves := []string{}
+			if arr, ok := m["moves"].([]interface{}); ok {
+				for _, it := range arr {
+					switch v := it.(type) {
+					case string:
+						moves = append(moves, v)
+					case map[string]interface{}:
+						if s, ok := v["name"].(string); ok {
+							moves = append(moves, s)
+						} else if s2, ok := v["move"].(map[string]interface{}); ok {
+							if s3, ok := s2["name"].(string); ok {
+								moves = append(moves, s3)
+							}
+						}
+					}
+				}
+			}
+
+			json.NewEncoder(w).Encode(map[string][]string{"abilities": abilities, "moves": moves})
+			return
+		}
+	}
+
+	// not found
+	json.NewEncoder(w).Encode(map[string][]string{"abilities": {}, "moves": {}})
+}
+
 // findBoss searches for a boss by name
 func (a *App) findBoss(name string) *RaidBoss {
 	for i := range a.season.RaidBosses {
@@ -231,6 +742,841 @@ func (a *App) findBoss(name string) *RaidBoss {
 		}
 	}
 	return nil
+}
+
+// checklistHandler returns the complete checklist data from the database
+func (a *App) checklistHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	// Query all types
+	typeRows, err := a.db.Query("SELECT id, type_name, min_required FROM types ORDER BY type_name")
+	if err != nil {
+		log.Printf("Error querying types: %v", err)
+		http.Error(w, "Failed to fetch checklist", http.StatusInternalServerError)
+		return
+	}
+	defer typeRows.Close()
+
+	var types []PokemonType
+
+	for typeRows.Next() {
+		var typeID int
+		var typeName string
+		var minRequired int
+
+		if err := typeRows.Scan(&typeID, &typeName, &minRequired); err != nil {
+			log.Printf("Error scanning type: %v", err)
+			continue
+		}
+
+		// Query pokemon for this type
+		pokemonRows, err := a.db.Query(
+			"SELECT id, type_id, pokemon_name, phys_special, secondary_type, held_item, ability, moves, notes, completed FROM pokemon_checklist WHERE type_id = ? ORDER BY pokemon_name",
+			typeID)
+		if err != nil {
+			log.Printf("Error querying pokemon: %v", err)
+			continue
+		}
+		defer pokemonRows.Close()
+
+		var pokemons []PokemonChecklistEntry
+		var completedCount int
+
+		for pokemonRows.Next() {
+			var entry PokemonChecklistEntry
+			if err := pokemonRows.Scan(&entry.ID, &entry.TypeID, &entry.PokemonName,
+				&entry.PhysSpecial, &entry.SecondaryType, &entry.HeldItem,
+				&entry.Ability, &entry.Moves, &entry.Notes, &entry.Completed); err != nil {
+				log.Printf("Error scanning pokemon: %v", err)
+				continue
+			}
+			pokemons = append(pokemons, entry)
+			if entry.Completed == 1 {
+				completedCount++
+			}
+		}
+		pokemonRows.Close()
+
+		typeData := PokemonType{
+			ID:          typeID,
+			TypeName:    typeName,
+			MinRequired: minRequired,
+			Count:       len(pokemons),
+			Completed:   completedCount,
+			Pokemons:    pokemons,
+		}
+		types = append(types, typeData)
+	}
+	typeRows.Close()
+
+	response := ChecklistResponse{Types: types}
+	json.NewEncoder(w).Encode(response)
+}
+
+// toggleChecklistHandler toggles the completion status of a pokemon
+func (a *App) toggleChecklistHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	var req struct {
+		PokemonID int `json:"pokemon_id"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	// Get current status
+	var completed int
+	err := a.db.QueryRow("SELECT completed FROM pokemon_checklist WHERE id = ?", req.PokemonID).Scan(&completed)
+	if err != nil {
+		log.Printf("Error querying pokemon: %v", err)
+		http.Error(w, "Pokemon not found", http.StatusNotFound)
+		return
+	}
+
+	// Toggle status
+	newStatus := 1 - completed
+	_, err = a.db.Exec("UPDATE pokemon_checklist SET completed = ? WHERE id = ?", newStatus, req.PokemonID)
+	if err != nil {
+		log.Printf("Error updating pokemon: %v", err)
+		http.Error(w, "Failed to update checklist", http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]int{"completed": newStatus})
+}
+
+// adminLoginHandler serves login form and handles login POST
+func (a *App) adminLoginHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		// render simple login form
+		tpl, err := pongo2.FromFile(templatesPath + "admin_login.html")
+		if err != nil {
+			http.Error(w, "login page not available", http.StatusInternalServerError)
+			return
+		}
+		renderTemplate(w, tpl, pongo2.Context{})
+		return
+	}
+
+	// POST: expect username+password (form or JSON)
+	var username, provided string
+	if strings.HasPrefix(r.Header.Get("Content-Type"), "application/json") {
+		var body struct {
+			Username string `json:"username"`
+			Password string `json:"password"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			http.Error(w, "invalid request", http.StatusBadRequest)
+			return
+		}
+		username = body.Username
+		provided = body.Password
+	} else {
+		username = r.FormValue("username")
+		provided = r.FormValue("password")
+	}
+
+	if username == "" || provided == "" {
+		http.Error(w, "username and password required", http.StatusBadRequest)
+		return
+	}
+
+	// lookup user in adminDB (get hash and role)
+	var hash, role string
+	row := a.adminDB.QueryRow("SELECT password_hash, role FROM users WHERE username = ?", username)
+	if err := row.Scan(&hash, &role); err != nil {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	if err := bcryptCompareHash(hash, provided); err != nil {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	// ensure role is admin for this path
+	if role != "admin" {
+		http.Error(w, "forbidden", http.StatusForbidden)
+		return
+	}
+
+	// successful auth, generate token with role
+	token, err := generateJWT(username, role)
+	if err != nil {
+		http.Error(w, "failed to create token", http.StatusInternalServerError)
+		return
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "auth_token",
+		Value:    token,
+		HttpOnly: true,
+		Path:     "/",
+		Expires:  time.Now().Add(24 * time.Hour),
+	})
+	http.Redirect(w, r, "/admin", http.StatusSeeOther)
+}
+
+// adminLogoutHandler clears auth cookie
+func (a *App) adminLogoutHandler(w http.ResponseWriter, r *http.Request) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     "auth_token",
+		Value:    "",
+		HttpOnly: true,
+		Path:     "/",
+		Expires:  time.Unix(0, 0),
+	})
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+// adminPageHandler renders admin UI and requires auth
+func (a *App) adminPageHandler(w http.ResponseWriter, r *http.Request) {
+	if !isAdminRequest(r) {
+		http.Redirect(w, r, "/admin/login", http.StatusSeeOther)
+		return
+	}
+	tpl, err := pongo2.FromFile(templatesPath + "admin.html")
+	if err != nil {
+		http.Error(w, "admin page not available", http.StatusInternalServerError)
+		return
+	}
+	// pass season names for selection
+	seasons := []string{a.season.SeasonName}
+	renderTemplate(w, tpl, pongo2.Context{"seasons": seasons})
+}
+
+// adminRaidBossBuildHandler renders the raid boss builder page (similar to build_team.html but admin-only)
+func (a *App) adminRaidBossBuildHandler(w http.ResponseWriter, r *http.Request) {
+	if !isAdminRequest(r) {
+		http.Redirect(w, r, "/admin/login", http.StatusSeeOther)
+		return
+	}
+
+	action := r.URL.Query().Get("action")
+	season := r.URL.Query().Get("season")
+	idStr := r.URL.Query().Get("id")
+
+	if action == "" || season == "" {
+		http.Error(w, "action and season required", http.StatusBadRequest)
+		return
+	}
+
+	tpl, err := pongo2.FromFile(templatesPath + "admin_raid_boss_builder.html")
+	if err != nil {
+		http.Error(w, "builder page not available", http.StatusInternalServerError)
+		return
+	}
+
+	context := pongo2.Context{
+		"action":             action,
+		"season":             season,
+		"boss_id":            "",
+		"boss_name":          "",
+		"stars":              3,
+		"description":        "",
+		"ability":            "",
+		"held_item":          "",
+		"speed_evs":          0,
+		"base_stats_speed":   0,
+		"base_stats_defense": 0,
+		"base_stats_spdef":   0,
+		"moves":              "[]",
+		"phase_effects":      "[]",
+		"variations":         "[]",
+		"mode_label":         "Creating new boss",
+		"raid_boss_data":     "{}",
+	}
+
+	if action == "edit" && idStr != "" {
+		id, _ := strconv.Atoi(idStr)
+		if id >= 0 && id < len(a.season.RaidBosses) {
+			boss := a.season.RaidBosses[id]
+			movesJSON, _ := json.Marshal(boss.Moves)
+			phasesJSON, _ := json.Marshal(boss.PhaseEffects)
+			variationsJSON, _ := json.Marshal(boss.Variations)
+
+			// Marshal the full boss object for the raid-boss-data JSON blob
+			bossDataJSON, _ := json.Marshal(map[string]interface{}{
+				"id":            id,
+				"name":          boss.Name,
+				"stars":         boss.Stars,
+				"description":   boss.Description,
+				"ability":       boss.Ability,
+				"held_item":     boss.HeldItem,
+				"speed_evs":     boss.SpeedEVs,
+				"base_stats":    boss.BaseStats,
+				"moves":         boss.Moves,
+				"phase_effects": boss.PhaseEffects,
+				"variations":    boss.Variations,
+			})
+
+			context["boss_id"] = id
+			context["boss_name"] = boss.Name
+			context["stars"] = boss.Stars
+			context["description"] = boss.Description
+			context["ability"] = boss.Ability
+			context["held_item"] = boss.HeldItem
+			context["speed_evs"] = boss.SpeedEVs
+			context["base_stats_speed"] = boss.BaseStats.Speed
+			context["base_stats_defense"] = boss.BaseStats.Def
+			context["base_stats_spdef"] = boss.BaseStats.SpDef
+			context["moves"] = string(movesJSON)
+			context["phase_effects"] = string(phasesJSON)
+			context["variations"] = string(variationsJSON)
+			context["raid_boss_data"] = string(bossDataJSON)
+			context["mode_label"] = fmt.Sprintf("Editing: %s", boss.Name)
+		}
+	}
+
+	renderTemplate(w, tpl, context)
+}
+
+// adminUsersPageHandler renders the admin users management page
+func (a *App) adminUsersPageHandler(w http.ResponseWriter, r *http.Request) {
+	if !isAdminRequest(r) {
+		http.Redirect(w, r, "/admin/login", http.StatusSeeOther)
+		return
+	}
+	tpl, err := pongo2.FromFile(templatesPath + "admin_users.html")
+	if err != nil {
+		http.Error(w, "admin users page not available", http.StatusInternalServerError)
+		return
+	}
+	renderTemplate(w, tpl, pongo2.Context{})
+}
+
+// adminUsersHandler provides CRUD API for admin users (requires admin)
+func (a *App) adminUsersHandler(w http.ResponseWriter, r *http.Request) {
+	if !isAdminRequest(r) {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	switch r.Method {
+	case http.MethodGet:
+		rows, err := a.adminDB.Query("SELECT id, username, role, created_at FROM users ORDER BY username")
+		if err != nil {
+			http.Error(w, "db error", http.StatusInternalServerError)
+			return
+		}
+		defer rows.Close()
+		out := []map[string]interface{}{}
+		for rows.Next() {
+			var id int
+			var username, role, created string
+			if err := rows.Scan(&id, &username, &role, &created); err != nil {
+				continue
+			}
+			out = append(out, map[string]interface{}{"id": id, "username": username, "role": role, "created_at": created})
+		}
+		json.NewEncoder(w).Encode(out)
+	case http.MethodPost:
+		var payload struct{ Username, Password, Role string }
+		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+			http.Error(w, "invalid body", http.StatusBadRequest)
+			return
+		}
+		if payload.Username == "" || payload.Password == "" || payload.Role == "" {
+			http.Error(w, "missing fields", http.StatusBadRequest)
+			return
+		}
+		hash, _ := bcryptGenerateHash(payload.Password)
+		_, err := a.adminDB.Exec("INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)", payload.Username, hash, payload.Role)
+		if err != nil {
+			http.Error(w, "db insert failed", http.StatusInternalServerError)
+			return
+		}
+		json.NewEncoder(w).Encode(map[string]string{"status": "created"})
+	case http.MethodPut:
+		var payload struct {
+			ID       int
+			Password string
+			Role     string
+		}
+		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+			http.Error(w, "invalid body", http.StatusBadRequest)
+			return
+		}
+		if payload.Password != "" {
+			hash, _ := bcryptGenerateHash(payload.Password)
+			if _, err := a.adminDB.Exec("UPDATE users SET password_hash = ?, role = ? WHERE id = ?", hash, payload.Role, payload.ID); err != nil {
+				http.Error(w, "db update failed", http.StatusInternalServerError)
+				return
+			}
+		} else {
+			if _, err := a.adminDB.Exec("UPDATE users SET role = ? WHERE id = ?", payload.Role, payload.ID); err != nil {
+				http.Error(w, "db update failed", http.StatusInternalServerError)
+				return
+			}
+		}
+		json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+	case http.MethodDelete:
+		idStr := r.URL.Query().Get("id")
+		if idStr == "" {
+			http.Error(w, "id required", http.StatusBadRequest)
+			return
+		}
+		id, _ := strconv.Atoi(idStr)
+		if _, err := a.adminDB.Exec("DELETE FROM users WHERE id = ?", id); err != nil {
+			http.Error(w, "db delete failed", http.StatusInternalServerError)
+			return
+		}
+		json.NewEncoder(w).Encode(map[string]string{"status": "deleted"})
+	default:
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+// authLoginHandler handles login for authors/mods (and admins if needed)
+func (a *App) authLoginHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		tpl, err := pongo2.FromFile(templatesPath + "auth_login.html")
+		if err != nil {
+			http.Error(w, "login page not available", http.StatusInternalServerError)
+			return
+		}
+		renderTemplate(w, tpl, pongo2.Context{})
+		return
+	}
+	// POST
+	username := r.FormValue("username")
+	password := r.FormValue("password")
+	if username == "" || password == "" {
+		http.Error(w, "username and password required", http.StatusBadRequest)
+		return
+	}
+	var hash, role string
+	row := a.adminDB.QueryRow("SELECT password_hash, role FROM users WHERE username = ?", username)
+	if err := row.Scan(&hash, &role); err != nil {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	if err := bcryptCompareHash(hash, password); err != nil {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	// allow roles author/mod/admin
+	if role != "author" && role != "mod" && role != "admin" {
+		http.Error(w, "forbidden", http.StatusForbidden)
+		return
+	}
+	token, err := generateJWT(username, role)
+	if err != nil {
+		http.Error(w, "failed to create token", http.StatusInternalServerError)
+		return
+	}
+	http.SetCookie(w, &http.Cookie{Name: "auth_token", Value: token, HttpOnly: true, Path: "/", Expires: time.Now().Add(24 * time.Hour)})
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+// authLogoutHandler clears auth cookie for authors/mods
+func (a *App) authLogoutHandler(w http.ResponseWriter, r *http.Request) {
+	http.SetCookie(w, &http.Cookie{Name: "auth_token", Value: "", HttpOnly: true, Path: "/", Expires: time.Unix(0, 0)})
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+// adminTypesHandler handles GET/POST/PUT/DELETE for types
+func (a *App) adminTypesHandler(w http.ResponseWriter, r *http.Request) {
+	if !isAdminRequest(r) {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	switch r.Method {
+	case http.MethodGet:
+		rows, err := a.db.Query("SELECT id, type_name, min_required FROM types ORDER BY type_name")
+		if err != nil {
+			http.Error(w, "db error", http.StatusInternalServerError)
+			return
+		}
+		defer rows.Close()
+		types := []PokemonType{}
+		for rows.Next() {
+			var t PokemonType
+			if err := rows.Scan(&t.ID, &t.TypeName, &t.MinRequired); err != nil {
+				continue
+			}
+			types = append(types, t)
+		}
+		json.NewEncoder(w).Encode(types)
+	case http.MethodPost:
+		var payload struct {
+			TypeName    string `json:"type_name"`
+			MinRequired int    `json:"min_required"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+			http.Error(w, "invalid body", http.StatusBadRequest)
+			return
+		}
+		// Trim and normalize the type name
+		payload.TypeName = strings.TrimSpace(payload.TypeName)
+		if payload.TypeName == "" {
+			http.Error(w, "type_name required", http.StatusBadRequest)
+			return
+		}
+
+		// Use SQLite upsert so creating duplicate type names won't create multiple rows
+		_, err := a.db.Exec("INSERT INTO types (type_name, min_required) VALUES (?, ?) ON CONFLICT(type_name) DO UPDATE SET min_required = excluded.min_required", payload.TypeName, payload.MinRequired)
+		if err != nil {
+			http.Error(w, "db insert/update failed", http.StatusInternalServerError)
+			return
+		}
+		// return the id of the (possibly existing) type
+		var id int64
+		if err := a.db.QueryRow("SELECT id FROM types WHERE type_name = ?", payload.TypeName).Scan(&id); err != nil {
+			json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+			return
+		}
+		json.NewEncoder(w).Encode(map[string]int64{"id": id})
+	case http.MethodPut:
+		var payload struct {
+			ID          int    `json:"id"`
+			TypeName    string `json:"type_name"`
+			MinRequired int    `json:"min_required"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+			http.Error(w, "invalid body", http.StatusBadRequest)
+			return
+		}
+		_, err := a.db.Exec("UPDATE types SET type_name = ?, min_required = ? WHERE id = ?", payload.TypeName, payload.MinRequired, payload.ID)
+		if err != nil {
+			http.Error(w, "db update failed", http.StatusInternalServerError)
+			return
+		}
+		json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+	case http.MethodDelete:
+		idStr := r.URL.Query().Get("id")
+		if idStr == "" {
+			http.Error(w, "id required", http.StatusBadRequest)
+			return
+		}
+		id, _ := strconv.Atoi(idStr)
+		_, err := a.db.Exec("DELETE FROM types WHERE id = ?", id)
+		if err != nil {
+			http.Error(w, "db delete failed", http.StatusInternalServerError)
+			return
+		}
+		json.NewEncoder(w).Encode(map[string]string{"status": "deleted"})
+	default:
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+// adminPokemonHandler handles CRUD for pokemon_checklist
+func (a *App) adminPokemonHandler(w http.ResponseWriter, r *http.Request) {
+	if !isAdminRequest(r) {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	switch r.Method {
+	case http.MethodPost:
+		var p PokemonChecklistEntry
+		if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
+			http.Error(w, "invalid body", http.StatusBadRequest)
+			return
+		}
+		res, err := a.db.Exec(`INSERT INTO pokemon_checklist (type_id, pokemon_name, phys_special, secondary_type, held_item, ability, moves, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+			p.TypeID, p.PokemonName, p.PhysSpecial, p.SecondaryType, p.HeldItem, p.Ability, p.Moves, p.Notes)
+		if err != nil {
+			http.Error(w, "db insert failed", http.StatusInternalServerError)
+			return
+		}
+		id, _ := res.LastInsertId()
+		json.NewEncoder(w).Encode(map[string]int64{"id": id})
+	case http.MethodPut:
+		var p PokemonChecklistEntry
+		if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
+			http.Error(w, "invalid body", http.StatusBadRequest)
+			return
+		}
+		_, err := a.db.Exec("UPDATE pokemon_checklist SET type_id=?, pokemon_name=?, phys_special=?, secondary_type=?, held_item=?, ability=?, moves=?, notes=?, completed=? WHERE id=?",
+			p.TypeID, p.PokemonName, p.PhysSpecial, p.SecondaryType, p.HeldItem, p.Ability, p.Moves, p.Notes, p.Completed, p.ID)
+		if err != nil {
+			http.Error(w, "db update failed", http.StatusInternalServerError)
+			return
+		}
+		json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+	case http.MethodDelete:
+		idStr := r.URL.Query().Get("id")
+		if idStr == "" {
+			http.Error(w, "id required", http.StatusBadRequest)
+			return
+		}
+		id, _ := strconv.Atoi(idStr)
+		_, err := a.db.Exec("DELETE FROM pokemon_checklist WHERE id = ?", id)
+		if err != nil {
+			http.Error(w, "db delete failed", http.StatusInternalServerError)
+			return
+		}
+		json.NewEncoder(w).Encode(map[string]string{"status": "deleted"})
+	case http.MethodGet:
+		// If id provided, return single row, otherwise list by type_id if provided
+		idStr := r.URL.Query().Get("id")
+		typeStr := r.URL.Query().Get("type_id")
+		if idStr != "" {
+			id, _ := strconv.Atoi(idStr)
+			row := a.db.QueryRow("SELECT id, type_id, pokemon_name, phys_special, secondary_type, held_item, ability, moves, notes, completed FROM pokemon_checklist WHERE id = ?", id)
+			var e PokemonChecklistEntry
+			if err := row.Scan(&e.ID, &e.TypeID, &e.PokemonName, &e.PhysSpecial, &e.SecondaryType, &e.HeldItem, &e.Ability, &e.Moves, &e.Notes, &e.Completed); err != nil {
+				http.Error(w, "not found", http.StatusNotFound)
+				return
+			}
+			json.NewEncoder(w).Encode(e)
+			return
+		}
+		var rows *sql.Rows
+		var err error
+		if typeStr != "" {
+			tid, _ := strconv.Atoi(typeStr)
+			rows, err = a.db.Query("SELECT id, type_id, pokemon_name, phys_special, secondary_type, held_item, ability, moves, notes, completed FROM pokemon_checklist WHERE type_id = ? ORDER BY pokemon_name", tid)
+		} else {
+			rows, err = a.db.Query("SELECT id, type_id, pokemon_name, phys_special, secondary_type, held_item, ability, moves, notes, completed FROM pokemon_checklist ORDER BY type_id, pokemon_name")
+		}
+		if err != nil {
+			http.Error(w, "db query failed", http.StatusInternalServerError)
+			return
+		}
+		defer rows.Close()
+		res := []PokemonChecklistEntry{}
+		for rows.Next() {
+			var e PokemonChecklistEntry
+			if err := rows.Scan(&e.ID, &e.TypeID, &e.PokemonName, &e.PhysSpecial, &e.SecondaryType, &e.HeldItem, &e.Ability, &e.Moves, &e.Notes, &e.Completed); err != nil {
+				continue
+			}
+			res = append(res, e)
+		}
+		json.NewEncoder(w).Encode(res)
+	default:
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+// adminExtrasHandler returns monster.json and held_items.json for dropdowns
+func (a *App) adminExtrasHandler(w http.ResponseWriter, r *http.Request) {
+	if !isAdminRequest(r) {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	monsFile, err := os.Open("data/monster.json")
+	if err != nil {
+		http.Error(w, "failed to open monsters", http.StatusInternalServerError)
+		return
+	}
+	defer monsFile.Close()
+	var mons []map[string]interface{}
+	if err := json.NewDecoder(monsFile).Decode(&mons); err != nil {
+		http.Error(w, "failed to decode monsters", http.StatusInternalServerError)
+		return
+	}
+
+	itemsFile, err := os.Open("data/held_items.json")
+	if err != nil {
+		http.Error(w, "failed to open items", http.StatusInternalServerError)
+		return
+	}
+	defer itemsFile.Close()
+	var itemsRoot map[string][]string
+	if err := json.NewDecoder(itemsFile).Decode(&itemsRoot); err != nil {
+		http.Error(w, "failed to decode items", http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]interface{}{"monsters": mons, "items": itemsRoot["items"]})
+}
+
+// adminRaidBossesHandler handles CRUD for raid bosses, loading from and persisting to bosses.json
+func (a *App) adminRaidBossesHandler(w http.ResponseWriter, r *http.Request) {
+	if !isAdminRequest(r) {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+
+	season := r.URL.Query().Get("season")
+	if season == "" {
+		http.Error(w, "season required", http.StatusBadRequest)
+		return
+	}
+
+	switch r.Method {
+	case http.MethodGet:
+		// Return raid bosses from in-memory season data
+		bosses := []map[string]interface{}{}
+		for i, boss := range a.season.RaidBosses {
+			movesJSON, _ := json.Marshal(boss.Moves)
+			phasesJSON, _ := json.Marshal(boss.PhaseEffects)
+			variationsJSON, _ := json.Marshal(boss.Variations)
+			bosses = append(bosses, map[string]interface{}{
+				"id":            i, // Use index as ID
+				"boss_name":     boss.Name,
+				"stars":         boss.Stars,
+				"description":   boss.Description,
+				"ability":       boss.Ability,
+				"held_item":     boss.HeldItem,
+				"speed_evs":     boss.SpeedEVs,
+				"base_stats":    boss.BaseStats,
+				"moves":         string(movesJSON),
+				"phase_effects": string(phasesJSON),
+				"variations":    string(variationsJSON),
+			})
+		}
+		json.NewEncoder(w).Encode(bosses)
+
+	case http.MethodPost:
+		var payload struct {
+			BossName     string          `json:"boss_name"`
+			Stars        int             `json:"stars"`
+			Description  string          `json:"description"`
+			Ability      string          `json:"ability"`
+			HeldItem     string          `json:"held_item"`
+			SpeedEVs     int             `json:"speed_evs"`
+			BaseStats    BaseStats       `json:"base_stats"`
+			Moves        json.RawMessage `json:"moves"`
+			PhaseEffects json.RawMessage `json:"phase_effects"`
+			Variations   json.RawMessage `json:"variations"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+			http.Error(w, "invalid body", http.StatusBadRequest)
+			return
+		}
+		if payload.BossName == "" {
+			http.Error(w, "boss_name required", http.StatusBadRequest)
+			return
+		}
+
+		// Parse moves
+		var moves []RaidBossMove
+		if err := json.Unmarshal(payload.Moves, &moves); err != nil {
+			moves = []RaidBossMove{}
+		}
+		// Parse phase effects
+		var phases []PhaseEffect
+		if err := json.Unmarshal(payload.PhaseEffects, &phases); err != nil {
+			phases = []PhaseEffect{}
+		}
+		// Parse variations
+		var variations []Variation
+		if err := json.Unmarshal(payload.Variations, &variations); err != nil {
+			variations = []Variation{}
+		}
+
+		newBoss := RaidBoss{
+			Name:         payload.BossName,
+			Stars:        payload.Stars,
+			Description:  payload.Description,
+			Ability:      payload.Ability,
+			HeldItem:     payload.HeldItem,
+			SpeedEVs:     payload.SpeedEVs,
+			BaseStats:    payload.BaseStats,
+			Moves:        moves,
+			PhaseEffects: phases,
+			Variations:   variations,
+		}
+		a.season.RaidBosses = append(a.season.RaidBosses, newBoss)
+		if err := a.saveBossesJSON(); err != nil {
+			http.Error(w, "failed to save bosses", http.StatusInternalServerError)
+			return
+		}
+		json.NewEncoder(w).Encode(map[string]string{"status": "created"})
+
+	case http.MethodPut:
+		var payload struct {
+			ID           int             `json:"id"`
+			BossName     string          `json:"boss_name"`
+			Stars        int             `json:"stars"`
+			Description  string          `json:"description"`
+			Ability      string          `json:"ability"`
+			HeldItem     string          `json:"held_item"`
+			SpeedEVs     int             `json:"speed_evs"`
+			BaseStats    BaseStats       `json:"base_stats"`
+			Moves        json.RawMessage `json:"moves"`
+			PhaseEffects json.RawMessage `json:"phase_effects"`
+			Variations   json.RawMessage `json:"variations"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+			http.Error(w, "invalid body", http.StatusBadRequest)
+			return
+		}
+		if payload.ID < 0 || payload.ID >= len(a.season.RaidBosses) {
+			http.Error(w, "boss not found", http.StatusNotFound)
+			return
+		}
+
+		// Parse moves
+		var moves []RaidBossMove
+		if err := json.Unmarshal(payload.Moves, &moves); err != nil {
+			moves = []RaidBossMove{}
+		}
+		// Parse phase effects
+		var phases []PhaseEffect
+		if err := json.Unmarshal(payload.PhaseEffects, &phases); err != nil {
+			phases = []PhaseEffect{}
+		}
+		// Parse variations
+		var variations []Variation
+		if err := json.Unmarshal(payload.Variations, &variations); err != nil {
+			variations = []Variation{}
+		}
+
+		a.season.RaidBosses[payload.ID] = RaidBoss{
+			Name:         payload.BossName,
+			Stars:        payload.Stars,
+			Description:  payload.Description,
+			Ability:      payload.Ability,
+			HeldItem:     payload.HeldItem,
+			SpeedEVs:     payload.SpeedEVs,
+			BaseStats:    payload.BaseStats,
+			Moves:        moves,
+			PhaseEffects: phases,
+			Variations:   variations,
+		}
+		if err := a.saveBossesJSON(); err != nil {
+			http.Error(w, "failed to save bosses", http.StatusInternalServerError)
+			return
+		}
+		json.NewEncoder(w).Encode(map[string]string{"status": "updated"})
+
+	case http.MethodDelete:
+		idStr := r.URL.Query().Get("id")
+		if idStr == "" {
+			http.Error(w, "id required", http.StatusBadRequest)
+			return
+		}
+		id, _ := strconv.Atoi(idStr)
+		if id < 0 || id >= len(a.season.RaidBosses) {
+			http.Error(w, "boss not found", http.StatusNotFound)
+			return
+		}
+		a.season.RaidBosses = append(a.season.RaidBosses[:id], a.season.RaidBosses[id+1:]...)
+		if err := a.saveBossesJSON(); err != nil {
+			http.Error(w, "failed to save bosses", http.StatusInternalServerError)
+			return
+		}
+		json.NewEncoder(w).Encode(map[string]string{"status": "deleted"})
+
+	default:
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+// saveBossesJSON writes the current season data back to bosses.json
+func (a *App) saveBossesJSON() error {
+	file, err := os.OpenFile(dataPath, os.O_WRONLY|os.O_TRUNC, 0644)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	encoder := json.NewEncoder(file)
+	encoder.SetIndent("", "  ")
+	return encoder.Encode(a.season)
 }
 
 // renderTemplate renders a template with given context
@@ -242,7 +1588,10 @@ func renderTemplate(w http.ResponseWriter, tpl *pongo2.Template, ctx pongo2.Cont
 
 	html, err := tpl.Execute(ctx)
 	if err != nil {
-		renderError(w, "Template rendering failed", http.StatusInternalServerError)
+		// Log detailed template error for debugging
+		log.Printf("Template execution error: %v", err)
+		// Also include the error message in the response to aid debugging in development
+		http.Error(w, fmt.Sprintf("Template rendering failed: %v", err), http.StatusInternalServerError)
 		return
 	}
 
