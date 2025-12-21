@@ -7,12 +7,39 @@ on:
       - main
 
 jobs:
-  docker-deploy:
+  build_and_publish:
+    runs-on: ubuntu-latest
+    steps: 
+      - uses: actions/checkout@v4
+        fetch-depth: 1
+
+      - name: Fetch latest tag
+        run: |
+          git fetch --tags
+          latest_tag="$(git tag -l --sort=-v:refname | head -n 1)"
+          git checkout "$latest_tag"
+          echo "LATEST_TAG=$latest_tag" >> $GITHUB_ENV
+
+      - name: Build and push the image
+        run : |
+          docker login --username p1utoze --password ${{ github.token }} ghcr.io
+          docker build . --tag ghcr.io/p1utoze/pokemmoraids:$LATEST_TAG
+          docker push ghcr.io/p1utoze/pokemmoraids:$LATEST_TAG
+
+  deploy:
     runs-on: self-hosted
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        fetch-depth: 1
+
+      - name: Fetch latest tag
+        run: |
+          git fetch --tags
+          latest_tag="$(git tag -l --sort=-v:refname | head -n 1)"
+          git checkout "$latest_tag"
+          echo "LATEST_TAG=$latest_tag" >> $GITHUB_ENV
 
       - name: Check Docker
         run: |
@@ -31,24 +58,28 @@ jobs:
       - name: Verify Docker
         run: docker --version
 
-      - name: Build Docker image
+      - name: Login to GitHub Container Registry
+        run: docker login --username p1utoze --password ${{ github.token }} ghcr.io
+
+      - name: Pull Docker image
         run: |
-          sudo docker build -t raids:latest .
+          sudo docker pull ghcr.io/p1utoze/pokemmoraids:$LATEST_TAG
 
       - name: Stop existing container (if running)
         run: |
-          if [ "$(sudo docker ps -q -f name=pokemmo-raids)" ]; then
-            sudo docker stop pokemmo-raids
-            sudo docker rm pokemmo-raids
+          if [ "$(sudo docker ps -q -f name=raids)" ]; then
+            sudo docker stop raids
+            sudo docker rm raids
           fi
 
       - name: Run Docker container
         run: |
           sudo docker run -d \
-            --name pokemmo-raids \
+            --name raids \
             -p 80:8080 \
+            -e "ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}" \
             --restart unless-stopped \
-            raids:latest
+            pokemmoraids:$LATEST_TAG
 
       - name: Check logs
-        run: sudo docker logs pokemmo-raids
+        run: sudo docker logs raids
