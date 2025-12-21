@@ -1,0 +1,53 @@
+name: Build and Run Docker on EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  docker-deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check Docker
+        run: |
+          if ! command -v docker &> /dev/null; then
+            echo "Docker not found. Installing..."
+            sudo apt-get update -y
+            sudo apt-get install -y \
+              ca-certificates \
+              curl \
+              gnupg \
+              lsb-release
+          else
+            echo "Docker already installed"
+          fi
+
+      - name: Verify Docker
+        run: docker --version
+
+      - name: Build Docker image
+        run: |
+          sudo docker build -t raids:latest .
+
+      - name: Stop existing container (if running)
+        run: |
+          if [ "$(sudo docker ps -q -f name=pokemmo-raids)" ]; then
+            sudo docker stop pokemmo-raids
+            sudo docker rm pokemmo-raids
+          fi
+
+      - name: Run Docker container
+        run: |
+          sudo docker run -d \
+            --name pokemmo-raids \
+            -p 80:8080 \
+            --restart unless-stopped \
+            raids:latest
+
+      - name: Check logs
+        run: sudo docker logs pokemmo-raids
