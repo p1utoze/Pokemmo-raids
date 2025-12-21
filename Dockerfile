@@ -1,20 +1,36 @@
-FROM golang:1.25.5-alpine
+# ---------- Builder ----------
+FROM golang:1.25.5-alpine AS builder
+
+WORKDIR /build
+
+RUN apk add --no-cache python3 build-base sqlite-dev
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY *.go ./
+COPY static ./static
+COPY templates ./templates
+COPY data ./data
+COPY init_checklist_db.py .
+
+RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 \
+    go build -ldflags="-s -w" -o pokemmoraids
+
+RUN python3 init_checklist_db.py
+
+# ---------- Runtime ----------
+FROM alpine:3.20
 
 WORKDIR /app
 
-RUN apk add --no-cache python3 py3-pip build-base
+RUN apk add --no-cache ca-certificates sqlite-libs
 
-COPY go.mod go.sum /app/
-COPY init_checklist_db.py /app/init_checklist_db.py
-COPY static /app/static
-COPY templates /app/templates
-COPY *.go /app/
-COPY data/*.json /app/data/
-
-RUN CGO_ENABLED=0 GOOS=linux go build -o pokemmoraids
-
-RUN python3 /app/init_checklist_db.py
+COPY --from=builder /build/pokemmoraids .
+COPY --from=builder /build/*.sqlite .
+COPY --from=builder /build/static ./static
+COPY --from=builder /build/templates ./templates
+COPY --from=builder /build/data ./data
 
 EXPOSE 8080
-
-CMD [ "./pokemmoraids" ]
+CMD ["./pokemmoraids"]
