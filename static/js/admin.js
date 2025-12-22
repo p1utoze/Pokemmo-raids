@@ -6,6 +6,17 @@ let currentTab = 'checklist';
 let currentSeason = '';
 let userRole = '';
 
+/**
+ * Common confirmation dialog for delete operations
+ * @param {string} itemType - Type of item being deleted (e.g., 'type', 'pokemon', 'raid boss', 'user')
+ * @param {string} itemName - Name or identifier of the item (optional)
+ * @returns {boolean} - True if user confirmed, false otherwise
+ */
+function confirmDelete(itemType, itemName = '') {
+    const displayName = itemName ? ` "${itemName}"` : '';
+    return confirm(`Are you sure you want to delete this ${itemType}${displayName}?\n\nThis action cannot be undone.`);
+}
+
 async function initAdmin() {
     try {
         userRole = window.USER_ROLE || '';
@@ -92,7 +103,7 @@ function renderTypes() {
     const container = document.getElementById('admin-app');
     container.innerHTML = '';
     const addBtn = document.createElement('button');
-    addBtn.textContent = 'Add Type';
+    addBtn.textContent = '+ Add Type';
     addBtn.addEventListener('click', showAddTypeForm);
     container.appendChild(addBtn);
 
@@ -101,21 +112,40 @@ function renderTypes() {
     types.forEach(t => {
         const card = document.createElement('div');
         card.className = 'admin-type-card';
-        card.innerHTML = `<h3>${t.type_name}</h3><div>Min required: ${t.min_required || 0}</div>`;
-        const edit = document.createElement('button'); edit.textContent = 'Edit';
+
+        const title = document.createElement('h3');
+        title.textContent = t.type_name;
+        card.appendChild(title);
+
+        const meta = document.createElement('div');
+        meta.textContent = `Min required: ${t.min_required || 0}`;
+        card.appendChild(meta);
+
+        const buttonGroup = document.createElement('div');
+        buttonGroup.className = 'admin-button-group';
+
+        const edit = document.createElement('button');
+        edit.textContent = 'Edit';
+        edit.className = 'edit';
         edit.addEventListener('click', () => showEditTypeForm(t));
-        card.appendChild(edit);
+        buttonGroup.appendChild(edit);
 
         // Only admins can delete
         if (userRole === 'admin') {
-            const del = document.createElement('button'); del.textContent = 'Delete';
+            const del = document.createElement('button');
+            del.textContent = 'Delete';
+            del.className = 'del';
             del.addEventListener('click', () => deleteType(t.id));
-            card.appendChild(del);
+            buttonGroup.appendChild(del);
         }
 
-        const manage = document.createElement('button'); manage.textContent = 'Manage Pokemons';
+        card.appendChild(buttonGroup);
+
+        const manage = document.createElement('button');
+        manage.textContent = 'Manage Pokemons';
         manage.addEventListener('click', () => managePokemons(t.id, t.type_name));
         card.appendChild(manage);
+
         list.appendChild(card);
     });
     container.appendChild(list);
@@ -126,10 +156,12 @@ function showAddTypeForm() {
     container.innerHTML = `
         <h2>Add Type</h2>
         <form id="add-type-form">
-            <label>Name</label>
-            <input name="type_name" />
-            <label>Min Required</label>
-            <input name="min_required" type="number" min="0" />
+            <label>Name
+                <input name="type_name" />
+            </label>
+            <label>Min Required
+                <input name="min_required" type="number" min="0" />
+            </label>
             <button type="submit">Create</button>
             <button type="button" id="cancel">Cancel</button>
         </form>
@@ -150,10 +182,12 @@ function showEditTypeForm(t) {
         <h2>Edit Type</h2>
         <form id="edit-type-form">
             <input type="hidden" name="id" value="${t.id}" />
-            <label>Name</label>
-            <input name="type_name" value="${t.type_name}" />
-            <label>Min Required</label>
-            <input name="min_required" type="number" min="0" value="${t.min_required || 0}" />
+            <label>Name
+                <input name="type_name" value="${t.type_name}" />
+            </label>
+            <label>Min Required
+                <input name="min_required" type="number" min="0" value="${t.min_required || 0}" />
+            </label>
             <button type="submit">Save</button>
             <button type="button" id="cancel">Cancel</button>
         </form>
@@ -169,7 +203,8 @@ function showEditTypeForm(t) {
 }
 
 async function deleteType(id) {
-    if (!confirm('Delete this type?')) return;
+    const type = types.find(t => t.id === id);
+    if (!confirmDelete('type', type?.type_name)) return;
     await fetch('/api/admin/types?id=' + id, { method: 'DELETE' });
     await loadTypes();
 }
@@ -182,9 +217,34 @@ async function loadExtras() {
 
 async function managePokemons(typeId, typeName) {
     const container = document.getElementById('admin-app');
-    container.innerHTML = `<h2>Manage Pokemons — ${typeName}</h2><div id="pokemon-list"></div><button id="add-pokemon">Add Pokemon</button><button id="back">Back</button>`;
-    document.getElementById('back').addEventListener('click', () => renderTypes());
-    document.getElementById('add-pokemon').addEventListener('click', () => showAddPokemonForm(typeId));
+    const heading = document.createElement('h2');
+    heading.textContent = `Manage Pokemons — ${typeName}`;
+
+    const buttonGroup = document.createElement('div');
+    buttonGroup.className = 'admin-button-group';
+    buttonGroup.style.marginBottom = '20px';
+
+    const addBtn = document.createElement('button');
+    addBtn.id = 'add-pokemon';
+    addBtn.textContent = '+ Add Pokemon';
+    addBtn.addEventListener('click', () => showAddPokemonForm(typeId));
+
+    const backBtn = document.createElement('button');
+    backBtn.id = 'back';
+    backBtn.textContent = '← Back';
+    backBtn.addEventListener('click', () => renderTypes());
+
+    buttonGroup.appendChild(addBtn);
+    buttonGroup.appendChild(backBtn);
+
+    const pokemonList = document.createElement('div');
+    pokemonList.id = 'pokemon-list';
+
+    container.innerHTML = '';
+    container.appendChild(heading);
+    container.appendChild(buttonGroup);
+    container.appendChild(pokemonList);
+
     await loadPokemons(typeId);
 }
 
@@ -196,7 +256,20 @@ async function loadPokemons(typeId) {
     pokes.forEach(p => {
         const el = document.createElement('div');
         el.className = 'admin-pokemon-row';
-        el.innerHTML = `<strong>${p.pokemon_name}</strong> — ${p.phys_special} <button class="edit">Edit</button>`;
+
+        const nameEl = document.createElement('strong');
+        nameEl.textContent = p.pokemon_name;
+        el.appendChild(nameEl);
+
+        const typeEl = document.createElement('span');
+        typeEl.textContent = ` — ${p.phys_special}`;
+        el.appendChild(typeEl);
+
+        const editBtn = document.createElement('button');
+        editBtn.className = 'edit';
+        editBtn.textContent = 'Edit';
+        editBtn.addEventListener('click', () => showEditPokemonForm(p));
+        el.appendChild(editBtn);
 
         // Only admins can delete
         if (userRole === 'admin') {
@@ -204,7 +277,7 @@ async function loadPokemons(typeId) {
             delBtn.className = 'del';
             delBtn.textContent = 'Delete';
             delBtn.addEventListener('click', async () => {
-                if (confirm('Delete?')) {
+                if (confirmDelete('pokemon', p.pokemon_name)) {
                     await fetch('/api/admin/pokemon?id=' + p.id, { method: 'DELETE' });
                     await loadPokemons(typeId);
                 }
@@ -212,7 +285,6 @@ async function loadPokemons(typeId) {
             el.appendChild(delBtn);
         }
 
-        el.querySelector('.edit').addEventListener('click', () => showEditPokemonForm(p));
         list.appendChild(el);
     });
 }
@@ -223,17 +295,30 @@ function showAddPokemonForm(typeId) {
         <h2>Add Pokemon</h2>
         <form id="add-poke-form">
             <input type="hidden" name="type_id" value="${typeId}" />
-            <label>Name</label><input name="pokemon_name" />
-            <label>Phys/Special</label><input name="phys_special" />
-            <label>Secondary Type</label><input name="secondary_type" />
-            <label>Ability</label><input name="ability" />
-            <label>Held Item</label>
-            <select name="held_item">
-                <option value="">(none)</option>
-                ${extras.items.map(i => `<option value="${i}">${i}</option>`).join('')}
-            </select>
-            <label>Moves (comma separated)</label><input name="moves" />
-            <label>Notes</label><input name="notes" />
+            <label>Name
+                <input name="pokemon_name" />
+            </label>
+            <label>Phys/Special
+                <input name="phys_special" />
+            </label>
+            <label>Secondary Type
+                <input name="secondary_type" />
+            </label>
+            <label>Ability
+                <input name="ability" />
+            </label>
+            <label>Held Item
+                <select name="held_item">
+                    <option value="">(none)</option>
+                    ${extras.items.map(i => `<option value="${i}">${i}</option>`).join('')}
+                </select>
+            </label>
+            <label>Moves (comma separated)
+                <input name="moves" />
+            </label>
+            <label>Notes
+                <input name="notes" />
+            </label>
             <button>Create</button>
             <button type="button" id="cancel">Cancel</button>
         </form>
@@ -264,20 +349,41 @@ function showEditPokemonForm(p) {
         <form id="edit-poke-form">
             <input type="hidden" name="id" value="${p.id}" />
             <input type="hidden" name="type_id" value="${p.type_id}" />
-            <label>Name</label><input name="pokemon_name" value="${p.pokemon_name}" />
-            <label>Phys/Special</label><input name="phys_special" value="${p.phys_special}" />
-            <label>Secondary Type</label><input name="secondary_type" value="${p.secondary_type}" />
-            <label>Ability</label><input name="ability" value="${p.ability}" />
-            <label>Held Item</label>
-            <select name="held_item">
-                <option value="">(none)</option>
-                ${extras.items.map(i => `<option value="${i}" ${p.held_item === i ? 'selected' : ''}>${i}</option>`).join('')}
-            </select>
-            <label>Moves (comma separated)</label><input name="moves" value="${p.moves}" />
-            <label>Notes</label><input name="notes" value="${p.notes || ''}" />
-            <label>Completed</label><input type="checkbox" name="completed" ${p.completed ? 'checked' : ''} />
-            <button>Save</button>
-            <button type="button" id="cancel">Cancel</button>
+            <label>Pokemon Name
+                <input name="pokemon_name" value="${p.pokemon_name || ''}" required />
+            </label>
+            <label>Physical/Special
+                <select name="phys_special">
+                    <option value="Physical" ${p.phys_special === 'Physical' ? 'selected' : ''}>Physical</option>
+                    <option value="Special" ${p.phys_special === 'Special' ? 'selected' : ''}>Special</option>
+                    <option value="Mixed" ${p.phys_special === 'Mixed' ? 'selected' : ''}>Mixed</option>
+                </select>
+            </label>
+            <label>Secondary Type
+                <select name="secondary_type">
+                    <option value="">(none)</option>
+                    ${types.map(t => `<option value="${t.type_name}" ${p.secondary_type === t.type_name ? 'selected' : ''}>${t.type_name}</option>`).join('')}
+                </select>
+            </label>
+            <label>Ability
+                <input name="ability" value="${p.ability || ''}" />
+            </label>
+            <label>Held Item
+                <select name="held_item">
+                    <option value="">(none)</option>
+                    ${extras.items.map(i => `<option value="${i}" ${p.held_item === i ? 'selected' : ''}>${i}</option>`).join('')}
+                </select>
+            </label>
+            <label>Moves (comma separated)
+                <input name="moves" value="${p.moves || ''}" />
+            </label>
+            <label>Notes
+                <input name="notes" value="${p.notes || ''}" />
+            </label>
+            <div class="admin-button-group">
+                <button type="submit">Save</button>
+                <button type="button" id="cancel">Cancel</button>
+            </div>
         </form>
     `;
     document.getElementById('cancel').addEventListener('click', () => managePokemons(p.type_id, ''));
@@ -293,8 +399,7 @@ function showEditPokemonForm(p) {
             held_item: f.held_item.value,
             ability: f.ability.value,
             moves: f.moves.value,
-            notes: f.notes.value,
-            completed: f.completed.checked ? 1 : 0
+            notes: f.notes.value
         };
         await fetch('/api/admin/pokemon', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         await managePokemons(payload.type_id, '');
@@ -315,7 +420,7 @@ function renderRaidBosses() {
     const container = document.getElementById('admin-app');
     container.innerHTML = '';
     const addBtn = document.createElement('button');
-    addBtn.textContent = 'Add Raid Boss';
+    addBtn.textContent = '+ Add Raid Boss';
     addBtn.addEventListener('click', () => {
         window.location.href = '/admin/raid-boss-builder?action=create&season=' + encodeURIComponent(currentSeason);
     });
@@ -326,27 +431,44 @@ function renderRaidBosses() {
     raidBosses.forEach(b => {
         const card = document.createElement('div');
         card.className = 'admin-raid-card';
-        card.innerHTML = `<h3>${b.boss_name}</h3><div>⭐ ${b.stars}</div>`;
-        const edit = document.createElement('button'); edit.textContent = 'Edit';
+
+        const title = document.createElement('h3');
+        title.textContent = b.boss_name;
+        card.appendChild(title);
+
+        const stars = document.createElement('div');
+        stars.textContent = `⭐ ${b.stars}`;
+        card.appendChild(stars);
+
+        const buttonGroup = document.createElement('div');
+        buttonGroup.className = 'admin-button-group';
+
+        const edit = document.createElement('button');
+        edit.textContent = 'Edit';
+        edit.className = 'edit';
         edit.addEventListener('click', () => {
             window.location.href = '/admin/raid-boss-builder?action=edit&id=' + b.id + '&season=' + encodeURIComponent(currentSeason);
         });
-        card.appendChild(edit);
+        buttonGroup.appendChild(edit);
 
         // Only admins can delete
         if (userRole === 'admin') {
-            const del = document.createElement('button'); del.textContent = 'Delete';
+            const del = document.createElement('button');
+            del.textContent = 'Delete';
+            del.className = 'del';
             del.addEventListener('click', () => deleteRaidBoss(b.id));
-            card.appendChild(del);
+            buttonGroup.appendChild(del);
         }
 
+        card.appendChild(buttonGroup);
         list.appendChild(card);
     });
     container.appendChild(list);
 }
 
 async function deleteRaidBoss(id) {
-    if (!confirm('Delete this raid boss?')) return;
+    const boss = raidBosses.find(b => b.id === id);
+    if (!confirmDelete('raid boss', boss?.name)) return;
     await fetch('/api/admin/raid-bosses?season=' + encodeURIComponent(currentSeason) + '&id=' + id, { method: 'DELETE' });
     await loadRaidBosses();
 }
@@ -359,7 +481,11 @@ async function loadUsers() {
     // Only admins can access user management
     if (userRole !== 'admin') {
         const container = document.getElementById('admin-app');
-        container.innerHTML = '<div style="padding:20px;color:var(--muted);"><h2>Access Denied</h2><p>Only administrators can manage users.</p></div>';
+        const deniedDiv = document.createElement('div');
+        deniedDiv.className = 'access-denied';
+        deniedDiv.innerHTML = '<h2>Access Denied</h2><p>Only administrators can manage users.</p>';
+        container.innerHTML = '';
+        container.appendChild(deniedDiv);
         return;
     }
     const res = await fetch('/api/admin/users');
@@ -372,7 +498,7 @@ function renderUsers() {
     const container = document.getElementById('admin-app');
     container.innerHTML = '';
     const addBtn = document.createElement('button');
-    addBtn.textContent = 'Add User';
+    addBtn.textContent = '+ Add User';
     addBtn.addEventListener('click', showAddUserForm);
     container.appendChild(addBtn);
 
@@ -381,14 +507,33 @@ function renderUsers() {
     users.forEach(u => {
         const row = document.createElement('div');
         row.className = 'admin-user-row';
-        row.innerHTML = `<strong>${u.username}</strong> <span class="role">${u.role}</span> <button class="edit">Edit</button> <button class="del">Delete</button>`;
-        row.querySelector('.edit').addEventListener('click', () => showEditUser(u));
-        row.querySelector('.del').addEventListener('click', async () => {
-            if (confirm('Delete user?')) {
+
+        const nameEl = document.createElement('strong');
+        nameEl.textContent = u.username;
+        row.appendChild(nameEl);
+
+        const roleEl = document.createElement('span');
+        roleEl.className = 'role';
+        roleEl.textContent = u.role;
+        row.appendChild(roleEl);
+
+        const editBtn = document.createElement('button');
+        editBtn.className = 'edit';
+        editBtn.textContent = 'Edit';
+        editBtn.addEventListener('click', () => showEditUser(u));
+        row.appendChild(editBtn);
+
+        const delBtn = document.createElement('button');
+        delBtn.className = 'del';
+        delBtn.textContent = 'Delete';
+        delBtn.addEventListener('click', async () => {
+            if (confirmDelete('user', u.username)) {
                 await fetch('/api/admin/users?id=' + u.id, { method: 'DELETE' });
                 await loadUsers();
             }
         });
+        row.appendChild(delBtn);
+
         list.appendChild(row);
     });
     container.appendChild(list);
@@ -399,14 +544,21 @@ function showAddUserForm() {
     container.innerHTML = `
         <h2>Create User</h2>
         <form id="create-user">
-            <label>Username</label><input name="username" required />
-            <label>Password <span style="color:var(--muted);font-size:12px;">(leave blank for random)</span></label><input name="password" type="password" />
-            <label>Role</label>
-            <select name="role"><option value="author">author</option><option value="mod">mod</option><option value="admin">admin</option></select>
-            <button type="submit">Create</button>
-            <button type="button" id="cancel">Cancel</button>
+            <label>Username
+                <input name="username" required />
+            </label>
+            <label>Password <span class="admin-message info">Leave blank for random</span>
+                <input name="password" type="password" />
+            </label>
+            <label>Role
+                <select name="role"><option value="author">author</option><option value="mod">mod</option><option value="admin">admin</option></select>
+            </label>
+            <div class="admin-button-group">
+                <button type="submit">Create</button>
+                <button type="button" id="cancel">Cancel</button>
+            </div>
         </form>
-        <div id="generated-password" style="margin-top:10px;color:var(--accent);"></div>
+        <div id="generated-password" class="generated-password-display" style="display:none;"></div>
     `;
     document.getElementById('cancel').addEventListener('click', loadUsers);
     document.getElementById('create-user').addEventListener('submit', async (e) => {
@@ -417,7 +569,9 @@ function showAddUserForm() {
         if (res.ok) {
             const data = await res.json();
             if (data.generated_password) {
-                document.getElementById('generated-password').textContent = 'Generated password: ' + data.generated_password;
+                const pwdDiv = document.getElementById('generated-password');
+                pwdDiv.textContent = 'Generated password: ' + data.generated_password;
+                pwdDiv.style.display = 'block';
             } else {
                 await loadUsers();
             }
@@ -433,19 +587,23 @@ function showEditUser(u) {
         <h2>Edit User: ${u.username}</h2>
         <form id="edit-user">
             <input type="hidden" name="id" value="${u.id}" />
-            <label>Role</label>
-            <select name="role">
-                <option value="author" ${u.role === 'author' ? 'selected' : ''}>author</option>
-                <option value="mod" ${u.role === 'mod' ? 'selected' : ''}>mod</option>
-                <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>admin</option>
-            </select>
-            <label>New Password (leave blank to keep)</label>
-            <input name="password" type="password" />
-            <button type="submit">Save</button>
-            <button type="button" id="reset-pass">Reset Password</button>
-            <button type="button" id="cancel">Cancel</button>
+            <label>Role
+                <select name="role">
+                    <option value="author" ${u.role === 'author' ? 'selected' : ''}>author</option>
+                    <option value="mod" ${u.role === 'mod' ? 'selected' : ''}>mod</option>
+                    <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>admin</option>
+                </select>
+            </label>
+            <label>New Password <span class="admin-message info">Leave blank to keep current</span>
+                <input name="password" type="password" />
+            </label>
+            <div class="admin-button-group">
+                <button type="submit">Save</button>
+                <button type="button" id="reset-pass">Reset Password</button>
+                <button type="button" id="cancel">Cancel</button>
+            </div>
         </form>
-        <div id="generated-password" style="margin-top:10px;color:var(--accent);"></div>
+        <div id="generated-password" class="generated-password-display" style="display:none;"></div>
     `;
     document.getElementById('cancel').addEventListener('click', loadUsers);
     document.getElementById('edit-user').addEventListener('submit', async (e) => {
@@ -465,7 +623,9 @@ function showEditUser(u) {
         const res = await fetch('/api/admin/users', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, role, reset: true }) });
         if (res.ok) {
             const data = await res.json();
-            document.getElementById('generated-password').textContent = 'Reset password: ' + data.generated_password;
+            const pwdDiv = document.getElementById('generated-password');
+            pwdDiv.textContent = 'Reset password: ' + data.generated_password;
+            pwdDiv.style.display = 'block';
         } else {
             alert('Failed to reset password');
         }

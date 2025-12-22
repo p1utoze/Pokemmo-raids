@@ -541,6 +541,7 @@ async function saveVariation(varIndex) {
     try {
         const payload = {
             boss_name: cleanBossName,
+            variation_index: parseInt(varIndex),
             players: players,
             health_remaining: healthRemaining,
             notes: notes

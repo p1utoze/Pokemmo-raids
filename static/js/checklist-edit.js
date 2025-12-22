@@ -107,7 +107,7 @@ function enterTypeEditMode(typeId) {
     saveBtn.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        console.log('Save button clicked for type:', typeId);
+        // console.log('Save button clicked for type:', typeId);
         saveTypeChanges(typeId);
     });
 
@@ -340,6 +340,14 @@ async function saveTypeChanges(typeId) {
     const typeSection = document.getElementById(typeId);
     if (!typeSection) return;
 
+    // Extract numeric type ID from typeId (format: "type-{id}")
+    const numericTypeId = parseInt(typeId.replace('type-', ''));
+    if (isNaN(numericTypeId)) {
+        console.error('Invalid typeId format:', typeId);
+        alert('Error: Invalid type ID');
+        return;
+    }
+
     const table = typeSection.querySelector('.checklist-table');
     if (!table) return;
 
@@ -350,53 +358,84 @@ async function saveTypeChanges(typeId) {
     // Extract data from editable inputs BEFORE any DOM manipulation
     rows.forEach((row, index) => {
         const cells = row.querySelectorAll('td');
-        console.log(`Row ${index}: Found ${cells.length} cells`);
+        // console.log(`Row ${index}: Found ${cells.length} cells`);
+
+        // Extract pokemon ID from row (format: "pokemon-{id}")
+        const pokemonId = parseInt(row.id.replace('pokemon-', ''));
+        if (isNaN(pokemonId)) {
+            // console.log(`Row ${index}: Invalid pokemon ID in row.id='${row.id}', skipping`);
+            return;
+        }
 
         const pokemonNameInput = cells[1]?.querySelector('.editable-pokemon-name');
         const heldItemInput = cells[5]?.querySelector('.editable-held-item');
         const movesContainer = cells[6]?.querySelector('.moves-container');
         const notesInput = cells[7]?.querySelector('.editable-notes');
 
-        console.log(`Row ${index} inputs:`, {
-            pokemonNameInput: pokemonNameInput?.value,
-            heldItemInput: heldItemInput?.value,
-            movesContainer: !!movesContainer,
-            notesInput: notesInput?.value
-        });
+        // console.log(`Row ${index} inputs:`, {
+        //     pokemonId: pokemonId,
+        //     pokemonNameInput: pokemonNameInput?.value,
+        //     heldItemInput: heldItemInput?.value,
+        //     movesContainer: !!movesContainer,
+        //     notesInput: notesInput?.value
+        // });
 
         if (!pokemonNameInput) {
-            console.log(`Row ${index}: No pokemon name input found, skipping`);
+            // console.log(`Row ${index}: No pokemon name input found, skipping`);
+            return;
+        }
+
+        if (!heldItemInput) {
+            // console.log(`Row ${index}: No held item input found, skipping`);
+            return;
+        }
+
+        if (!notesInput) {
+            // console.log(`Row ${index}: No notes input found, skipping`);
             return;
         }
 
         // Extract moves from tags
         const moves = [];
-        movesContainer.querySelectorAll('.move-tag span').forEach(span => {
-            moves.push(span.textContent.trim());
-        });
+        if (movesContainer) {
+            movesContainer.querySelectorAll('.move-tag span').forEach(span => {
+                moves.push(span.textContent.trim());
+            });
+        }
 
         const rowData = {
+            id: pokemonId,
             pokemon_name: pokemonNameInput.value.trim(),
             held_item: heldItemInput.value.trim(),
             moves: moves.join(', '),
             notes: notesInput.value.trim()
         };
 
-        console.log(`Row ${index} extracted data:`, rowData);
+        // console.log(`Row ${index} extracted data:`, rowData);
         updateData.push(rowData);
     });
 
     // Send to server
-    console.log('Saving checklist data:', updateData);
+    // console.log('Saving checklist data:', updateData);
+
+    if (updateData.length === 0) {
+        console.warn('⚠️ No pokemon data extracted for saving!');
+        alert('No changes to save. Make sure you have edit fields filled in.');
+        return;
+    }
+
     try {
+        const payload = { pokemon: updateData };
+        // console.log('Full payload to send:', JSON.stringify(payload, null, 2));
+
         const response = await fetch('/api/checklist/save', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'same-origin',  // Include cookies for authentication
-            body: JSON.stringify({ pokemon: updateData })
+            body: JSON.stringify(payload)
         });
 
-        console.log('Response status:', response.status);
+        // console.log('Response status:', response.status);
 
         if (!response.ok) {
             const errorText = await response.text();
@@ -405,7 +444,7 @@ async function saveTypeChanges(typeId) {
         }
 
         const result = await response.json();
-        console.log('Save successful:', result);
+        // console.log('Save successful:', result);
 
         // Exit edit mode FIRST (before reloading)
         typeEditModes[typeId] = false;
@@ -424,7 +463,7 @@ async function saveTypeChanges(typeId) {
         // Re-add edit buttons since loadChecklist rebuilds the DOM
         addChecklistEditButtons();
 
-        // After reload, collapse the type section
+        // After reload, expand the type section to show updated data
         const updatedTypeSection = document.getElementById(typeId);
         if (updatedTypeSection) {
             const content = updatedTypeSection.querySelector('.type-content');
@@ -433,15 +472,22 @@ async function saveTypeChanges(typeId) {
             const chevron = collapseBtn ? collapseBtn.querySelector('.chevron') : null;
 
             if (content) {
-                content.style.display = 'none';
+                content.style.display = 'block';
             }
             if (header) {
-                header.classList.remove('expanded');
+                header.classList.add('expanded');
             }
             if (chevron) {
-                chevron.textContent = '▼';
+                chevron.textContent = '▲';
             }
         }
+
+        // Show success message to user
+        const tempMsg = document.createElement('div');
+        tempMsg.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #10b981; color: white; padding: 12px 16px; border-radius: 4px; z-index: 10000; font-weight: bold;';
+        tempMsg.textContent = '✓ Changes saved successfully';
+        document.body.appendChild(tempMsg);
+        setTimeout(() => tempMsg.remove(), 3000);
     } catch (error) {
         console.error('Failed to save checklist:', error);
         alert(`Failed to save changes: ${error.message}`);
@@ -450,13 +496,9 @@ async function saveTypeChanges(typeId) {
 
 /**
  * Escape HTML for safe display
+ * (Function defined in boss-edit.js which loads first - this is redundant)
  */
-function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
+// Removed duplicate escapeHtml function
 
 /**
  * Attach Pokemon autocomplete specifically for checklist
