@@ -28,6 +28,7 @@ go.work.sum
 # env file
 .env
 pokemmo*
+.vscode/
 # Editor/IDE
 # .idea/
 # .vscode/
