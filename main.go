@@ -63,6 +63,7 @@ type RaidBoss struct {
 
 type Season struct {
 	SeasonName string     `json:"season"`
+	Year       int        `json:"year"`
 	RaidBosses []RaidBoss `json:"raid_bosses"`
 }
 
@@ -93,7 +94,8 @@ type ChecklistResponse struct {
 }
 
 type App struct {
-	season    Season
+	seasons   []Season
+	season    Season // current season for backwards compatibility
 	templates map[string]*pongo2.Template
 	db        *sql.DB
 	adminDB   *sql.DB
@@ -101,15 +103,27 @@ type App struct {
 
 var app *App
 
-const (
-	dataPath      = "data/bosses.json"
+var (
+	dataPath      = getEnvOrDefault("DATA_PATH", "data/bosses.json")
 	templatesPath = "templates/"
-	dbPath        = "data/checklist_xmas.db"
-	maxPlayers    = 4
-	emptyCell     = "—"
+	dbPath        = getEnvOrDefault("CHECKLIST_DB", "data/checklist.db")
+	adminDBPath   = getEnvOrDefault("ADMIN_DB", "data/users.db")
+)
+
+const (
+	maxPlayers = 4
+	emptyCell  = "—"
 )
 
 var playerPositions = [maxPlayers]string{"P1", "P2", "P3", "P4"}
+
+// getEnvOrDefault returns the value of an environment variable or a default value if not set
+func getEnvOrDefault(envVar, defaultValue string) string {
+	if value := os.Getenv(envVar); value != "" {
+		return value
+	}
+	return defaultValue
+}
 
 // generateRandomPassword creates a random password of given length
 func generateRandomPassword(length int) string {
@@ -169,8 +183,7 @@ func (a *App) openDatabase() error {
 // openAdminDatabase opens or creates the admin user database and ensures an admin user exists
 func (a *App) openAdminDatabase() error {
 	var err error
-	adminPath := "data/users.db"
-	a.adminDB, err = sql.Open("sqlite3", adminPath)
+	a.adminDB, err = sql.Open("sqlite3", adminDBPath)
 	if err != nil {
 		return fmt.Errorf("failed to open admin database: %w", err)
 	}
@@ -417,8 +430,14 @@ func (a *App) loadData() error {
 	}
 	defer file.Close()
 
-	if err := json.NewDecoder(file).Decode(&a.season); err != nil {
-		return fmt.Errorf("failed to decode season data: %w", err)
+	// bosses.json is now a list of seasons
+	if err := json.NewDecoder(file).Decode(&a.seasons); err != nil {
+		return fmt.Errorf("failed to decode seasons data: %w", err)
+	}
+
+	// Set the current season to the first one if available
+	if len(a.seasons) > 0 {
+		a.season = a.seasons[0]
 	}
 
 	a.preprocessVariations()
@@ -801,6 +820,15 @@ func (a *App) pokemonInfoHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string][]string{"abilities": {}, "moves": {}})
 }
 
+// getSeasonTableName returns the table name for a season in format {season}_{year}
+func (a *App) getSeasonTableName() string {
+	seasonName := strings.ToLower(strings.ReplaceAll(a.season.SeasonName, " ", "_"))
+	if a.season.Year > 0 {
+		return fmt.Sprintf("%s_%d", seasonName, a.season.Year)
+	}
+	return seasonName
+}
+
 // findBoss searches for a boss by name
 func (a *App) findBoss(name string) *RaidBoss {
 	for i := range a.season.RaidBosses {
@@ -868,8 +896,9 @@ func (a *App) checklistHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Query pokemon for this type
+		seasonTable := a.getSeasonTableName()
 		pokemonRows, err := a.db.Query(
-			"SELECT id, type_id, pokemon_name, phys_special, secondary_type, held_item, ability, moves, notes, completed FROM pokemon_checklist WHERE type_id = ? ORDER BY pokemon_name",
+			fmt.Sprintf("SELECT id, type_id, pokemon_name, phys_special, secondary_type, held_item, ability, moves, notes, completed FROM %s WHERE type_id = ? ORDER BY pokemon_name", seasonTable),
 			typeID)
 		if err != nil {
 			log.Printf("Error querying pokemon: %v", err)
@@ -938,7 +967,8 @@ func (a *App) toggleChecklistHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get current status
 	var completed int
-	err := a.db.QueryRow("SELECT completed FROM pokemon_checklist WHERE id = ?", req.PokemonID).Scan(&completed)
+	seasonTable := a.getSeasonTableName()
+	err := a.db.QueryRow(fmt.Sprintf("SELECT completed FROM %s WHERE id = ?", seasonTable), req.PokemonID).Scan(&completed)
 	if err != nil {
 		log.Printf("Error querying pokemon: %v", err)
 		http.Error(w, "Pokemon not found", http.StatusNotFound)
@@ -947,7 +977,7 @@ func (a *App) toggleChecklistHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Toggle status
 	newStatus := 1 - completed
-	_, err = a.db.Exec("UPDATE pokemon_checklist SET completed = ? WHERE id = ?", newStatus, req.PokemonID)
+	_, err = a.db.Exec(fmt.Sprintf("UPDATE %s SET completed = ? WHERE id = ?", seasonTable), newStatus, req.PokemonID)
 	if err != nil {
 		log.Printf("Error updating pokemon: %v", err)
 		http.Error(w, "Failed to update checklist", http.StatusInternalServerError)
@@ -973,6 +1003,7 @@ func (a *App) saveChecklistHandler(w http.ResponseWriter, r *http.Request) {
 
 	var req struct {
 		Pokemon []struct {
+			ID          int    `json:"id"`
 			PokemonName string `json:"pokemon_name"`
 			HeldItem    string `json:"held_item"`
 			Moves       string `json:"moves"`
@@ -988,23 +1019,50 @@ func (a *App) saveChecklistHandler(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("Received checklist save request with %d pokemon", len(req.Pokemon))
 
-	// Update each pokemon in the checklist
-	for i, pokemon := range req.Pokemon {
-		log.Printf("Updating pokemon %d: name=%s, item=%s, moves=%s, notes=%s",
-			i, pokemon.PokemonName, pokemon.HeldItem, pokemon.Moves, pokemon.Notes)
+	if len(req.Pokemon) == 0 {
+		log.Printf("⚠️  WARNING: No pokemon data received in request!")
+		http.Error(w, "No pokemon data provided", http.StatusBadRequest)
+		return
+	}
 
-		result, err := a.db.Exec(
-			"UPDATE pokemon_checklist SET held_item = ?, moves = ?, notes = ? WHERE pokemon_name = ?",
-			pokemon.HeldItem, pokemon.Moves, pokemon.Notes, pokemon.PokemonName,
+	// Update each pokemon in the checklist
+	seasonTable := a.getSeasonTableName()
+	// log.Printf("Using season table: %s", seasonTable)
+	
+	// Verify the table exists
+	// var tableExists int
+	// err := a.db.QueryRow(fmt.Sprintf("SELECT COUNT(name) FROM sqlite_master WHERE type='table' AND name='%s'", seasonTable)).Scan(&tableExists)
+	// if err != nil || tableExists == 0 {
+	// 	log.Printf("❌ ERROR: Season table '%s' does not exist!", seasonTable)
+	// 	http.Error(w, fmt.Sprintf("Season table '%s' not found", seasonTable), http.StatusInternalServerError)
+	// 	return
+	// }
+	// log.Printf("✓ Verified season table '%s' exists", seasonTable)
+	
+	for i, pokemon := range req.Pokemon {
+		// log.Printf("Updating pokemon %d: id=%d, name='%s', item='%s', moves='%s', notes='%s'",
+		// 	i, pokemon.ID, pokemon.PokemonName, pokemon.HeldItem, pokemon.Moves, pokemon.Notes)
+
+		query := fmt.Sprintf("UPDATE %s SET held_item = ?, moves = ?, notes = ? WHERE id = ?", seasonTable)
+		// log.Printf("SQL Query: %s | Params: item='%s', moves='%s', notes='%s', id=%d", 
+		// 	query, pokemon.HeldItem, pokemon.Moves, pokemon.Notes, pokemon.ID)
+
+		result, err := a.db.Exec(query,
+			pokemon.HeldItem, pokemon.Moves, pokemon.Notes, pokemon.ID,
 		)
 		if err != nil {
-			log.Printf("Error updating pokemon %s: %v", pokemon.PokemonName, err)
+			log.Printf("Error updating pokemon id=%d: %v", pokemon.ID, err)
 			http.Error(w, "Failed to update checklist", http.StatusInternalServerError)
 			return
 		}
 
 		rowsAffected, _ := result.RowsAffected()
-		log.Printf("Rows affected for %s: %d", pokemon.PokemonName, rowsAffected)
+		if rowsAffected == 0 {
+			log.Printf("⚠️  WARNING: No rows affected for pokemon id=%d", pokemon.ID)
+		} else {
+			_ = i // Suppress unused variable warning
+			// log.Printf("✓ Successfully updated pokemon id=%d ('%s')", pokemon.ID, pokemon.PokemonName)
+		}
 	}
 
 	log.Printf("Checklist save completed successfully")
@@ -1554,7 +1612,7 @@ func (a *App) authLogoutHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
-// saveVariationHandler handles saving new variation data (appends to boss variations)
+// saveVariationHandler handles saving variation data (creates new or updates existing)
 func (a *App) saveVariationHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -1570,6 +1628,7 @@ func (a *App) saveVariationHandler(w http.ResponseWriter, r *http.Request) {
 
 	var req struct {
 		BossName        string              `json:"boss_name"`
+		VariationIndex  int                 `json:"variation_index"`
 		Players         map[string][]Player `json:"players"`
 		HealthRemaining []float64           `json:"health_remaining"`
 		Notes           []string            `json:"notes"`
@@ -1587,20 +1646,34 @@ func (a *App) saveVariationHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Create new variation
-	newVariation := Variation{
-		Index:           len(boss.Variations) + 1,
-		Index0:          len(boss.Variations),
-		Players:         req.Players,
-		HealthRemaining: req.HealthRemaining,
-		Notes:           req.Notes,
+	// Check if this is an update or a new variation
+	if req.VariationIndex >= 0 && req.VariationIndex < len(boss.Variations) {
+		// Update existing variation at the specified index - replace entire variation
+		updatedVariation := Variation{
+			Index:           boss.Variations[req.VariationIndex].Index,
+			Index0:          req.VariationIndex,
+			Players:         req.Players,
+			HealthRemaining: req.HealthRemaining,
+			Notes:           req.Notes,
+		}
+		updatedVariation.TableHTML = a.buildVariationTable(&updatedVariation)
+		boss.Variations[req.VariationIndex] = updatedVariation
+	} else {
+		// Create new variation only if index is not provided or invalid
+		newVariation := Variation{
+			Index:           len(boss.Variations) + 1,
+			Index0:          len(boss.Variations),
+			Players:         req.Players,
+			HealthRemaining: req.HealthRemaining,
+			Notes:           req.Notes,
+		}
+
+		// Build the HTML table for this variation
+		newVariation.TableHTML = a.buildVariationTable(&newVariation)
+
+		// Append to boss variations
+		boss.Variations = append(boss.Variations, newVariation)
 	}
-
-	// Build the HTML table for this variation
-	newVariation.TableHTML = a.buildVariationTable(&newVariation)
-
-	// Append to boss variations
-	boss.Variations = append(boss.Variations, newVariation)
 
 	// Save to bosses.json
 	if err := a.saveBossesJSON(); err != nil {
@@ -1715,7 +1788,7 @@ func (a *App) adminTypesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// adminPokemonHandler handles CRUD for pokemon_checklist
+// adminPokemonHandler handles CRUD for season-specific pokemon checklists
 func (a *App) adminPokemonHandler(w http.ResponseWriter, r *http.Request) {
 	role := getRoleFromRequest(r)
 	if role == "" {
@@ -1735,7 +1808,8 @@ func (a *App) adminPokemonHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "invalid body", http.StatusBadRequest)
 			return
 		}
-		res, err := a.db.Exec(`INSERT INTO pokemon_checklist (type_id, pokemon_name, phys_special, secondary_type, held_item, ability, moves, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+		seasonTable := a.getSeasonTableName()
+		res, err := a.db.Exec(fmt.Sprintf(`INSERT INTO %s (type_id, pokemon_name, phys_special, secondary_type, held_item, ability, moves, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, seasonTable),
 			p.TypeID, p.PokemonName, p.PhysSpecial, p.SecondaryType, p.HeldItem, p.Ability, p.Moves, p.Notes)
 		if err != nil {
 			http.Error(w, "db insert failed", http.StatusInternalServerError)
@@ -1754,7 +1828,8 @@ func (a *App) adminPokemonHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "invalid body", http.StatusBadRequest)
 			return
 		}
-		_, err := a.db.Exec("UPDATE pokemon_checklist SET type_id=?, pokemon_name=?, phys_special=?, secondary_type=?, held_item=?, ability=?, moves=?, notes=?, completed=? WHERE id=?",
+		seasonTable := a.getSeasonTableName()
+		_, err := a.db.Exec(fmt.Sprintf("UPDATE %s SET type_id=?, pokemon_name=?, phys_special=?, secondary_type=?, held_item=?, ability=?, moves=?, notes=?, completed=? WHERE id=?", seasonTable),
 			p.TypeID, p.PokemonName, p.PhysSpecial, p.SecondaryType, p.HeldItem, p.Ability, p.Moves, p.Notes, p.Completed, p.ID)
 		if err != nil {
 			http.Error(w, "db update failed", http.StatusInternalServerError)
@@ -1773,7 +1848,8 @@ func (a *App) adminPokemonHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		id, _ := strconv.Atoi(idStr)
-		_, err := a.db.Exec("DELETE FROM pokemon_checklist WHERE id = ?", id)
+		seasonTable := a.getSeasonTableName()
+		_, err := a.db.Exec(fmt.Sprintf("DELETE FROM %s WHERE id = ?", seasonTable), id)
 		if err != nil {
 			http.Error(w, "db delete failed", http.StatusInternalServerError)
 			return
@@ -1783,9 +1859,10 @@ func (a *App) adminPokemonHandler(w http.ResponseWriter, r *http.Request) {
 		// If id provided, return single row, otherwise list by type_id if provided
 		idStr := r.URL.Query().Get("id")
 		typeStr := r.URL.Query().Get("type_id")
+		seasonTable := a.getSeasonTableName()
 		if idStr != "" {
 			id, _ := strconv.Atoi(idStr)
-			row := a.db.QueryRow("SELECT id, type_id, pokemon_name, phys_special, secondary_type, held_item, ability, moves, notes, completed FROM pokemon_checklist WHERE id = ?", id)
+			row := a.db.QueryRow(fmt.Sprintf("SELECT id, type_id, pokemon_name, phys_special, secondary_type, held_item, ability, moves, notes, completed FROM %s WHERE id = ?", seasonTable), id)
 			var e PokemonChecklistEntry
 			if err := row.Scan(&e.ID, &e.TypeID, &e.PokemonName, &e.PhysSpecial, &e.SecondaryType, &e.HeldItem, &e.Ability, &e.Moves, &e.Notes, &e.Completed); err != nil {
 				http.Error(w, "not found", http.StatusNotFound)
@@ -1798,9 +1875,9 @@ func (a *App) adminPokemonHandler(w http.ResponseWriter, r *http.Request) {
 		var err error
 		if typeStr != "" {
 			tid, _ := strconv.Atoi(typeStr)
-			rows, err = a.db.Query("SELECT id, type_id, pokemon_name, phys_special, secondary_type, held_item, ability, moves, notes, completed FROM pokemon_checklist WHERE type_id = ? ORDER BY pokemon_name", tid)
+			rows, err = a.db.Query(fmt.Sprintf("SELECT id, type_id, pokemon_name, phys_special, secondary_type, held_item, ability, moves, notes, completed FROM %s WHERE type_id = ? ORDER BY pokemon_name", seasonTable), tid)
 		} else {
-			rows, err = a.db.Query("SELECT id, type_id, pokemon_name, phys_special, secondary_type, held_item, ability, moves, notes, completed FROM pokemon_checklist ORDER BY type_id, pokemon_name")
+			rows, err = a.db.Query(fmt.Sprintf("SELECT id, type_id, pokemon_name, phys_special, secondary_type, held_item, ability, moves, notes, completed FROM %s ORDER BY type_id, pokemon_name", seasonTable))
 		}
 		if err != nil {
 			http.Error(w, "db query failed", http.StatusInternalServerError)
@@ -2047,7 +2124,7 @@ func (a *App) adminRaidBossesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// saveBossesJSON writes the current season data back to bosses.json
+// saveBossesJSON writes the seasons data back to bosses.json
 func (a *App) saveBossesJSON() error {
 	file, err := os.OpenFile(dataPath, os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil {
@@ -2056,8 +2133,15 @@ func (a *App) saveBossesJSON() error {
 	defer file.Close()
 	encoder := json.NewEncoder(file)
 	encoder.SetIndent("", "  ")
-	return encoder.Encode(a.season)
-}
+	// Update the current season in the seasons list
+	for i, s := range a.seasons {
+		if s.SeasonName == a.season.SeasonName {
+			a.seasons[i] = a.season
+			break
+		}
+	}
+	return encoder.Encode(a.seasons)
+} 
 
 // renderTemplate renders a template with given context
 func renderTemplate(w http.ResponseWriter, tpl *pongo2.Template, ctx pongo2.Context) {
