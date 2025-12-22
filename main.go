@@ -1336,7 +1336,7 @@ func (a *App) authResetRequestHandler(w http.ResponseWriter, r *http.Request) {
 		scheme = "http"
 	}
 	resetURL := fmt.Sprintf("%s://%s/auth/reset?token=%s", scheme, host, token)
-	log.Printf("Password reset link for %s → %s (email to: %s)", username, resetURL, email)
+	// log.Printf("Password reset link for %s → %s (email to: %s)", username, resetURL, email)
 
 	// Send email
 	if err := sendResetEmail(email, username, resetURL); err != nil {
