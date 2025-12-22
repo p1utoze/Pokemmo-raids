@@ -393,6 +393,22 @@ func getRoleFromRequest(r *http.Request) string {
 	return ""
 }
 
+// getUsernameFromRequest returns the username (sub) from the auth_token cookie, or empty if unauthenticated
+func getUsernameFromRequest(r *http.Request) string {
+	c, err := r.Cookie("auth_token")
+	if err != nil {
+		return ""
+	}
+	claims, err := parseJWTClaims(c.Value)
+	if err != nil {
+		return ""
+	}
+	if sub, ok := claims["sub"].(string); ok {
+		return sub
+	}
+	return ""
+}
+
 // loadData reads and processes the raid season data from JSON
 func (a *App) loadData() error {
 	file, err := os.Open(dataPath)
@@ -525,6 +541,7 @@ func setupRoutes() {
 	// auth routes for non-admin authors/mods
 	http.HandleFunc("/auth/login", app.authLoginHandler)
 	http.HandleFunc("/auth/logout", app.authLogoutHandler)
+	http.HandleFunc("/auth/change", app.authChangePasswordHandler)
 	// password reset endpoints
 	http.HandleFunc("/auth/reset/request", app.authResetRequestHandler)
 	http.HandleFunc("/auth/reset", app.authResetHandler)
@@ -537,7 +554,7 @@ func setupRoutes() {
 
 // loadTemplates loads all template files
 func (a *App) loadTemplates() error {
-	templateNames := []string{"index.html", "boss.html", "build_team.html", "base.html", "admin.html", "admin_login.html", "auth_login.html", "auth_reset.html", "auth_reset_sent.html", "admin_build_team.html"}
+	templateNames := []string{"index.html", "boss.html", "build_team.html", "base.html", "admin.html", "admin_login.html", "auth_login.html", "auth_reset.html", "auth_reset_sent.html", "auth_change_password.html", "admin_build_team.html"}
 	for _, name := range templateNames {
 		tpl, err := pongo2.FromFile(templatesPath + name)
 		if err != nil {
@@ -1396,6 +1413,87 @@ func (a *App) authResetRequestHandler(w http.ResponseWriter, r *http.Request) {
 		"message": "If the account exists and is eligible, a reset link has been sent to the email provided.",
 	}
 	renderTemplate(w, a.templates["auth_reset_sent.html"], ctx)
+}
+
+// authChangePasswordHandler allows a logged-in user to change password without email
+func (a *App) authChangePasswordHandler(w http.ResponseWriter, r *http.Request) {
+	if !isAuthRequest(r) {
+		http.Redirect(w, r, "/auth/login", http.StatusSeeOther)
+		return
+	}
+	username := getUsernameFromRequest(r)
+	role := getRoleFromRequest(r)
+	if username == "" {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	switch r.Method {
+	case http.MethodGet:
+		renderTemplate(w, a.templates["auth_change_password.html"], pongo2.Context{"user_role": role})
+	case http.MethodPost:
+		current := strings.TrimSpace(r.FormValue("current_password"))
+		newPass := strings.TrimSpace(r.FormValue("new_password"))
+		confirm := strings.TrimSpace(r.FormValue("confirm_password"))
+
+		if current == "" || newPass == "" || confirm == "" {
+			renderTemplate(w, a.templates["auth_change_password.html"], pongo2.Context{
+				"user_role": role,
+				"error":     "All fields are required.",
+			})
+			return
+		}
+		if newPass != confirm {
+			renderTemplate(w, a.templates["auth_change_password.html"], pongo2.Context{
+				"user_role": role,
+				"error":     "New passwords do not match.",
+			})
+			return
+		}
+		if len(newPass) < 8 {
+			renderTemplate(w, a.templates["auth_change_password.html"], pongo2.Context{
+				"user_role": role,
+				"error":     "New password must be at least 8 characters.",
+			})
+			return
+		}
+
+		var hash string
+		row := a.adminDB.QueryRow("SELECT password_hash FROM users WHERE username = ?", username)
+		if err := row.Scan(&hash); err != nil {
+			http.Error(w, "user not found", http.StatusUnauthorized)
+			return
+		}
+		if err := bcryptCompareHash(hash, current); err != nil {
+			renderTemplate(w, a.templates["auth_change_password.html"], pongo2.Context{
+				"user_role": role,
+				"error":     "Current password is incorrect.",
+			})
+			return
+		}
+
+		newHash, err := bcryptGenerateHash(newPass)
+		if err != nil {
+			http.Error(w, "failed to hash password", http.StatusInternalServerError)
+			return
+		}
+		if _, err := a.adminDB.Exec("UPDATE users SET password_hash = ? WHERE username = ?", newHash, username); err != nil {
+			http.Error(w, "failed to update password", http.StatusInternalServerError)
+			return
+		}
+
+		token, err := generateJWT(username, role)
+		if err == nil {
+			http.SetCookie(w, &http.Cookie{Name: "auth_token", Value: token, HttpOnly: true, Path: "/", Expires: time.Now().Add(24 * time.Hour)})
+		}
+
+		renderTemplate(w, a.templates["auth_change_password.html"], pongo2.Context{
+			"user_role": role,
+			"success":   "Password updated successfully.",
+		})
+	default:
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	}
 }
 
 // authResetHandler serves the reset page (GET) and completes reset (POST)
