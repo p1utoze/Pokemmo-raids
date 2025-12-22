@@ -8,6 +8,17 @@
 {% endblock %}
 
 {% block content %}
+<div class="auth-top-bar">
+    {% if user_role %}
+    <div class="auth-chip">Logged in as <strong>{{ user_role }}</strong></div>
+    <a class="auth-btn" href="/admin">Admin Panel</a>
+    <a class="auth-btn ghost" href="/auth/logout">Logout</a>
+    {% else %}
+    <div class="auth-chip muted">Staff Login</div>
+    <a class="auth-btn" href="/auth/login">Login</a>
+    {% endif %}
+</div>
+
 <div class="boss-page">
     <h2>{{ boss.Name }}</h2>
     <p class="boss-desc">{{ boss.Description }} <button class="view-more" id="viewMoreBtn">View more</button></p>

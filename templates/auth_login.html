@@ -10,5 +10,17 @@
         <input type="password" name="password" />
         <button type="submit">Sign In</button>
     </form>
+
+    <hr style="margin: 18px 0; opacity: 0.2;" />
+    <h2>Forgot Password?</h2>
+    <p class="lead">Enter your username and the email where you want to receive the reset link. Note: Admin accounts
+        cannot be reset here.</p>
+    <form method="post" action="/auth/reset/request">
+        <label>Username</label>
+        <input name="username" />
+        <label>Email</label>
+        <input type="email" name="email" />
+        <button type="submit">Send Reset Link</button>
+    </form>
 </section>
 {% endblock %}

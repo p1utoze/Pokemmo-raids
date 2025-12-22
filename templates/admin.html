@@ -1,25 +1,38 @@
 {% extends "base.html" %}
 
-{% block content %}
-<section class="admin-shell">
-    <h1>Admin Panel</h1>
-    <div>
-        <label for="season-select">Season</label>
-        <select id="season-select">
-            {% for s in seasons %}
-            <option value="{{ s }}">{{ s }}</option>
-            {% endfor %}
-        </select>
-        <a href="/" class="button">Public View</a>
-        <a href="/admin/logout" class="button">Logout</a>
+{% block admin_sidebar %}
+<a href="/" class="back-link">← Back to Public View</a>
+<h3 class="admin-title">Admin Panel</h3>
+<div class="admin-info">
+    <label for="season-select-sidebar" style="margin-top: 12px;">Select Season</label>
+    <div class="season-button-stack" id="season-select-sidebar">
+        {% for s in seasons %}
+        <button class="season-select-btn" data-season="{{ s }}" id="season-{{ s }}">{{ s }}</button>
+        {% endfor %}
     </div>
-    <div>
-        <button id="tab-checklist" class="admin-tab-btn active">Checklist</button>
-        <button id="tab-raid-bosses" class="admin-tab-btn">Raid Bosses</button>
+</div>
+{% endblock %}
+
+{% block content %}
+<section class="admin-shell" data-initial-season="{{ seasons|first }}">
+    <h1>Admin Panel</h1>
+    <div class="admin-header-row">
+        <div class="season-chip" id="selected-season-label">Season: {{ seasons|first }}</div>
+        <div class="admin-header-spacer"></div>
+        <a href="/admin/logout" class="button btn-secondary">Logout</a>
+    </div>
+    <div class="admin-tab-bar">
+        <button id="tab-checklist" class="admin-tab-btn active" data-tab="checklist">Checklist</button>
+        <button id="tab-raid-bosses" class="admin-tab-btn" data-tab="raid-bosses">Raid Bosses</button>
+        <button id="tab-users" class="admin-tab-btn" data-tab="users">Users</button>
     </div>
     <div id="admin-app">
         <!-- Admin UI populated by JS -->
     </div>
 </section>
-<script src="/static/js/admin.js"></script>
+<script>
+    // Pass user role to JavaScript for conditional UI
+    window.USER_ROLE = "{{ user_role|default:'' }}";
+</script>
+<script src="/static/js/admin.js?v=4"></script>
 {% endblock %}

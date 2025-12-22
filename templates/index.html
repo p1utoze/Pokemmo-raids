@@ -14,6 +14,17 @@
 {% endblock %}
 
 {% block content %}
+<div class="auth-top-bar">
+    {% if user_role %}
+    <div class="auth-chip">Logged in as <strong>{{ user_role }}</strong></div>
+    <a class="auth-btn" href="/admin">Admin Panel</a>
+    <a class="auth-btn ghost" href="/auth/logout">Logout</a>
+    {% else %}
+    <div class="auth-chip muted">Staff Login</div>
+    <a class="auth-btn" href="/auth/login">Login</a>
+    {% endif %}
+</div>
+
 <section class="hero">
     <h1>{{ season.SeasonName }}</h1>
     <p class="lead">Select a boss on the left to view variations and turn-by-turn plans.</p>
@@ -26,5 +37,9 @@
     </div>
 </section>
 
+<script>
+    // Pass user role to JavaScript
+    window.USER_ROLE = "{{ user_role|default:'' }}";
+</script>
 <script src="/static/js/checklist.js"></script>
 {% endblock %}

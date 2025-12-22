@@ -1,6 +1,7 @@
 /**
  * Checklist functionality for Pokemon raid team building
- * Client-side only: all checkbox states stored in localStorage, not persisted to server
+ * Checkbox states stored in localStorage only (client-side) for ALL users
+ * This is for personal tracking and does not persist to server
  */
 
 let checklistData = {};
@@ -13,7 +14,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 /**
  * Fetch checklist data from the API and render it
- * Client-side storage of checkbox states via localStorage
+ * Checkbox states stored in localStorage for ALL users (client-side only)
  */
 async function loadChecklist() {
     try {
@@ -23,7 +24,8 @@ async function loadChecklist() {
         }
         checklistData = await response.json();
         renderChecklist();
-        // Restore checkbox states from localStorage
+
+        // Restore checkbox states from localStorage for all users
         restoreChecklistState();
     } catch (error) {
         console.error('Error loading checklist:', error);
@@ -268,10 +270,11 @@ function toggleTypeContent(typeId) {
 }
 
 /**
- * Handle pokemon checkbox toggle (client-side only, no server call)
+ * Handle pokemon checkbox toggle
+ * Client-side only (localStorage) for ALL users
  */
 function handlePokemonToggle(pokemonId, isChecked) {
-    // Update UI
+    // Update UI immediately
     const row = document.getElementById(`pokemon-${pokemonId}`);
     if (row) {
         if (isChecked) {
@@ -284,7 +287,7 @@ function handlePokemonToggle(pokemonId, isChecked) {
     // Update completion counts
     updateCompletionCounts();
 
-    // Save state to localStorage
+    // Save to localStorage for all users (client-side only)
     saveChecklistState();
 }
 
@@ -328,7 +331,7 @@ function updateCompletionCounts() {
             ? Math.round((completedCount / typeData.count) * 100)
             : 0;
         if (progressFill) {
-            
+
             progressFill.style.width = completionPercent + '%';
             // add threshold coloring for progress bar
             if (typeData.count <= typeData.min_required && completedCount < typeData.min_required) {

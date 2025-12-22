@@ -7,7 +7,8 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Boss page: checkbox state persistence (no dropdown)
+    // Boss page: checkbox state persistence in sessionStorage (client-side only for ALL users)
+    // This is for personal tracking and does not persist to server
     const checkboxes = Array.from(document.querySelectorAll('.plan-table input.player-check'));
     checkboxes.forEach(chk => {
         const cell = chk.closest('.player-cell');
