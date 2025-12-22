@@ -7,6 +7,7 @@ import (
 	"html"
 	"log"
 	"net/http"
+	"net/smtp"
 	"os"
 	"strconv"
 	"strings"
@@ -14,8 +15,8 @@ import (
 
 	"github.com/flosch/pongo2/v4"
 	"github.com/golang-jwt/jwt/v5"
-	"golang.org/x/crypto/bcrypt"
 	_ "github.com/mattn/go-sqlite3"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type Player struct {
@@ -110,6 +111,17 @@ const (
 
 var playerPositions = [maxPlayers]string{"P1", "P2", "P3", "P4"}
 
+// generateRandomPassword creates a random password of given length
+func generateRandomPassword(length int) string {
+	letters := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=")
+	b := make([]rune, length)
+	for i := range b {
+		b[i] = letters[int(time.Now().UnixNano())%len(letters)]
+		time.Sleep(time.Nanosecond) // ensure different seed
+	}
+	return string(b)
+}
+
 // openDatabase opens the checklist database
 func (a *App) openDatabase() error {
 	var err error
@@ -157,7 +169,7 @@ func (a *App) openDatabase() error {
 // openAdminDatabase opens or creates the admin user database and ensures an admin user exists
 func (a *App) openAdminDatabase() error {
 	var err error
-	adminPath := "data/admin.db"
+	adminPath := "data/users.db"
 	a.adminDB, err = sql.Open("sqlite3", adminPath)
 	if err != nil {
 		return fmt.Errorf("failed to open admin database: %w", err)
@@ -178,6 +190,20 @@ func (a *App) openAdminDatabase() error {
 	`)
 	if err != nil {
 		return fmt.Errorf("failed to ensure users table: %w", err)
+	}
+
+	// create password_resets table if not exists
+	_, err = a.adminDB.Exec(`
+		CREATE TABLE IF NOT EXISTS password_resets (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			username TEXT NOT NULL,
+			token TEXT NOT NULL UNIQUE,	
+			expires_at INTEGER NOT NULL,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		)
+	`)
+	if err != nil {
+		return fmt.Errorf("failed to ensure password_resets table: %w", err)
 	}
 
 	// Check if any users exist; if none, create a default admin using ADMIN_PASSWORD
@@ -216,6 +242,55 @@ func bcryptGenerateHash(password string) (string, error) {
 
 func bcryptCompareHash(hash, password string) error {
 	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+}
+
+// SMTP configuration from environment
+var (
+	smtpHost     = os.Getenv("SMTP_HOST")     // e.g., "smtp.gmail.com"
+	smtpPort     = os.Getenv("SMTP_PORT")     // e.g., "587"
+	smtpUser     = os.Getenv("SMTP_USER")     // e.g., "your-email@gmail.com"
+	smtpPassword = os.Getenv("SMTP_PASSWORD") // e.g., app password
+	smtpFrom     = os.Getenv("SMTP_FROM")     // e.g., "noreply@pokemmoraids.com" or same as SMTP_USER
+)
+
+// sendResetEmail sends password reset email via SMTP
+func sendResetEmail(toEmail, username, resetURL string) error {
+	if smtpHost == "" || smtpPort == "" || smtpUser == "" || smtpPassword == "" {
+		return fmt.Errorf("SMTP not configured")
+	}
+	from := smtpFrom
+	if from == "" {
+		from = smtpUser
+	}
+
+	// Compose email
+	subject := "Password Reset Request - PokeMMO Raid Book"
+	body := fmt.Sprintf(`Hello %s,
+
+You requested a password reset for your account.
+
+Click the link below to reset your password:
+%s
+
+This link will expire in 1 hour.
+
+If you did not request this reset, please ignore this email.
+
+Best regards,
+PokeMMO Raid Book Team`, username, resetURL)
+
+	message := fmt.Sprintf("From: %s\r\nTo: %s\r\nSubject: %s\r\n\r\n%s", from, toEmail, subject, body)
+
+	// SMTP authentication
+	auth := smtp.PlainAuth("", smtpUser, smtpPassword, smtpHost)
+
+	// Send email
+	addr := smtpHost + ":" + smtpPort
+	err := smtp.SendMail(addr, auth, from, []string{toEmail}, []byte(message))
+	if err != nil {
+		return fmt.Errorf("failed to send email: %w", err)
+	}
+	return nil
 }
 
 // Admin auth configuration
@@ -300,6 +375,22 @@ func isAuthRequest(r *http.Request) bool {
 		}
 	}
 	return false
+}
+
+// getRoleFromRequest returns the role string from the auth_token cookie, or empty if unauthenticated
+func getRoleFromRequest(r *http.Request) string {
+	c, err := r.Cookie("auth_token")
+	if err != nil {
+		return ""
+	}
+	claims, err := parseJWTClaims(c.Value)
+	if err != nil {
+		return ""
+	}
+	if role, ok := claims["role"].(string); ok {
+		return role
+	}
+	return ""
 }
 
 // loadData reads and processes the raid season data from JSON
@@ -422,16 +513,19 @@ func setupRoutes() {
 	http.HandleFunc("/api/pokemon-info", app.pokemonInfoHandler)
 	http.HandleFunc("/api/checklist", app.checklistHandler)
 	http.HandleFunc("/api/checklist/toggle", app.toggleChecklistHandler)
+	http.HandleFunc("/api/user/role", app.userRoleHandler)
 	// Admin UI and API
 	http.HandleFunc("/admin/login", app.adminLoginHandler)
 	http.HandleFunc("/admin/logout", app.adminLogoutHandler)
 	http.HandleFunc("/admin", app.adminPageHandler)
 	http.HandleFunc("/admin/raid-boss-builder", app.adminRaidBossBuildHandler)
-	http.HandleFunc("/admin/users", app.adminUsersPageHandler) // Admin users page
 	http.HandleFunc("/api/admin/users", app.adminUsersHandler) // Admin users API
 	// auth routes for non-admin authors/mods
 	http.HandleFunc("/auth/login", app.authLoginHandler)
 	http.HandleFunc("/auth/logout", app.authLogoutHandler)
+	// password reset endpoints
+	http.HandleFunc("/auth/reset/request", app.authResetRequestHandler)
+	http.HandleFunc("/auth/reset", app.authResetHandler)
 	http.HandleFunc("/api/admin/types", app.adminTypesHandler)
 	http.HandleFunc("/api/admin/pokemon", app.adminPokemonHandler)
 	http.HandleFunc("/api/admin/extras", app.adminExtrasHandler)
@@ -440,7 +534,7 @@ func setupRoutes() {
 
 // loadTemplates loads all template files
 func (a *App) loadTemplates() error {
-	templateNames := []string{"index.html", "boss.html", "build_team.html", "base.html", "admin.html", "admin_login.html", "admin_users.html", "auth_login.html"}
+	templateNames := []string{"index.html", "boss.html", "build_team.html", "base.html", "admin.html", "admin_login.html", "auth_login.html", "auth_reset.html", "admin_build_team.html"}
 	for _, name := range templateNames {
 		tpl, err := pongo2.FromFile(templatesPath + name)
 		if err != nil {
@@ -453,7 +547,8 @@ func (a *App) loadTemplates() error {
 
 // indexHandler renders the main page with all bosses
 func (a *App) indexHandler(w http.ResponseWriter, r *http.Request) {
-	renderTemplate(w, a.templates["index.html"], pongo2.Context{"season": a.season})
+	role := getRoleFromRequest(r)
+	renderTemplate(w, a.templates["index.html"], pongo2.Context{"season": a.season, "user_role": role})
 }
 
 // bossHandler renders a specific boss page
@@ -471,9 +566,11 @@ func (a *App) bossHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	role := getRoleFromRequest(r)
 	ctx := pongo2.Context{
-		"boss":     boss,
-		"bossJSON": string(bossJSON),
+		"boss":      boss,
+		"bossJSON":  string(bossJSON),
+		"user_role": role,
 	}
 	renderTemplate(w, a.templates["boss.html"], ctx)
 }
@@ -820,6 +917,13 @@ func (a *App) toggleChecklistHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Only authenticated users (mod/author/admin) can persist to server
+	role := getRoleFromRequest(r)
+	if role == "" {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 
 	var req struct {
@@ -850,6 +954,13 @@ func (a *App) toggleChecklistHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(map[string]int{"completed": newStatus})
+}
+
+// userRoleHandler returns the current user's role
+func (a *App) userRoleHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	role := getRoleFromRequest(r)
+	json.NewEncoder(w).Encode(map[string]string{"role": role})
 }
 
 // adminLoginHandler serves login form and handles login POST
@@ -937,23 +1048,24 @@ func (a *App) adminLogoutHandler(w http.ResponseWriter, r *http.Request) {
 
 // adminPageHandler renders admin UI and requires auth
 func (a *App) adminPageHandler(w http.ResponseWriter, r *http.Request) {
-	if !isAdminRequest(r) {
+	if !isAuthRequest(r) {
 		http.Redirect(w, r, "/admin/login", http.StatusSeeOther)
 		return
 	}
+	role := getRoleFromRequest(r)
 	tpl, err := pongo2.FromFile(templatesPath + "admin.html")
 	if err != nil {
 		http.Error(w, "admin page not available", http.StatusInternalServerError)
 		return
 	}
-	// pass season names for selection
+	// pass season names for selection and user role
 	seasons := []string{a.season.SeasonName}
-	renderTemplate(w, tpl, pongo2.Context{"seasons": seasons})
+	renderTemplate(w, tpl, pongo2.Context{"seasons": seasons, "user_role": role})
 }
 
 // adminRaidBossBuildHandler renders the raid boss builder page (similar to build_team.html but admin-only)
 func (a *App) adminRaidBossBuildHandler(w http.ResponseWriter, r *http.Request) {
-	if !isAdminRequest(r) {
+	if !isAuthRequest(r) {
 		http.Redirect(w, r, "/admin/login", http.StatusSeeOther)
 		return
 	}
@@ -967,7 +1079,7 @@ func (a *App) adminRaidBossBuildHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	tpl, err := pongo2.FromFile(templatesPath + "admin_raid_boss_builder.html")
+	tpl, err := pongo2.FromFile(templatesPath + "admin_build_team.html")
 	if err != nil {
 		http.Error(w, "builder page not available", http.StatusInternalServerError)
 		return
@@ -1037,29 +1149,20 @@ func (a *App) adminRaidBossBuildHandler(w http.ResponseWriter, r *http.Request) 
 	renderTemplate(w, tpl, context)
 }
 
-// adminUsersPageHandler renders the admin users management page
-func (a *App) adminUsersPageHandler(w http.ResponseWriter, r *http.Request) {
-	if !isAdminRequest(r) {
-		http.Redirect(w, r, "/admin/login", http.StatusSeeOther)
-		return
-	}
-	tpl, err := pongo2.FromFile(templatesPath + "admin_users.html")
-	if err != nil {
-		http.Error(w, "admin users page not available", http.StatusInternalServerError)
-		return
-	}
-	renderTemplate(w, tpl, pongo2.Context{})
-}
-
 // adminUsersHandler provides CRUD API for admin users (requires admin)
 func (a *App) adminUsersHandler(w http.ResponseWriter, r *http.Request) {
-	if !isAdminRequest(r) {
+	role := getRoleFromRequest(r)
+	if role == "" {
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	switch r.Method {
 	case http.MethodGet:
+		if role != "admin" && role != "mod" {
+			http.Error(w, "forbidden", http.StatusForbidden)
+			return
+		}
 		rows, err := a.adminDB.Query("SELECT id, username, role, created_at FROM users ORDER BY username")
 		if err != nil {
 			http.Error(w, "db error", http.StatusInternalServerError)
@@ -1077,23 +1180,44 @@ func (a *App) adminUsersHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		json.NewEncoder(w).Encode(out)
 	case http.MethodPost:
+		// only admin may create admin users
+		if role != "admin" {
+			http.Error(w, "forbidden", http.StatusForbidden)
+			return
+		}
 		var payload struct{ Username, Password, Role string }
 		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 			http.Error(w, "invalid body", http.StatusBadRequest)
 			return
 		}
-		if payload.Username == "" || payload.Password == "" || payload.Role == "" {
+		if payload.Username == "" || payload.Role == "" {
 			http.Error(w, "missing fields", http.StatusBadRequest)
 			return
 		}
-		hash, _ := bcryptGenerateHash(payload.Password)
+		// If no password provided, generate a random one
+		password := payload.Password
+		if password == "" {
+			password = generateRandomPassword(12)
+		}
+		hash, _ := bcryptGenerateHash(password)
 		_, err := a.adminDB.Exec("INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)", payload.Username, hash, payload.Role)
 		if err != nil {
 			http.Error(w, "db insert failed", http.StatusInternalServerError)
 			return
 		}
-		json.NewEncoder(w).Encode(map[string]string{"status": "created"})
+		// Return the generated password if it was generated
+		resp := map[string]string{"status": "created"}
+		if payload.Password == "" {
+			resp["generated_password"] = password
+		}
+		json.NewEncoder(w).Encode(resp)
+
 	case http.MethodPut:
+		// only admin may update admin users
+		if role != "admin" {
+			http.Error(w, "forbidden", http.StatusForbidden)
+			return
+		}
 		var payload struct {
 			ID       int
 			Password string
@@ -1175,6 +1299,109 @@ func (a *App) authLoginHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
+// authResetRequestHandler handles initiating a password reset by generating a token
+// Forbidden for admin users (only master admin may reset admin accounts)
+func (a *App) authResetRequestHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	username := strings.TrimSpace(r.FormValue("username"))
+	email := strings.TrimSpace(r.FormValue("email"))
+	if username == "" || email == "" {
+		http.Error(w, "username and email required", http.StatusBadRequest)
+		return
+	}
+	var role string
+	row := a.adminDB.QueryRow("SELECT role FROM users WHERE username = ?", username)
+	if err := row.Scan(&role); err != nil {
+		http.Error(w, "user not found", http.StatusNotFound)
+		return
+	}
+	if role == "admin" {
+		http.Error(w, "reset forbidden for admin users", http.StatusForbidden)
+		return
+	}
+	// generate token
+	token := generateRandomPassword(32)
+	expires := time.Now().Add(1 * time.Hour).Unix()
+	if _, err := a.adminDB.Exec("INSERT INTO password_resets (username, token, expires_at) VALUES (?, ?, ?)", username, token, expires); err != nil {
+		http.Error(w, "failed to create reset token", http.StatusInternalServerError)
+		return
+	}
+	// build reset URL
+	host := r.Host
+	scheme := "https"
+	if strings.HasPrefix(host, "localhost") || strings.HasPrefix(host, "127.0.0.1") {
+		scheme = "http"
+	}
+	resetURL := fmt.Sprintf("%s://%s/auth/reset?token=%s", scheme, host, token)
+	log.Printf("Password reset link for %s → %s (email to: %s)", username, resetURL, email)
+
+	// Send email
+	if err := sendResetEmail(email, username, resetURL); err != nil {
+		log.Printf("Failed to send reset email to %s: %v", email, err)
+		// Still return success to avoid leaking whether email exists
+		// but log the error for debugging
+	}
+
+	// Respond with success (do not leak the token or email status)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"status": "sent"})
+}
+
+// authResetHandler serves the reset page (GET) and completes reset (POST)
+func (a *App) authResetHandler(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		token := r.URL.Query().Get("token")
+		if token == "" {
+			http.Error(w, "token required", http.StatusBadRequest)
+			return
+		}
+		tpl, err := pongo2.FromFile(templatesPath + "auth_reset.html")
+		if err != nil {
+			http.Error(w, "reset page not available", http.StatusInternalServerError)
+			return
+		}
+		renderTemplate(w, tpl, pongo2.Context{"token": token})
+	case http.MethodPost:
+		token := strings.TrimSpace(r.FormValue("token"))
+		newPassword := strings.TrimSpace(r.FormValue("new_password"))
+		if token == "" || newPassword == "" {
+			http.Error(w, "token and new_password required", http.StatusBadRequest)
+			return
+		}
+		var username string
+		var expires int64
+		row := a.adminDB.QueryRow("SELECT username, expires_at FROM password_resets WHERE token = ?", token)
+		if err := row.Scan(&username, &expires); err != nil {
+			http.Error(w, "invalid token", http.StatusBadRequest)
+			return
+		}
+		if time.Now().Unix() > expires {
+			http.Error(w, "token expired", http.StatusBadRequest)
+			return
+		}
+		// Update password
+		hash, err := bcryptGenerateHash(newPassword)
+		if err != nil {
+			http.Error(w, "failed to hash password", http.StatusInternalServerError)
+			return
+		}
+		if _, err := a.adminDB.Exec("UPDATE users SET password_hash = ? WHERE username = ?", hash, username); err != nil {
+			http.Error(w, "failed to update password", http.StatusInternalServerError)
+			return
+		}
+		// Clean up token
+		_, _ = a.adminDB.Exec("DELETE FROM password_resets WHERE token = ?", token)
+		// Redirect to login
+		http.Redirect(w, r, "/auth/login", http.StatusSeeOther)
+	default:
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
 // authLogoutHandler clears auth cookie for authors/mods
 func (a *App) authLogoutHandler(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{Name: "auth_token", Value: "", HttpOnly: true, Path: "/", Expires: time.Unix(0, 0)})
@@ -1183,7 +1410,8 @@ func (a *App) authLogoutHandler(w http.ResponseWriter, r *http.Request) {
 
 // adminTypesHandler handles GET/POST/PUT/DELETE for types
 func (a *App) adminTypesHandler(w http.ResponseWriter, r *http.Request) {
-	if !isAdminRequest(r) {
+	role := getRoleFromRequest(r)
+	if role == "" {
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
@@ -1206,6 +1434,11 @@ func (a *App) adminTypesHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		json.NewEncoder(w).Encode(types)
 	case http.MethodPost:
+		// allowed for admin, mod, author
+		if role != "admin" && role != "mod" && role != "author" {
+			http.Error(w, "forbidden", http.StatusForbidden)
+			return
+		}
 		var payload struct {
 			TypeName    string `json:"type_name"`
 			MinRequired int    `json:"min_required"`
@@ -1235,6 +1468,11 @@ func (a *App) adminTypesHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		json.NewEncoder(w).Encode(map[string]int64{"id": id})
 	case http.MethodPut:
+		// allowed for admin, mod, author
+		if role != "admin" && role != "mod" && role != "author" {
+			http.Error(w, "forbidden", http.StatusForbidden)
+			return
+		}
 		var payload struct {
 			ID          int    `json:"id"`
 			TypeName    string `json:"type_name"`
@@ -1251,6 +1489,11 @@ func (a *App) adminTypesHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
 	case http.MethodDelete:
+		// only admin may delete types
+		if role != "admin" {
+			http.Error(w, "forbidden", http.StatusForbidden)
+			return
+		}
 		idStr := r.URL.Query().Get("id")
 		if idStr == "" {
 			http.Error(w, "id required", http.StatusBadRequest)
@@ -1270,13 +1513,19 @@ func (a *App) adminTypesHandler(w http.ResponseWriter, r *http.Request) {
 
 // adminPokemonHandler handles CRUD for pokemon_checklist
 func (a *App) adminPokemonHandler(w http.ResponseWriter, r *http.Request) {
-	if !isAdminRequest(r) {
+	role := getRoleFromRequest(r)
+	if role == "" {
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	switch r.Method {
 	case http.MethodPost:
+		// allow CRU for admin/mod/author
+		if role != "admin" && role != "mod" && role != "author" {
+			http.Error(w, "forbidden", http.StatusForbidden)
+			return
+		}
 		var p PokemonChecklistEntry
 		if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
 			http.Error(w, "invalid body", http.StatusBadRequest)
@@ -1291,6 +1540,11 @@ func (a *App) adminPokemonHandler(w http.ResponseWriter, r *http.Request) {
 		id, _ := res.LastInsertId()
 		json.NewEncoder(w).Encode(map[string]int64{"id": id})
 	case http.MethodPut:
+		// allowed for admin, mod, author
+		if role != "admin" && role != "mod" && role != "author" {
+			http.Error(w, "forbidden", http.StatusForbidden)
+			return
+		}
 		var p PokemonChecklistEntry
 		if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
 			http.Error(w, "invalid body", http.StatusBadRequest)
@@ -1304,6 +1558,11 @@ func (a *App) adminPokemonHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
 	case http.MethodDelete:
+		// only admin may delete types
+		if role != "admin" {
+			http.Error(w, "forbidden", http.StatusForbidden)
+			return
+		}
 		idStr := r.URL.Query().Get("id")
 		if idStr == "" {
 			http.Error(w, "id required", http.StatusBadRequest)
@@ -1360,7 +1619,8 @@ func (a *App) adminPokemonHandler(w http.ResponseWriter, r *http.Request) {
 
 // adminExtrasHandler returns monster.json and held_items.json for dropdowns
 func (a *App) adminExtrasHandler(w http.ResponseWriter, r *http.Request) {
-	if !isAdminRequest(r) {
+	role := getRoleFromRequest(r)
+	if role == "" {
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
@@ -1394,7 +1654,8 @@ func (a *App) adminExtrasHandler(w http.ResponseWriter, r *http.Request) {
 
 // adminRaidBossesHandler handles CRUD for raid bosses, loading from and persisting to bosses.json
 func (a *App) adminRaidBossesHandler(w http.ResponseWriter, r *http.Request) {
-	if !isAdminRequest(r) {
+	role := getRoleFromRequest(r)
+	if role == "" {
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
@@ -1431,6 +1692,11 @@ func (a *App) adminRaidBossesHandler(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(bosses)
 
 	case http.MethodPost:
+		// allow CRU for admin/mod/author on JSONs
+		if role != "admin" && role != "mod" && role != "author" {
+			http.Error(w, "forbidden", http.StatusForbidden)
+			return
+		}
 		var payload struct {
 			BossName     string          `json:"boss_name"`
 			Stars        int             `json:"stars"`
@@ -1488,6 +1754,11 @@ func (a *App) adminRaidBossesHandler(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(map[string]string{"status": "created"})
 
 	case http.MethodPut:
+		// allow CRU for admin/mod/author on JSONs
+		if role != "admin" && role != "mod" && role != "author" {
+			http.Error(w, "forbidden", http.StatusForbidden)
+			return
+		}
 		var payload struct {
 			ID           int             `json:"id"`
 			BossName     string          `json:"boss_name"`
@@ -1545,6 +1816,11 @@ func (a *App) adminRaidBossesHandler(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(map[string]string{"status": "updated"})
 
 	case http.MethodDelete:
+		// only admin may delete JSON bosses
+		if role != "admin" {
+			http.Error(w, "forbidden", http.StatusForbidden)
+			return
+		}
 		idStr := r.URL.Query().Get("id")
 		if idStr == "" {
 			http.Error(w, "id required", http.StatusBadRequest)
