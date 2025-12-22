@@ -37,6 +37,12 @@ jobs:
   deploy:
     runs-on: self-hosted
     needs: [build_and_publish]
+    env:
+      SMTP_HOST: ${{ vars.SMTP_HOST }}
+      SMTP_USER: ${{ vars.SMTP_USER }}
+      SMTP_PORT: ${{ vars.SMTP_PORT }}
+      SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+      SMTP_FROM: ${{ vars.SMTP_FROM }}
     permissions:
       contents: read
       packages: read
