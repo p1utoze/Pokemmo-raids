@@ -80,12 +80,15 @@ jobs:
           else
             echo "No existing container found. Continuing..."
           fi
-  
+      - name: Initialize databases
+        run: python3 init_checklist_db.py
+        
       - name: Run container
         run: |
           docker run -d \
             --name raids \
             -p 80:8080 \
+            -v "${{ github.workspace }}/data:/app/data" \
             -e "ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}" \
             -e "SMTP_HOST=${{ vars.SMTP_HOST }}" \
             -e "SMTP_USER=${{ vars.SMTP_USER }}" \
