@@ -9,7 +9,7 @@ from pathlib import Path
 PARENT_DIR = Path(__file__).parent
 DB_PATH = PARENT_DIR / "data/checklist.db"  
 BOSSES_JSON_PATH = PARENT_DIR / "data/bosses.json"
-CHECKLIST_JSON_PATH = PARENT_DIR / "data/checklist.json"
+CHECKLIST_JSON_PATH = PARENT_DIR / "data/checklist_xmas.json"
 
 def init_db():
     """Create SQLite database with multi-season checklist schema"""
