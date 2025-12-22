@@ -1028,7 +1028,7 @@ func (a *App) saveChecklistHandler(w http.ResponseWriter, r *http.Request) {
 	// Update each pokemon in the checklist
 	seasonTable := a.getSeasonTableName()
 	// log.Printf("Using season table: %s", seasonTable)
-	
+
 	// Verify the table exists
 	// var tableExists int
 	// err := a.db.QueryRow(fmt.Sprintf("SELECT COUNT(name) FROM sqlite_master WHERE type='table' AND name='%s'", seasonTable)).Scan(&tableExists)
@@ -1038,13 +1038,13 @@ func (a *App) saveChecklistHandler(w http.ResponseWriter, r *http.Request) {
 	// 	return
 	// }
 	// log.Printf("✓ Verified season table '%s' exists", seasonTable)
-	
+
 	for i, pokemon := range req.Pokemon {
 		// log.Printf("Updating pokemon %d: id=%d, name='%s', item='%s', moves='%s', notes='%s'",
 		// 	i, pokemon.ID, pokemon.PokemonName, pokemon.HeldItem, pokemon.Moves, pokemon.Notes)
 
 		query := fmt.Sprintf("UPDATE %s SET held_item = ?, moves = ?, notes = ? WHERE id = ?", seasonTable)
-		// log.Printf("SQL Query: %s | Params: item='%s', moves='%s', notes='%s', id=%d", 
+		// log.Printf("SQL Query: %s | Params: item='%s', moves='%s', notes='%s', id=%d",
 		// 	query, pokemon.HeldItem, pokemon.Moves, pokemon.Notes, pokemon.ID)
 
 		result, err := a.db.Exec(query,
@@ -2141,7 +2141,7 @@ func (a *App) saveBossesJSON() error {
 		}
 	}
 	return encoder.Encode(a.seasons)
-} 
+}
 
 // renderTemplate renders a template with given context
 func renderTemplate(w http.ResponseWriter, tpl *pongo2.Template, ctx pongo2.Context) {
