@@ -5,7 +5,7 @@
     {% for boss in season.RaidBosses %}
     <div class="boss-card" data-name="{{ boss.Name }}">
         <a href="/boss?name={{ boss.Name }}" class="boss-link">
-            <div class="boss-card-title">{{ boss.Name }}</div>
+            <div class="boss-card-title">{{ boss.Name }} {{ boss.Stars }}★</div>
             <div class="boss-card-desc">{{ boss.Description }}</div>
         </a>
     </div>
@@ -18,12 +18,15 @@
     {% if user_role %}
     <div class="auth-chip">Logged in as <strong>{{ user_role }}</strong></div>
     <a class="auth-btn" href="/admin">Admin Panel</a>
+    <a class="auth-btn" href="/build-team">Team Builder</a>
     <a class="auth-btn ghost" href="/auth/logout">Logout</a>
     {% else %}
     <div class="auth-chip muted">Staff Login</div>
     <a class="auth-btn" href="/auth/login">Login</a>
     {% endif %}
 </div>
+
+<div id="page-data" data-user-role="{{ user_role|default:'' }}" style="display: none;"></div>
 
 <section class="hero">
     <h1>{{ season.SeasonName }}</h1>
@@ -38,8 +41,11 @@
 </section>
 
 <script>
-    // Pass user role to JavaScript
-    window.USER_ROLE = "{{ user_role|default:'' }}";
+    // Pass user role to JavaScript for checklist editor
+    document.body.dataset.userRole = "{{ user_role|default:'' }}";
 </script>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
 <script src="/static/js/checklist.js"></script>
+<script src="/static/js/boss-edit.js"></script>
+<script src="/static/js/checklist-edit.js"></script>
 {% endblock %}

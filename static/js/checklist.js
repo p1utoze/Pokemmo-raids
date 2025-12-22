@@ -103,6 +103,16 @@ function createTypeSection(typeData, typeIndex) {
         ? `(${typeData.completed}/${typeData.min_required})`
         : '';
 
+    // Calculate threshold percentage and segment widths
+    const minThresholdPercent = typeData.count > 0 && typeData.min_required > 0
+        ? Math.round((typeData.min_required / typeData.count) * 100)
+        : 0;
+
+    // Green segment: fills from 0 to min threshold (capped at current completion)
+    const greenWidth = Math.min(completionPercent, minThresholdPercent);
+    // Post segment: shows progress beyond threshold (if any)
+    const postWidth = completionPercent > minThresholdPercent ? (completionPercent - minThresholdPercent) : 0;
+
     // Header with collapse toggle
     const header = document.createElement('div');
     header.className = `type-header ${isMinMet ? 'min-met' : 'min-pending'}`;
@@ -116,7 +126,10 @@ function createTypeSection(typeData, typeIndex) {
                 <span class="single-badge">${typeData.completed}/${typeData.count}</span>
                 <small class="min-sub" title="${typeData.min_required > 0 ? `Min required: ${typeData.min_required}` : ''}">${typeData.min_required > 0 ? `(min ${typeData.min_required})` : ''}</small>
                 <div class="progress-bar">
-                    <div class="progress-fill" style="width: ${completionPercent}%"></div>
+                    <div class="progress-stack">
+                        <div class="progress-min" style="width: ${greenWidth}%"></div>
+                        <div class="progress-post" style="width: ${postWidth}%"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -306,7 +319,8 @@ function updateCompletionCounts() {
 
         const header = typeSection.querySelector('.type-header');
         const singleBadge = header.querySelector('.single-badge');
-        const progressFill = header.querySelector('.progress-fill');
+        const progressMin = header.querySelector('.progress-min');
+        const progressPost = header.querySelector('.progress-post');
 
         // Update single badge (always show completed/total)
         if (singleBadge) {
@@ -326,21 +340,25 @@ function updateCompletionCounts() {
             }
         }
 
-        // Update progress bar
+        // Update stacked progress bar segments
         const completionPercent = typeData.count > 0
             ? Math.round((completedCount / typeData.count) * 100)
             : 0;
-        if (progressFill) {
 
-            progressFill.style.width = completionPercent + '%';
-            // add threshold coloring for progress bar
-            if (typeData.count <= typeData.min_required && completedCount < typeData.min_required) {
-                progressFill.classList.add('progress-minimum');
-                progressFill.classList.remove('progress-normal');
-            } else {
-                progressFill.classList.remove('progress-minimum');
-                progressFill.classList.add('progress-normal');
-            }
+        const minThresholdPercent = typeData.count > 0 && typeData.min_required > 0
+            ? Math.round((typeData.min_required / typeData.count) * 100)
+            : 0;
+
+        // Green segment: fills from 0 to min threshold (capped at current completion)
+        const greenWidth = Math.min(completionPercent, minThresholdPercent);
+        // Post segment: shows progress beyond threshold (if any)
+        const postWidth = completionPercent > minThresholdPercent ? (completionPercent - minThresholdPercent) : 0;
+
+        if (progressMin) {
+            progressMin.style.width = greenWidth + '%';
+        }
+        if (progressPost) {
+            progressPost.style.width = postWidth + '%';
         }
 
         // Update header styling based on min requirement

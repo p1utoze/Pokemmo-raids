@@ -1,0 +1,544 @@
+/**
+ * Checklist in-place editor with reused autocomplete from boss-edit.js
+ * Admin-only functionality for editing pokemon, moves, items, and minimum required
+ */
+
+// Reuse checklistData and STORAGE_KEY from checklist.js  
+// These are already declared in checklist.js which loads first
+
+let checklistEditData = null;
+let typeEditModes = {}; // Track edit mode per type
+
+// Initialize checklist editor on page load
+document.addEventListener('DOMContentLoaded', async () => {
+    // Check if user is admin
+    const isAdmin = document.body.dataset.userRole === 'admin';
+    if (!isAdmin) return;
+
+    // Wait for boss-edit.js to load edit data first
+    if (typeof editData !== 'undefined' && editData) {
+        checklistEditData = editData;
+        addChecklistEditButtons();
+    } else {
+        // If editData not ready, wait a bit and retry
+        setTimeout(async () => {
+            if (typeof editData !== 'undefined' && editData) {
+                checklistEditData = editData;
+                addChecklistEditButtons();
+            }
+        }, 1000);
+    }
+});
+
+/**
+ * Add edit buttons to each type header
+ */
+function addChecklistEditButtons() {
+    const typeSections = document.querySelectorAll('.type-section');
+
+    typeSections.forEach(section => {
+        const typeId = section.id;
+        const header = section.querySelector('.type-header');
+        if (!header) return;
+
+        const typeInfo = header.querySelector('.type-info');
+        if (!typeInfo) return;
+
+        const editBtn = document.createElement('button');
+        editBtn.className = 'btn-edit-type';
+        editBtn.id = `edit-btn-${typeId}`;
+        editBtn.textContent = '✏️';
+        editBtn.title = 'Edit this type';
+
+        editBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (typeEditModes[typeId]) {
+                exitTypeEditMode(typeId);
+            } else {
+                enterTypeEditMode(typeId);
+            }
+        });
+
+        typeInfo.appendChild(editBtn);
+    });
+}
+
+/**
+ * Enter edit mode for a specific type
+ */
+function enterTypeEditMode(typeId) {
+    typeEditModes[typeId] = true;
+
+    const typeSection = document.getElementById(typeId);
+    if (!typeSection) return;
+
+    const table = typeSection.querySelector('.checklist-table');
+    if (!table) return;
+
+    const tbody = table.querySelector('tbody');
+    const rows = tbody.querySelectorAll('tr');
+
+    rows.forEach((row, rowIdx) => {
+        makeRowEditable(row, typeId, rowIdx);
+    });
+
+    // Create button container for save and cancel
+    const header = typeSection.querySelector('.type-header');
+    const typeInfo = header.querySelector('.type-info');
+    const buttonContainer = document.createElement('div');
+    buttonContainer.className = 'edit-button-container';
+    buttonContainer.id = `btn-container-${typeId}`;
+
+    // Get the old edit button and remove it
+    const oldEditBtn = document.getElementById(`edit-btn-${typeId}`);
+    if (oldEditBtn) {
+        oldEditBtn.remove();
+    }
+
+    // Create new save button (cloned to remove all event listeners)
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'btn-edit-type save-mode';
+    saveBtn.id = `edit-btn-${typeId}`;
+    saveBtn.textContent = '💾';
+    saveBtn.title = 'Save changes';
+
+    // Add ONLY the save handler
+    saveBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('Save button clicked for type:', typeId);
+        saveTypeChanges(typeId);
+    });
+
+    buttonContainer.appendChild(saveBtn);
+
+    // Add cancel button
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'btn-cancel-type';
+    cancelBtn.id = `cancel-btn-${typeId}`;
+    cancelBtn.textContent = '✖';
+    cancelBtn.title = 'Cancel editing';
+    cancelBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        exitTypeEditMode(typeId);
+    });
+    buttonContainer.appendChild(cancelBtn);
+
+    typeInfo.appendChild(buttonContainer);
+}
+
+/**
+ * Make a single row editable
+ */
+function makeRowEditable(row, typeId, rowIdx) {
+    const cells = row.querySelectorAll('td');
+    if (cells.length < 8) return;
+
+    // Skip checkbox cell (0)
+    // Pokemon name (1)
+    const nameCell = cells[1];
+    const originalName = nameCell.textContent;
+    nameCell.innerHTML = `<input type="text" class="editable-pokemon-name" value="${escapeHtml(originalName)}" placeholder="Pokemon">`;
+    const nameInput = nameCell.querySelector('input');
+
+    // Type (2) - skip, display only
+    // Secondary type (3) - skip, display only
+    // Ability (4) - skip, display only
+
+    // Held Item (5)
+    const itemCell = cells[5];
+    const originalItem = itemCell.textContent === '—' ? '' : itemCell.textContent;
+    itemCell.innerHTML = `<input type="text" class="editable-held-item" value="${escapeHtml(originalItem)}" placeholder="Item">`;
+    const itemInput = itemCell.querySelector('input');
+    if (typeof attachItemAutocomplete === 'function') {
+        attachItemAutocomplete(itemInput);
+    }
+
+    // Moves (6) - Multi-select
+    const movesCell = cells[6];
+    const originalMoves = [];
+    movesCell.querySelectorAll('li').forEach(li => {
+        originalMoves.push(li.textContent.trim());
+    });
+    movesCell.innerHTML = '';
+    const movesContainer = document.createElement('div');
+    movesContainer.className = 'moves-container';
+
+    // Add selected moves as tags
+    originalMoves.forEach((move, idx) => {
+        if (idx < 4) {
+            const tag = createMoveTag(move, movesContainer, nameInput);
+            movesContainer.appendChild(tag);
+        }
+    });
+
+    // Add move input if less than 4 moves
+    if (originalMoves.length < 4) {
+        const moveInput = document.createElement('input');
+        moveInput.type = 'text';
+        moveInput.className = 'editable-move-input';
+
+        // Check if pokemon name is valid
+        const isPokemonValid = () => {
+            const pokemonName = nameInput.value.trim();
+            if (!pokemonName) return false;
+
+            // Check if pokemon exists in monster data
+            if (checklistEditData && checklistEditData.monsters) {
+                return checklistEditData.monsters.some(m =>
+                    m.name.toLowerCase() === pokemonName.toLowerCase()
+                );
+            }
+            return false;
+        };
+
+        const isValid = isPokemonValid();
+        moveInput.disabled = !isValid;
+        moveInput.placeholder = isValid ? 'Add move' : 'Select valid Pokemon first';
+        movesContainer.appendChild(moveInput);
+
+        // Attach move autocomplete
+        if (typeof attachMoveAutocomplete === 'function') {
+            attachMoveAutocomplete(moveInput, nameInput);
+        }
+
+        // Handle move selection
+        moveInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const moveValue = moveInput.value.trim();
+                if (moveValue && originalMoves.length < 4) {
+                    originalMoves.push(moveValue);
+                    const newTag = createMoveTag(moveValue, movesContainer, nameInput);
+                    movesContainer.insertBefore(newTag, moveInput);
+                    moveInput.value = '';
+                    if (originalMoves.length >= 4) {
+                        moveInput.style.display = 'none';
+                    }
+                }
+            }
+        });
+
+        // Enable/disable move input based on pokemon selection
+        nameInput.addEventListener('change', () => {
+            const isValid = isPokemonValid();
+            moveInput.disabled = !isValid;
+            moveInput.placeholder = isValid ? 'Add move' : 'Select valid Pokemon first';
+        });
+    }
+
+    movesCell.appendChild(movesContainer);
+    movesCell.dataset.movesData = JSON.stringify(originalMoves);
+
+    // Notes (7)
+    const notesCell = cells[7];
+    const originalNotes = notesCell.textContent === '—' ? '' : notesCell.textContent;
+    notesCell.innerHTML = `<input type="text" class="editable-notes" value="${escapeHtml(originalNotes)}" placeholder="Notes">`;
+
+    // Attach Pokemon autocomplete AFTER all inputs are created
+    attachChecklistPokemonAutocomplete(nameInput);
+}
+
+/**
+ * Create a move tag with delete button
+ */
+function createMoveTag(move, container, nameInput) {
+    const tag = document.createElement('div');
+    tag.className = 'move-tag';
+
+    const span = document.createElement('span');
+    span.textContent = move;
+    tag.appendChild(span);
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.textContent = '×';
+    deleteBtn.title = 'Remove move';
+
+    deleteBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        tag.remove();
+
+        // Get the move input if it exists
+        const moveInput = container.querySelector('.editable-move-input');
+        if (moveInput && moveInput.style.display === 'none') {
+            moveInput.style.display = 'block';
+
+            // Check if pokemon name is valid before enabling
+            const pokemonName = nameInput.value.trim();
+            const isPokemonValid = pokemonName && checklistEditData &&
+                checklistEditData.monsters &&
+                checklistEditData.monsters.some(m =>
+                    m.name.toLowerCase() === pokemonName.toLowerCase()
+                );
+            moveInput.disabled = !isPokemonValid;
+        }
+    });
+
+    tag.appendChild(deleteBtn);
+    return tag;
+}
+
+/**
+ * Exit edit mode and restore original view for a specific type
+ */
+function exitTypeEditMode(typeId) {
+    typeEditModes[typeId] = false;
+
+    const typeSection = document.getElementById(typeId);
+    if (!typeSection) return;
+
+    // Find the type data
+    const typeData = checklistData.types.find(t => `type-${t.id}` === typeId);
+    if (!typeData) return;
+
+    // Rebuild the table
+    const content = typeSection.querySelector('.type-content');
+    const table = content.querySelector('.checklist-table');
+    const tbody = table.querySelector('tbody');
+    tbody.innerHTML = '';
+
+    typeData.pokemons.forEach((pokemon) => {
+        const row = createPokemonRow(pokemon);
+        tbody.appendChild(row);
+    });
+
+    // Restore checkbox states
+    if (typeof restoreChecklistState === 'function') {
+        restoreChecklistState();
+    }
+
+    // Remove button container and restore original edit button
+    const buttonContainer = document.getElementById(`btn-container-${typeId}`);
+    if (buttonContainer) {
+        buttonContainer.remove();
+    }
+
+    // Re-add the original edit button
+    const header = typeSection.querySelector('.type-header');
+    const typeInfo = header.querySelector('.type-info');
+    const editBtn = document.createElement('button');
+    editBtn.className = 'btn-edit-type';
+    editBtn.id = `edit-btn-${typeId}`;
+    editBtn.textContent = '✏️';
+    editBtn.title = 'Edit this type';
+    editBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        enterTypeEditMode(typeId);
+    });
+    typeInfo.appendChild(editBtn);
+}
+
+/**
+ * Save changes for a specific type to server
+ */
+async function saveTypeChanges(typeId) {
+    if (!typeEditModes[typeId]) return;
+
+    const typeSection = document.getElementById(typeId);
+    if (!typeSection) return;
+
+    const table = typeSection.querySelector('.checklist-table');
+    if (!table) return;
+
+    const tbody = table.querySelector('tbody');
+    const rows = tbody.querySelectorAll('tr');
+    const updateData = [];
+
+    // Extract data from editable inputs BEFORE any DOM manipulation
+    rows.forEach((row, index) => {
+        const cells = row.querySelectorAll('td');
+        console.log(`Row ${index}: Found ${cells.length} cells`);
+
+        const pokemonNameInput = cells[1]?.querySelector('.editable-pokemon-name');
+        const heldItemInput = cells[5]?.querySelector('.editable-held-item');
+        const movesContainer = cells[6]?.querySelector('.moves-container');
+        const notesInput = cells[7]?.querySelector('.editable-notes');
+
+        console.log(`Row ${index} inputs:`, {
+            pokemonNameInput: pokemonNameInput?.value,
+            heldItemInput: heldItemInput?.value,
+            movesContainer: !!movesContainer,
+            notesInput: notesInput?.value
+        });
+
+        if (!pokemonNameInput) {
+            console.log(`Row ${index}: No pokemon name input found, skipping`);
+            return;
+        }
+
+        // Extract moves from tags
+        const moves = [];
+        movesContainer.querySelectorAll('.move-tag span').forEach(span => {
+            moves.push(span.textContent.trim());
+        });
+
+        const rowData = {
+            pokemon_name: pokemonNameInput.value.trim(),
+            held_item: heldItemInput.value.trim(),
+            moves: moves.join(', '),
+            notes: notesInput.value.trim()
+        };
+
+        console.log(`Row ${index} extracted data:`, rowData);
+        updateData.push(rowData);
+    });
+
+    // Send to server
+    console.log('Saving checklist data:', updateData);
+    try {
+        const response = await fetch('/api/checklist/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',  // Include cookies for authentication
+            body: JSON.stringify({ pokemon: updateData })
+        });
+
+        console.log('Response status:', response.status);
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Server error response:', errorText);
+            throw new Error(`Server error: ${response.status} - ${errorText}`);
+        }
+
+        const result = await response.json();
+        console.log('Save successful:', result);
+
+        // Exit edit mode FIRST (before reloading)
+        typeEditModes[typeId] = false;
+
+        // Remove button container and restore original edit button
+        const buttonContainer = document.getElementById(`btn-container-${typeId}`);
+        if (buttonContainer) {
+            buttonContainer.remove();
+        }
+
+        // Reload checklist data to get fresh data from server
+        if (typeof loadChecklist === 'function') {
+            await loadChecklist();
+        }
+
+        // Re-add edit buttons since loadChecklist rebuilds the DOM
+        addChecklistEditButtons();
+
+        // After reload, collapse the type section
+        const updatedTypeSection = document.getElementById(typeId);
+        if (updatedTypeSection) {
+            const content = updatedTypeSection.querySelector('.type-content');
+            const header = updatedTypeSection.querySelector('.type-header');
+            const collapseBtn = header ? header.querySelector('.collapse-btn') : null;
+            const chevron = collapseBtn ? collapseBtn.querySelector('.chevron') : null;
+
+            if (content) {
+                content.style.display = 'none';
+            }
+            if (header) {
+                header.classList.remove('expanded');
+            }
+            if (chevron) {
+                chevron.textContent = '▼';
+            }
+        }
+    } catch (error) {
+        console.error('Failed to save checklist:', error);
+        alert(`Failed to save changes: ${error.message}`);
+    }
+}
+
+/**
+ * Escape HTML for safe display
+ */
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+/**
+ * Attach Pokemon autocomplete specifically for checklist
+ * (Reuses Fuse instance from boss-edit.js if available)
+ */
+function attachChecklistPokemonAutocomplete(input) {
+    let autocompleteDiv = null;
+
+    input.addEventListener('input', () => {
+        const query = input.value.trim();
+        if (query.length < 2) {
+            removeAutocomplete();
+            return;
+        }
+
+        // Use Fuse instance from boss-edit.js
+        if (!fuseInstances || !fuseInstances.pokemon) {
+            return;
+        }
+
+        const results = fuseInstances.pokemon.search(query).slice(0, 8);
+        if (results.length === 0) {
+            removeAutocomplete();
+            return;
+        }
+
+        showAutocomplete(input, results.map(r => r.item), (selected) => {
+            input.value = selected;
+            removeAutocomplete();
+            // Trigger change event to enable move inputs
+            input.dispatchEvent(new Event('change'));
+        });
+    });
+
+    input.addEventListener('blur', () => {
+        setTimeout(removeAutocomplete, 200);
+    });
+
+    function removeAutocomplete() {
+        if (autocompleteDiv) {
+            autocompleteDiv.remove();
+            autocompleteDiv = null;
+        }
+    }
+
+    function showAutocomplete(targetInput, items, onSelect) {
+        removeAutocomplete();
+
+        autocompleteDiv = document.createElement('div');
+        autocompleteDiv.className = 'autocomplete-dropdown';
+        autocompleteDiv.style.position = 'absolute';
+        autocompleteDiv.style.zIndex = '9999';
+        autocompleteDiv.style.background = 'white';
+        autocompleteDiv.style.border = '1px solid #ccc';
+        autocompleteDiv.style.borderRadius = '4px';
+        autocompleteDiv.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.3)';
+        autocompleteDiv.style.maxHeight = '200px';
+        autocompleteDiv.style.overflowY = 'auto';
+        autocompleteDiv.style.minWidth = targetInput.offsetWidth + 'px';
+
+        items.forEach(item => {
+            const div = document.createElement('div');
+            div.textContent = item;
+            div.style.padding = '8px 12px';
+            div.style.cursor = 'pointer';
+            div.style.color = '#1a202c';
+            div.style.fontSize = '14px';
+            div.addEventListener('mouseenter', () => {
+                div.style.background = '#e2e8f0';
+            });
+            div.addEventListener('mouseleave', () => {
+                div.style.background = 'white';
+            });
+            div.addEventListener('mousedown', () => {
+                onSelect(item);
+            });
+            autocompleteDiv.appendChild(div);
+        });
+
+        const rect = targetInput.getBoundingClientRect();
+        autocompleteDiv.style.top = (rect.bottom + window.scrollY) + 'px';
+        autocompleteDiv.style.left = (rect.left + window.scrollX) + 'px';
+        document.body.appendChild(autocompleteDiv);
+    }
+}

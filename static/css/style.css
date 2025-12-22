@@ -145,6 +145,29 @@ body {
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6)
 }
 
+/* Stacked progress segments */
+.progress-stack {
+    display: flex;
+    height: 100%;
+    width: 100%;
+}
+
+.progress-min {
+    height: 100%;
+    background: #a560fa;
+    border-color: #0f1724;
+    /* Emerald green */
+    border-radius: 0px 2px 2px 0px;
+    transition: width 0.25s ease;
+}
+
+.progress-post {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-2), var(--accent));
+    border-radius: 2px 0 0 2px;
+    transition: width 0.25s ease;
+}
+
 .boss-card:hover {
     transform: translateY(-4px);
     box-shadow: 0 14px 32px rgba(2, 6, 23, 0.6)
@@ -783,13 +806,6 @@ input.player-check:checked::after {
     max-width: 200px;
 }
 
-.progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--accent-2), var(--accent));
-    border-radius: 2px;
-    transition: width 0.3s ease;
-}
-
 .type-content {
     overflow-x: auto;
 }
@@ -1135,4 +1151,233 @@ button[type="reset"]:hover {
 .btn-danger:hover {
     background: rgba(239, 68, 68, 0.3);
     border-color: #ef4444;
+}
+
+/* In-place editing styles */
+.editable-player-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 4px;
+}
+
+.editable-player-cell input {
+    padding: 6px 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    color: #e6eef6;
+    font-size: 13px;
+    transition: all 0.2s;
+}
+
+.editable-player-cell input:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.editable-player-cell input::placeholder {
+    color: rgba(255, 255, 255, 0.3);
+}
+
+.health-input {
+    width: 80px;
+    padding: 6px 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    color: #e6eef6;
+    font-size: 13px;
+}
+
+.health-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.note-input.editing {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.note-input.editing:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.autocomplete-dropdown {
+    background: var(--card);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.autocomplete-dropdown div {
+    color: #e6eef6;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.autocomplete-dropdown div:last-child {
+    border-bottom: none;
+}
+
+.save-variation-btn,
+.cancel-variation-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.save-variation-btn {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: #082018;
+}
+
+.save-variation-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(110, 231, 183, 0.3);
+}
+
+.cancel-variation-btn {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--muted);
+}
+
+.cancel-variation-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+.edit-variation-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 14px;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--accent);
+    border: 1px solid rgba(110, 231, 183, 0.2);
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.edit-variation-btn:hover {
+    background: rgba(110, 231, 183, 0.1);
+    border-color: var(--accent);
+    transform: translateY(-2px);
+}
+
+/* Checklist Editor Styles */
+.btn-edit-type {
+    margin-left: 8px;
+    padding: 4px 8px;
+    font-size: 14px;
+    cursor: pointer;
+    border: none;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    color: inherit;
+    transition: all 0.2s ease;
+}
+
+.btn-edit-type:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.btn-edit-type.save-mode {
+    background: #4ade80;
+    color: white;
+    padding: 6px 48px;
+    margin-left: 0;
+    flex-shrink: 0;
+}
+
+.btn-edit-type.save-mode:hover {
+    background: #22c55e;
+}
+
+.btn-cancel-type {
+    padding: 6px 48px;
+    font-size: 14px;
+    cursor: pointer;
+    border: none;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    color: inherit;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+}
+
+.btn-cancel-type:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.edit-button-container {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    margin-left: auto;
+}
+
+.moves-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.move-tag {
+    background: #4ade80;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+}
+
+.move-tag button {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 0;
+    line-height: 1;
+}
+
+.move-tag button:hover {
+    opacity: 0.8;
+}
+
+.editable-move-input {
+    flex: 1;
+    min-width: 120px;
+    padding: 6px 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    color: #e6eef6;
+    font-size: 13px;
+}
+
+.editable-move-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.editable-move-input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }

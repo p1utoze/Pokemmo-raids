@@ -233,6 +233,7 @@ function buildPlanFromVariation(teamData) {
         if (!tbody) return;
         tbody.innerHTML = '';
         if (!teamData || !teamData.players) return;
+
         // determine max turns by looking at players arrays
         let maxTurns = 0;
         ['P1', 'P2', 'P3', 'P4'].forEach(p => {
@@ -240,18 +241,28 @@ function buildPlanFromVariation(teamData) {
                 maxTurns = Math.max(maxTurns, teamData.players[p].length);
             }
         });
+
+        // Build a row for each turn
         for (let ti = 0; ti < maxTurns; ti++) {
             const snap = {};
             ['P1', 'P2', 'P3', 'P4'].forEach((p, idx) => {
                 const arr = teamData.players[p] || [];
                 const entry = arr[ti] || {};
-                snap[`P${idx + 1}`] = entry;
+                // Map the data correctly - Player struct has Pokemon, Move, Item fields
+                snap[`P${idx + 1}`] = {
+                    pokemon: entry.pokemon || '',
+                    move: entry.move || '',
+                    item: entry.item || '',
+                    ability: '' // ability will be fetched when pokemon is set
+                };
             });
-            appendPlanRowFromSnap(snap);
+            appendPlanRowFromSnap(snap, teamData.notes ? teamData.notes[ti] : '');
         }
-    } catch (e) { }
+    } catch (e) {
+        console.error('Error building plan from variation:', e);
+    }
 }
-function appendPlanRowFromSnap(snap) {
+function appendPlanRowFromSnap(snap, note) {
     const tbody = document.getElementById('planTbody');
     if (!tbody) return;
     const tr = document.createElement('tr');
@@ -263,7 +274,7 @@ function appendPlanRowFromSnap(snap) {
         tr.appendChild(cell);
     }
     const notesTd = document.createElement('td');
-    notesTd.textContent = '';
+    notesTd.textContent = note || '';
     tr.appendChild(notesTd);
     tbody.appendChild(tr);
 }
@@ -331,6 +342,24 @@ function createPlayerCellFromData(turnIdx, playerIdx, data) {
             }
         }).catch(() => { });
     });
+
+    // If pokemon is already set, fetch its ability and moves
+    if (data && data.pokemon) {
+        fetchPokemonInfo(data.pokemon).then(info => {
+            abilityDiv.textContent = info.abilities && info.abilities.length ? info.abilities[0] : '—';
+            if (info.moves && info.moves.length) {
+                mSelect.innerHTML = '<option value="">Select Move</option>';
+                info.moves.forEach(m => {
+                    const o = document.createElement('option');
+                    o.value = m;
+                    o.textContent = m;
+                    mSelect.appendChild(o);
+                });
+                // Restore the selected move
+                if (data.move) mSelect.value = data.move;
+            }
+        }).catch(() => { });
+    }
 
     meta.appendChild(pSelect);
     meta.appendChild(mSelect);

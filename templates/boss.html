@@ -3,7 +3,7 @@
 {% block sidebar %}
 <div class="boss-list-compact">
     <a href="/">← Back</a>
-    <h3>{{ boss.Name }}</h3>
+    <h3>{{ boss.Name }} {{ boss.Stars }}★</h3>
 </div>
 {% endblock %}
 
@@ -20,7 +20,7 @@
 </div>
 
 <div class="boss-page">
-    <h2>{{ boss.Name }}</h2>
+    <h2>{{ boss.Name }} {{ boss.Stars }}★</h2>
     <p class="boss-desc">{{ boss.Description }} <button class="view-more" id="viewMoreBtn">View more</button></p>
     <!-- All variations are shown below; dropdown removed per user request -->
 
@@ -28,11 +28,15 @@
         {% for var in boss.Variations %}
         <div class="variation-header">
             <h3 class="variation-title">Variation {{ var.Index }}</h3>
+            {% if user_role %}
             <div style="display:flex;gap:8px;align-items:center">
-                <a href="/build-team?boss={{ boss.Name }}&variation={{ var.Index0 }}" class="edit-variation-btn">✏️ Edit
-                    Team</a>
-                <a href="/build-team?boss={{ boss.Name }}&variation=new" class="new-variation-btn">➕ New Variation</a>
+                <button class="edit-variation-btn" data-variation-index="{{ var.Index0 }}">✏️ Edit</button>
+                <button class="save-variation-btn" data-variation-index="{{ var.Index0 }}" style="display:none;">💾
+                    Save</button>
+                <button class="cancel-variation-btn" data-variation-index="{{ var.Index0 }}" style="display:none;">✖
+                    Cancel</button>
             </div>
+            {% endif %}
         </div>
         <div class="variation-table" data-variation-index="{{ var.Index0 }}">
             <table class="plan-table">
@@ -57,6 +61,8 @@
 </div>
 
 <script type="application/json" id="boss-data">{{ bossJSON|safe }}</script>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
+<script src="/static/js/boss-edit.js"></script>
 <aside class="right-sidebar" id="rightSidebar" aria-hidden="true">
     <button class="close-sidebar" id="closeSidebar">✕</button>
     <div class="sidebar-inner">

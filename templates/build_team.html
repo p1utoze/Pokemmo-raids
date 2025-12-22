@@ -3,23 +3,52 @@
 {% block sidebar %}
 <div class="sidebar-builder">
     <a href="/" class="back-link">← Back</a>
-    <h3 class="builder-title">{{ boss_name }}</h3>
+    {% if boss_name %}
+    <h3 class="builder-title">{{ boss_name }} {{ boss.Stars }}★</h3>
     <div class="builder-info">
         <p class="variation-info">Variation {{ variation_index }}</p>
-        <button class="save-btn" id="saveTeamBtn">Save Team</button>
+        {% if user_role %}
+        <button class="save-btn" id="saveTeamBtn">Save</button>
         <button class="cancel-btn" id="cancelTeamBtn">Cancel</button>
+        {% endif %}
     </div>
+    {% else %}
+    <h3 class="builder-title">Team Builder</h3>
+    <form class="builder-select-form" method="get" action="/build-team"
+        style="display:flex;flex-direction:column;gap:8px;">
+        <label>Season
+            <select name="season" disabled>
+                <option value="{{ season_name }}">{{ season_name }}</option>
+            </select>
+        </label>
+        <label>Raid Boss
+            <select name="boss" required>
+                <option value="">Select a boss</option>
+                {% for name in bosses %}
+                <option value="{{ name }}">{{ name }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <button type="submit" class="save-btn">Open Builder</button>
+    </form>
+    {% endif %}
 </div>
 {% endblock %}
 
 {% block content %}
 <div class="team-builder">
+    {% if not boss_name %}
     <div class="builder-header">
-        <h2>Team Builder</h2>
-        <p class="builder-subtitle">Edit your team composition. Each player needs a Pokémon, Move, Item, and Ability.
-        </p>
+        <p class="builder-subtitle">Select a season and boss to start building.</p>
     </div>
-    
+    {% else %}
+    <div class="builder-header">
+        <h2>Building New Variation for {{ boss_name }}</h2>
+        <p class="builder-subtitle">Use autocomplete inputs to add Pokémon, moves, items, and notes per turn. Click the
+            X to delete a row.</p>
+    </div>
+    {% endif %}
+
     <!-- -- Redundant form as below table is used as a form input method replacing this -->
     <!-- <form id="teamBuilderForm" class="team-form">
         <div class="players-grid">
@@ -67,29 +96,116 @@
         </div>
     </form> -->
 
+    {% if boss_name %}
     <div class="plan-area">
-        <h3>Planned Turns</h3>
-        <table class="plan-table" id="planTable">
-            <thead>
-                <tr>
-                    <th>Turn</th>
-                    <th>Player 1</th>
-                    <th>Player 2</th>
-                    <th>Player 3</th>
-                    <th>Player 4</th>
-                    <th>Side notes</th>
-                </tr>
-            </thead>
-            <tbody id="planTbody">
-            </tbody>
-        </table>
+        <div class="variation-header">
+            <div style="display:flex;gap:8px;align-items:center">
+                {% if user_role %}
+                <button class="edit-variation-btn" data-variation-index="0">✏️ Edit</button>
+                <button class="save-variation-btn" data-variation-index="0" style="display:none;">💾 Save</button>
+                <button class="cancel-variation-btn" data-variation-index="0" style="display:none;">✖ Cancel</button>
+                {% endif %}
+            </div>
+        </div>
+        <div class="variation-table" data-variation-index="0">
+            <table class="plan-table">
+                <thead>
+                    <tr>
+                        <th>Turn</th>
+                        <th>Player 1</th>
+                        <th>Player 2</th>
+                        <th>Player 3</th>
+                        <th>Player 4</th>
+                        <th>Boss health</th>
+                        <th>Side notes</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Rows added dynamically -->
+                </tbody>
+            </table>
+        </div>
         <div style="margin-top:12px; display:flex; gap:8px;">
             <button id="addTurnBtn" class="btn-secondary">Add Turn</button>
-            <button id="clearPlanBtn" class="btn-secondary">Clear Plan</button>
+            <button id="clearPlanBtn" class="btn-secondary">Clear All</button>
         </div>
     </div>
+    {% endif %}
 </div>
 
+{% if boss_name %}
 <script type="application/json" id="pokemon-data">{{ pokemon_data|safe }}</script>
 <script type="application/json" id="team-data">{{ team_data|safe }}</script>
+<script type="application/json" id="boss-data">{{ bossJSON|safe }}</script>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
+<script src="/static/js/boss-edit.js"></script>
+<script>
+    // Auto-enter edit mode and add initial empty row
+    document.addEventListener('DOMContentLoaded', () => {
+        if (document.querySelector('.variation-table')) {
+            // Add one initial empty row
+            addEmptyRow();
+            // Auto-enter edit mode
+            const editBtn = document.querySelector('.edit-variation-btn[data-variation-index="0"]');
+            if (editBtn) editBtn.click();
+        }
+    });
+
+    function addEmptyRow() {
+        const tbody = document.querySelector('.variation-table tbody');
+        if (!tbody) return;
+        const turn = tbody.children.length + 1;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${turn}</td>
+            <td>—</td>
+            <td>—</td>
+            <td>—</td>
+            <td>—</td>
+            <td class="boss-health"><input type="number" step="0.1" placeholder="100" value="100"></td>
+            <td class="side-notes"><input class="note-input" type="text" placeholder="notes"></td>
+            <td><button class="delete-row-btn" style="background:rgba(239,68,68,0.2);color:#fca5a5;border:1px solid rgba(239,68,68,0.3);padding:4px 8px;border-radius:4px;cursor:pointer;">✖</button></td>
+        `;
+        tbody.appendChild(tr);
+        updateTurnNumbers();
+    }
+
+    function updateTurnNumbers() {
+        const tbody = document.querySelector('.variation-table tbody');
+        if (!tbody) return;
+        Array.from(tbody.children).forEach((row, idx) => {
+            row.children[0].textContent = idx + 1;
+        });
+    }
+
+    document.getElementById('addTurnBtn')?.addEventListener('click', () => {
+        addEmptyRow();
+        // Re-enter edit mode if not already editing
+        const editBtn = document.querySelector('.edit-variation-btn[data-variation-index="0"]');
+        if (editBtn && editBtn.style.display !== 'none') {
+            editBtn.click();
+        }
+    });
+
+    document.getElementById('clearPlanBtn')?.addEventListener('click', () => {
+        if (confirm('Clear all rows?')) {
+            const tbody = document.querySelector('.variation-table tbody');
+            if (tbody) tbody.innerHTML = '';
+        }
+    });
+
+    // Delete row handler (event delegation)
+    document.querySelector('.variation-table tbody')?.addEventListener('click', (e) => {
+        if (e.target.classList.contains('delete-row-btn') || e.target.parentElement?.classList.contains('delete-row-btn')) {
+            const btn = e.target.classList.contains('delete-row-btn') ? e.target : e.target.parentElement;
+            const row = btn.closest('tr');
+            if (row) {
+                row.remove();
+                updateTurnNumbers();
+            }
+        }
+    });
+</script>
+{% endif %}
 {% endblock %}
