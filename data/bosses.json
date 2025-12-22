@@ -1,8 +1,8 @@
 {
   "season": "Christmas",
   "raid_bosses": [
-    {   
-      "name": "Glaceon 3★",
+    {
+      "name": "Glaceon",
       "description": "3★ Glaceon seasonal raid boss.",
       "ability": "Ice Body",
       "held_item": "Icy Rock",
@@ -14,65 +14,232 @@
         "special_defense": 95
       },
       "moves": [
-        {"name": "Blizzard", "type": "Ice"},
-        {"name": "Ice Beam", "type": "Ice"},
-        {"name": "Shadow Ball", "type": "Ghost"},
-        {"name": "Water Pulse⭐️", "type": "Water"}
+        {
+          "name": "Blizzard",
+          "type": "Ice"
+        },
+        {
+          "name": "Ice Beam",
+          "type": "Ice"
+        },
+        {
+          "name": "Shadow Ball",
+          "type": "Ghost"
+        },
+        {
+          "name": "Water Pulse⭐️",
+          "type": "Water"
+        }
       ],
-
-
       "phase_effects": [
-        {"health": 100, "effect": "Snowscape"},
-        {"health": 66, "effect": "Reflect"},
-        {"health": 50, "effect": "Adaptation [Glaceon's type stays the same, it just will not take super effective damage from fire damage if that was the majority of damage up until this point]"},
-        {"health": 25, "effect": "Sing"}
-      ],    
-
+        {
+          "health": 100,
+          "effect": "Snowscape"
+        },
+        {
+          "health": 66,
+          "effect": "Reflect"
+        },
+        {
+          "health": 50,
+          "effect": "Adaptation [Glaceon's type stays the same, it just will not take super effective damage from fire damage if that was the majority of damage up until this point]"
+        },
+        {
+          "health": 25,
+          "effect": "Sing"
+        }
+      ],
       "variations": [
         {
           "players": {
-            "P1": [ {"pokemon": "Golduck", "move": "skill swap cloud 9 onto Add", "item": "Rocky Helmet"},
-                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice Band"},
-                    {"pokemon": "Mienshao", "move": "Close combat", "item": "Black Belt"},
-                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
-                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
-                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"} 
-                ],
-            "P2": [ {"pokemon": "Medicham", "move": "Close combat", "item": "Fist Plate"},
-                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice Band"},
-                    {"pokemon": "Mienshao", "move": "Close combat", "item": "Black Belt"},
-                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
-                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
-                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"} 
-                ],
-            "P3": [ {"pokemon": "Medicham", "move": "Close combat", "item": "Fist Plate"},
-                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice Band"},
-                    {"pokemon": "Ninetales", "move": "Safeguard", "item": "Expert Belt"},
-                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
-                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
-                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"}
-                ],  
-            "P4": [ {"pokemon": "Medicham", "move": "Close combat", "item": "Fist plate"},
-                    {"pokemon": "Heracross", "move": "Brick Break", "item": "Choice band"},
-                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"},   
-                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
-                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
-                    {"pokemon": "Darmanitan", "move": "Flare Blitz", "item": "Expert Belt"}
-                ]
+            "P1": [
+              {
+                "pokemon": "Golduck",
+                "move": "skill swap cloud 9 onto Add",
+                "item": "Rocky Helmet"
+              },
+              {
+                "pokemon": "Heracross",
+                "move": "Brick Break",
+                "item": "Choice Band"
+              },
+              {
+                "pokemon": "Mienshao",
+                "move": "Close combat",
+                "item": "Black Belt"
+              },
+              {
+                "pokemon": "Charizard",
+                "move": "Weather Ball",
+                "item": "Charcoal"
+              },
+              {
+                "pokemon": "Chandelure",
+                "move": "Flamethrower",
+                "item": "Flame Plate"
+              },
+              {
+                "pokemon": "Volcarona",
+                "move": "Flamethrower",
+                "item": "Choice Specs"
+              }
+            ],
+            "P2": [
+              {
+                "pokemon": "Medicham",
+                "move": "Close combat",
+                "item": "Fist Plate"
+              },
+              {
+                "pokemon": "Heracross",
+                "move": "Brick Break",
+                "item": "Choice Band"
+              },
+              {
+                "pokemon": "Mienshao",
+                "move": "Close combat",
+                "item": "Black Belt"
+              },
+              {
+                "pokemon": "Charizard",
+                "move": "Weather Ball",
+                "item": "Charcoal"
+              },
+              {
+                "pokemon": "Chandelure",
+                "move": "Flamethrower",
+                "item": "Flame Plate"
+              },
+              {
+                "pokemon": "Volcarona",
+                "move": "Flamethrower",
+                "item": "Choice Specs"
+              }
+            ],
+            "P3": [
+              {
+                "pokemon": "Medicham",
+                "move": "Close combat",
+                "item": "Fist Plate"
+              },
+              {
+                "pokemon": "Heracross",
+                "move": "Brick Break",
+                "item": "Choice Band"
+              },
+              {
+                "pokemon": "Ninetales",
+                "move": "Safeguard",
+                "item": "Expert Belt"
+              },
+              {
+                "pokemon": "Charizard",
+                "move": "Weather Ball",
+                "item": "Charcoal"
+              },
+              {
+                "pokemon": "Chandelure",
+                "move": "Flamethrower",
+                "item": "Flame Plate"
+              },
+              {
+                "pokemon": "Volcarona",
+                "move": "Flamethrower",
+                "item": "Choice Specs"
+              }
+            ],
+            "P4": [
+              {
+                "pokemon": "Medicham",
+                "move": "Close combat",
+                "item": "Fist plate"
+              },
+              {
+                "pokemon": "Heracross",
+                "move": "Brick Break",
+                "item": "Choice band"
+              },
+              {
+                "pokemon": "Volcarona",
+                "move": "Flamethrower",
+                "item": "Choice Specs"
+              },
+              {
+                "pokemon": "Charizard",
+                "move": "Weather Ball",
+                "item": "Charcoal"
+              },
+              {
+                "pokemon": "Chandelure",
+                "move": "Flamethrower",
+                "item": "Flame Plate"
+              },
+              {
+                "pokemon": "Darmanitan",
+                "move": "Flare Blitz",
+                "item": "Expert Belt"
+              }
+            ]
           },
-          "health_remaining": [77.5, 55, 32.5, 2.5, 0, 0],
-          "notes": ["Skill swap disables ice body healing",
-                    "Brick break for super effective damage and reflect",
-                    "Safeguard to prevent sing later",
-                    "",
-                    "",
-                    ""
-                  ]
+          "health_remaining": [
+            77.5,
+            55,
+            32.5,
+            2.5,
+            0,
+            0
+          ],
+          "notes": [
+            "Skill swap disables ice body healing",
+            "Brick break for super effective damage and reflect",
+            "Safeguard to prevent sing later",
+            "",
+            "",
+            ""
+          ]
+        },
+        {
+          "players": {
+            "P1": [
+              {
+                "pokemon": "Chansey",
+                "move": "Covet",
+                "item": "Moon Ball"
+              }
+            ],
+            "P2": [
+              {
+                "pokemon": "",
+                "move": "",
+                "item": ""
+              }
+            ],
+            "P3": [
+              {
+                "pokemon": "",
+                "move": "",
+                "item": ""
+              }
+            ],
+            "P4": [
+              {
+                "pokemon": "",
+                "move": "",
+                "item": ""
+              }
+            ]
+          },
+          "health_remaining": [
+            100
+          ],
+          "notes": [
+            ""
+          ]
         }
       ]
     },
     {
-      "name": "Raichu 3★",
+      "name": "Raichu",
       "description": "3★ Raichu seasonal raid boss.",
       "ability": "Lightning Rod",
       "held_item": "Expert Belt",
@@ -83,68 +250,195 @@
         "defense": 55,
         "special_defense": 80
       },
-     "moves": [
-        {"name": "Discharge ⭐️", "type": "Electric"},
-        {"name": "Thunderbolt", "type": "Electric"},
-        {"name": "Grass Knot", "type": "Grass"},
-        {"name": "Signal Beam", "type": "Bug"}
+      "moves": [
+        {
+          "name": "Discharge ⭐️",
+          "type": "Electric"
+        },
+        {
+          "name": "Thunderbolt",
+          "type": "Electric"
+        },
+        {
+          "name": "Grass Knot",
+          "type": "Grass"
+        },
+        {
+          "name": "Signal Beam",
+          "type": "Bug"
+        }
       ],
-     "phase_effects": [
-        {"health": 100, "effect": "Ally Guard"},
-        {"health": 75, "effect": "Magnet Rise"},
-        {"health": 50, "effect": "Reflect"},
-        {"health": 20, "effect": "Agility"}
+      "phase_effects": [
+        {
+          "health": 100,
+          "effect": "Ally Guard"
+        },
+        {
+          "health": 75,
+          "effect": "Magnet Rise"
+        },
+        {
+          "health": 50,
+          "effect": "Reflect"
+        },
+        {
+          "health": 20,
+          "effect": "Agility"
+        }
       ],
-    "variations": [
-            {
-            "players": {
-                "P1": [
-                { "pokemon": "Golduck", "move": "Cloud 9 Skill Swap onto Add", "item": null },
-                { "pokemon": "Mamoswine", "move": "Dig", "item": null },
-                { "pokemon": null, "move": "Smack Down", "item": null },
-                { "pokemon": "Garchomp", "move": "Dig", "item": null },
-                { "pokemon": "Excadrill", "move": "Dig", "item": null },
-                { "pokemon": "Marowak", "move": "Dig", "item": null }
-                ],
-                "P2": [
-                { "pokemon": "Excadrill", "move": "Dig", "item": null },
-                { "pokemon": "Mamoswine", "move": "Dig", "item": null },
-                { "pokemon": "Garchomp", "move": "Dig", "item": null },
-                { "pokemon": "Nidoking", "move": "Brick Break", "item": null },
-                { "pokemon": "Marowak", "move": "Dig", "item": "Rocky Helmet" },
-                { "pokemon": "Marowak", "move": "Dig", "item": null }
-                ],
-                "P3": [
-                { "pokemon": null, "move": "Prankster Tailwind", "item": null },
-                { "pokemon": "Mamoswine", "move": "Dig", "item": null },
-                { "pokemon": "Excadrill", "move": "Dig", "item": null },
-                { "pokemon": "Rhyperior", "move": "Dig", "item": null },
-                { "pokemon": null, "move": "Prankster Haze", "item": "Rocky Helmet" },
-                { "pokemon": "Garchomp", "move": "Dig", "item": null }
-                ],
-                "P4": [
-                { "pokemon": "Golduck", "move": "Cloud 9 Skill Swap onto Add", "item": null },
-                { "pokemon": "Mamoswine", "move": "Dig", "item": null },
-                { "pokemon": "Excadrill", "move": "Dig", "item": null },
-                { "pokemon": "Marowak", "move": "Dig", "item": null },
-                { "pokemon": null, "move": "Prankster Tailwind", "item": "Rocky Helmet" },
-                { "pokemon": "Garchomp", "move": "Dig", "item": null }
-                ]
-            },
-            "health_remaining": [92.5, 70, 47.5, 24, 0, 0],
-            "notes": [
-                "100% ally guard",
-                "75% magnet rise",
-                "50% reflect. Smack down to counter magnet rise",
-                "",
-                "20% agility",
-                ""
+      "variations": [
+        {
+          "players": {
+            "P1": [
+              {
+                "pokemon": "Golduck",
+                "move": "Cloud 9 Skill Swap onto Add",
+                "item": ""
+              },
+              {
+                "pokemon": "Mamoswine",
+                "move": "Dig",
+                "item": ""
+              },
+              {
+                "pokemon": "",
+                "move": "Smack Down",
+                "item": ""
+              },
+              {
+                "pokemon": "Garchomp",
+                "move": "Dig",
+                "item": ""
+              },
+              {
+                "pokemon": "Excadrill",
+                "move": "Dig",
+                "item": ""
+              },
+              {
+                "pokemon": "Marowak",
+                "move": "Dig",
+                "item": ""
+              }
+            ],
+            "P2": [
+              {
+                "pokemon": "Excadrill",
+                "move": "Dig",
+                "item": ""
+              },
+              {
+                "pokemon": "Mamoswine",
+                "move": "Dig",
+                "item": ""
+              },
+              {
+                "pokemon": "Garchomp",
+                "move": "Dig",
+                "item": ""
+              },
+              {
+                "pokemon": "Nidoking",
+                "move": "Brick Break",
+                "item": ""
+              },
+              {
+                "pokemon": "Marowak",
+                "move": "Dig",
+                "item": "Rocky Helmet"
+              },
+              {
+                "pokemon": "Marowak",
+                "move": "Dig",
+                "item": ""
+              }
+            ],
+            "P3": [
+              {
+                "pokemon": "Murkrow",
+                "move": "Prankster Tailwind",
+                "item": ""
+              },
+              {
+                "pokemon": "Mamoswine",
+                "move": "Dig",
+                "item": ""
+              },
+              {
+                "pokemon": "Excadrill",
+                "move": "Dig",
+                "item": ""
+              },
+              {
+                "pokemon": "Rhyperior",
+                "move": "Dig",
+                "item": ""
+              },
+              {
+                "pokemon": "",
+                "move": "Prankster Haze",
+                "item": "Rocky Helmet"
+              },
+              {
+                "pokemon": "Garchomp",
+                "move": "Dig",
+                "item": ""
+              }
+            ],
+            "P4": [
+              {
+                "pokemon": "Golduck",
+                "move": "Cloud 9 Skill Swap onto Add",
+                "item": ""
+              },
+              {
+                "pokemon": "Mamoswine",
+                "move": "Dig",
+                "item": ""
+              },
+              {
+                "pokemon": "Excadrill",
+                "move": "Dig",
+                "item": ""
+              },
+              {
+                "pokemon": "Marowak",
+                "move": "Dig",
+                "item": ""
+              },
+              {
+                "pokemon": "Murkrow",
+                "move": "Prankster Tailwind",
+                "item": "Rocky Helmet"
+              },
+              {
+                "pokemon": "Garchomp",
+                "move": "Dig",
+                "item": ""
+              }
             ]
-            }
-        ]
+          },
+          "health_remaining": [
+            92.5,
+            70,
+            47.5,
+            24,
+            0,
+            0
+          ],
+          "notes": [
+            "100% ally guard",
+            "75% magnet rise",
+            "50% reflect. Smack down to counter magnet rise",
+            "",
+            "20% agility",
+            ""
+          ]
+        }
+      ]
     },
     {
-      "name": "Stantler 3★",
+      "name": "Stantler",
       "description": "3★ Stantler seasonal raid boss.",
       "ability": "Intimidate",
       "held_item": "Light Clay",
@@ -156,69 +450,194 @@
         "special_defense": 65
       },
       "moves": [
-        {"name": "Body Slam", "type": "Normal"},
-        {"name": "Psychic⭐️", "type": "Psychic"},
-        {"name": "Earthquake", "type": "Ground"},
-        {"name": "Thunderbolt", "type": "Electric"}
+        {
+          "name": "Body Slam",
+          "type": "Normal"
+        },
+        {
+          "name": "Psychic⭐️",
+          "type": "Psychic"
+        },
+        {
+          "name": "Earthquake",
+          "type": "Ground"
+        },
+        {
+          "name": "Thunderbolt",
+          "type": "Electric"
+        }
       ],
-
       "phase_effects": [
-        {"health": 100, "effect": "Reflect"},
-        {"health": 75, "effect": "Roar⭐️"},
-        {"health": 50, "effect": "Move Flip [Special/Physical Inversion]"},
-        {"health": 25, "effect": "Confuse Ray⭐️"}
+        {
+          "health": 100,
+          "effect": "Reflect"
+        },
+        {
+          "health": 75,
+          "effect": "Roar⭐️"
+        },
+        {
+          "health": 50,
+          "effect": "Move Flip [Special/Physical Inversion]"
+        },
+        {
+          "health": 25,
+          "effect": "Confuse Ray⭐️"
+        }
       ],
-
       "variations": [
         {
-        "players": {
+          "players": {
             "P1": [
-            { "pokemon": "Ninetales", "move": "Safeguard", "item": null },
-            { "pokemon": "Medicham", "move": "Close Combat", "item": "Fist Plate" },
-            { "pokemon": "Primeape", "move": "Close Combat", "item": "Expert Belt" },
-            { "pokemon": "Mienshao", "move": "Aura Sphere", "item": "Choice Specs" },
-            { "pokemon": "Gallade", "move": "Aura Sphere", "item": "Life Orb" },
-            { "pokemon": null, "move": "Throwaway", "item": null }
+              {
+                "pokemon": "Ninetales",
+                "move": "Safeguard",
+                "item": ""
+              },
+              {
+                "pokemon": "Medicham",
+                "move": "Close Combat",
+                "item": "Fist Plate"
+              },
+              {
+                "pokemon": "Primeape",
+                "move": "Close Combat",
+                "item": "Expert Belt"
+              },
+              {
+                "pokemon": "Mienshao",
+                "move": "Aura Sphere",
+                "item": "Choice Specs"
+              },
+              {
+                "pokemon": "Gallade",
+                "move": "Aura Sphere",
+                "item": "Life Orb"
+              },
+              {
+                "pokemon": "",
+                "move": "Throwaway",
+                "item": ""
+              }
             ],
             "P2": [
-            { "pokemon": null, "move": "Prankster Defog", "item": null },
-            { "pokemon": "Medicham", "move": "Close Combat", "item": "Fist Plate" },
-            { "pokemon": "Primeape", "move": "Close Combat", "item": null },
-            { "pokemon": "Mienshao", "move": "Aura Sphere", "item": "Choice Specs" },
-            { "pokemon": "Gallade", "move": "Aura Sphere", "item": "Life Orb" },
-            { "pokemon": null, "move": "Throwaway", "item": null }
+              {
+                "pokemon": "",
+                "move": "Prankster Defog",
+                "item": ""
+              },
+              {
+                "pokemon": "Medicham",
+                "move": "Close Combat",
+                "item": "Fist Plate"
+              },
+              {
+                "pokemon": "Primeape",
+                "move": "Close Combat",
+                "item": ""
+              },
+              {
+                "pokemon": "Mienshao",
+                "move": "Aura Sphere",
+                "item": "Choice Specs"
+              },
+              {
+                "pokemon": "Gallade",
+                "move": "Aura Sphere",
+                "item": "Life Orb"
+              },
+              {
+                "pokemon": "",
+                "move": "Throwaway",
+                "item": ""
+              }
             ],
             "P3": [
-            { "pokemon": null, "move": "Prankster Tailwind", "item": null },
-            { "pokemon": "Medicham", "move": "Close Combat", "item": "Fist Plate" },
-            { "pokemon": "Hitmonlee", "move": "Aura Sphere", "item": "Fighting Gem" },
-            { "pokemon": "Mienshao", "move": "Aura Sphere", "item": "Choice Specs" },
-            { "pokemon": "Gallade", "move": "Aura Sphere", "item": "Life Orb" },
-            { "pokemon": null, "move": "Throwaway", "item": null }
+              {
+                "pokemon": "",
+                "move": "Prankster Tailwind",
+                "item": ""
+              },
+              {
+                "pokemon": "Medicham",
+                "move": "Close Combat",
+                "item": "Fist Plate"
+              },
+              {
+                "pokemon": "Hitmonlee",
+                "move": "Aura Sphere",
+                "item": "Fighting Gem"
+              },
+              {
+                "pokemon": "Mienshao",
+                "move": "Aura Sphere",
+                "item": "Choice Specs"
+              },
+              {
+                "pokemon": "Gallade",
+                "move": "Aura Sphere",
+                "item": "Life Orb"
+              },
+              {
+                "pokemon": "",
+                "move": "Throwaway",
+                "item": ""
+              }
             ],
             "P4": [
-            { "pokemon": null, "move": "Fake Tears", "item": null },
-            { "pokemon": "Medicham", "move": "Close Combat", "item": "Fist Plate" },
-            { "pokemon": "Hitmonlee", "move": "Aura Sphere", "item": "Fighting Gem" },
-            { "pokemon": "Mienshao", "move": "Aura Sphere", "item": "Choice Specs" },
-            { "pokemon": "Gallade", "move": "Aura Sphere", "item": "Life Orb" },
-            { "pokemon": null, "move": "Throwaway", "item": null }
+              {
+                "pokemon": "",
+                "move": "Fake Tears",
+                "item": ""
+              },
+              {
+                "pokemon": "Medicham",
+                "move": "Close Combat",
+                "item": "Fist Plate"
+              },
+              {
+                "pokemon": "Hitmonlee",
+                "move": "Aura Sphere",
+                "item": "Fighting Gem"
+              },
+              {
+                "pokemon": "Mienshao",
+                "move": "Aura Sphere",
+                "item": "Choice Specs"
+              },
+              {
+                "pokemon": "Gallade",
+                "move": "Aura Sphere",
+                "item": "Life Orb"
+              },
+              {
+                "pokemon": "",
+                "move": "Throwaway",
+                "item": ""
+              }
             ]
-        },
-        "health_remaining": [100, 70, 40, 10, 0, 0],
-        "notes": [
+          },
+          "health_remaining": [
+            100,
+            70,
+            40,
+            10,
+            0,
+            0
+          ],
+          "notes": [
             "100% reflect",
             "75% Roar. After roar, swap to throwaway pokemon to maintain strategy",
             "50% special/physical inversion",
             "25% Confuse Ray",
             "",
             "After roar, swap to these pokes to preserve the aura sphere pokes"
-           ]
+          ]
         }
-    ]
+      ]
     },
     {
-      "name": "Chimecho 3★",
+      "name": "Chimecho",
       "description": "3★ Chimecho seasonal raid boss.",
       "ability": "Levitate",
       "held_item": "Petaya Berry",
@@ -230,67 +649,194 @@
         "special_defense": 90
       },
       "moves": [
-        {"name": "Psyshock⭐️", "type": "Psychic"},
-        {"name": "Signal Beam", "type": "Bug"},
-        {"name": "Energy Ball", "type": "Grass"},
-        {"name": "Shadow Ball", "type": "Ghost"}
-        ],
-      "phase_effects": [
-        {"health": 100, "effect": "Ally Boost"},
-        {"health": 66, "effect": "Wish"},
-        {"health": 50, "effect": "Cosmic Power"},
-        {"health": 33, "effect": "Trick Room"}
-      ],
-    "variations": [
-     {
-      "players": {
-        "P1": [
-          { "pokemon": "Whimsicott", "move": "Tailwind", "item": "Rocky Helmet" },
-          { "pokemon": "Hydreigon", "move": "Dark Pulse", "item": "Choice Specs" },
-          { "pokemon": "Shiftry", "move": "Sucker Punch", "item": "Choice Band" },
-          { "pokemon": "Absol", "move": "Sucker Punch", "item": "Dark Gem" },
-          { "pokemon": "Honchkrow", "move": "Assurance", "item": "Expert Belt" },
-          { "pokemon": "Bisharp", "move": "Assurance", "item": "Dread Plate" }
-        ],
-        "P2": [
-          { "pokemon": null, "move": "Prankster Haze", "item": "Rocky Helmet" },
-          { "pokemon": null, "move": "Heal Block", "item": "Rocky Helmet" },
-          { "pokemon": "Shiftry", "move": "Sucker Punch", "item": "Choice Band" },
-          { "pokemon": "Absol", "move": "Assurance", "item": "Expert Belt" },
-          { "pokemon": "Honchkrow", "move": "Sucker Punch", "item": "Dark Gem" },
-          { "pokemon": "Bisharp", "move": "Assurance", "item": "Dread Plate" }
-        ],
-        "P3": [
-          { "pokemon": null, "move": "Weavile Beat Up", "item": "Life Orb" },
-          { "pokemon": "Tyranitar", "move": "Sand Stream Assurance", "item": "Dread Plate" },
-          { "pokemon": "Shiftry", "move": "Sucker Punch", "item": "Choice Band" },
-          { "pokemon": null, "move": "Prankster Haze", "item": "Rocky Helmet" },
-          { "pokemon": "Honchkrow", "move": "Assurance", "item": "Expert Belt" },
-          { "pokemon": "Bisharp", "move": "Sucker Punch", "item": "Dark Gem" }
-        ],
-        "P4": [
-          { "pokemon": null, "move": "Weavile Beat Up", "item": "Life Orb" },
-          { "pokemon": null, "move": "Slow Trick Room", "item": "Sitrus Berry" },
-          { "pokemon": "Shiftry", "move": "Sucker Punch", "item": "Choice Band" },
-          { "pokemon": "Absol", "move": "Assurance", "item": "Expert Belt" },
-          { "pokemon": "Honchkrow", "move": "Assurance", "item": "Dread Plate" },
-          { "pokemon": "Bisharp", "move": "Assurance", "item": "Blackglasses" }
-        ]
-      },
-      "health_remaining": [85, 62.5, 32.5, 17.5, 0, 0],
-      "notes": [
-        "100% ally boost. Tailwinding for Shiftry Wind Rider boost. Murkrow/Honchkrow species clause",
-        "66% Wish",
-        "50% Cosmic Power. 33% Trick Room. Trick room is reversed",
-        "",
-        "",
-        ""
-            ]
+        {
+          "name": "Psyshock⭐️",
+          "type": "Psychic"
+        },
+        {
+          "name": "Signal Beam",
+          "type": "Bug"
+        },
+        {
+          "name": "Energy Ball",
+          "type": "Grass"
+        },
+        {
+          "name": "Shadow Ball",
+          "type": "Ghost"
         }
-    ]
+      ],
+      "phase_effects": [
+        {
+          "health": 100,
+          "effect": "Ally Boost"
+        },
+        {
+          "health": 66,
+          "effect": "Wish"
+        },
+        {
+          "health": 50,
+          "effect": "Cosmic Power"
+        },
+        {
+          "health": 33,
+          "effect": "Trick Room"
+        }
+      ],
+      "variations": [
+        {
+          "players": {
+            "P1": [
+              {
+                "pokemon": "Whimsicott",
+                "move": "Tailwind",
+                "item": "Rocky Helmet"
+              },
+              {
+                "pokemon": "Hydreigon",
+                "move": "Dark Pulse",
+                "item": "Choice Specs"
+              },
+              {
+                "pokemon": "Shiftry",
+                "move": "Sucker Punch",
+                "item": "Choice Band"
+              },
+              {
+                "pokemon": "Absol",
+                "move": "Sucker Punch",
+                "item": "Dark Gem"
+              },
+              {
+                "pokemon": "Honchkrow",
+                "move": "Assurance",
+                "item": "Expert Belt"
+              },
+              {
+                "pokemon": "Bisharp",
+                "move": "Assurance",
+                "item": "Dread Plate"
+              }
+            ],
+            "P2": [
+              {
+                "pokemon": "",
+                "move": "Prankster Haze",
+                "item": "Rocky Helmet"
+              },
+              {
+                "pokemon": "",
+                "move": "Heal Block",
+                "item": "Rocky Helmet"
+              },
+              {
+                "pokemon": "Shiftry",
+                "move": "Sucker Punch",
+                "item": "Choice Band"
+              },
+              {
+                "pokemon": "Absol",
+                "move": "Assurance",
+                "item": "Expert Belt"
+              },
+              {
+                "pokemon": "Honchkrow",
+                "move": "Sucker Punch",
+                "item": "Dark Gem"
+              },
+              {
+                "pokemon": "Bisharp",
+                "move": "Assurance",
+                "item": "Dread Plate"
+              }
+            ],
+            "P3": [
+              {
+                "pokemon": "",
+                "move": "Weavile Beat Up",
+                "item": "Life Orb"
+              },
+              {
+                "pokemon": "Tyranitar",
+                "move": "Sand Stream Assurance",
+                "item": "Dread Plate"
+              },
+              {
+                "pokemon": "Shiftry",
+                "move": "Sucker Punch",
+                "item": "Choice Band"
+              },
+              {
+                "pokemon": "",
+                "move": "Prankster Haze",
+                "item": "Rocky Helmet"
+              },
+              {
+                "pokemon": "Honchkrow",
+                "move": "Assurance",
+                "item": "Expert Belt"
+              },
+              {
+                "pokemon": "Bisharp",
+                "move": "Sucker Punch",
+                "item": "Dark Gem"
+              }
+            ],
+            "P4": [
+              {
+                "pokemon": "",
+                "move": "Weavile Beat Up",
+                "item": "Life Orb"
+              },
+              {
+                "pokemon": "",
+                "move": "Slow Trick Room",
+                "item": "Sitrus Berry"
+              },
+              {
+                "pokemon": "Shiftry",
+                "move": "Sucker Punch",
+                "item": "Choice Band"
+              },
+              {
+                "pokemon": "Absol",
+                "move": "Assurance",
+                "item": "Expert Belt"
+              },
+              {
+                "pokemon": "Honchkrow",
+                "move": "Assurance",
+                "item": "Dread Plate"
+              },
+              {
+                "pokemon": "Bisharp",
+                "move": "Assurance",
+                "item": "Blackglasses"
+              }
+            ]
+          },
+          "health_remaining": [
+            85,
+            62.5,
+            32.5,
+            17.5,
+            0,
+            0
+          ],
+          "notes": [
+            "100% ally boost. Tailwinding for Shiftry Wind Rider boost. Murkrow/Honchkrow species clause",
+            "66% Wish",
+            "50% Cosmic Power. 33% Trick Room. Trick room is reversed",
+            "",
+            "",
+            ""
+          ]
+        }
+      ]
     },
     {
-      "name": "Sawsbuck 3★",
+      "name": "Sawsbuck",
       "description": "3★ Sawsbuck seasonal raid boss.",
       "ability": "Chlorophyll",
       "held_item": "Sitrus Berry",
@@ -302,67 +848,194 @@
         "special_defense": 70
       },
       "moves": [
-        {"name": "Horn Leech", "type": "Grass"},
-        {"name": "Wild Charge", "type": "Electric"},
-        {"name": "Jump Kick⭐️", "type": "Fighting"},
-        {"name": "Body Slam", "type": "Normal"}
+        {
+          "name": "Horn Leech",
+          "type": "Grass"
+        },
+        {
+          "name": "Wild Charge",
+          "type": "Electric"
+        },
+        {
+          "name": "Jump Kick⭐️",
+          "type": "Fighting"
+        },
+        {
+          "name": "Body Slam",
+          "type": "Normal"
+        }
       ],
       "phase_effects": [
-        {"health": 100, "effect": "Swords Dance"},
-        {"health": 66, "effect": "Agility"},
-        {"health": 40, "effect": "Swords Dance"},
-        {"health": 33, "effect": "Flurry [Boss has priority attack. Plan to lose pokes and give rocky helmet as a held item]"}
-        ],  
+        {
+          "health": 100,
+          "effect": "Swords Dance"
+        },
+        {
+          "health": 66,
+          "effect": "Agility"
+        },
+        {
+          "health": 40,
+          "effect": "Swords Dance"
+        },
+        {
+          "health": 33,
+          "effect": "Flurry [Boss has priority attack. Plan to lose pokes and give rocky helmet as a held item]"
+        }
+      ],
       "variations": [
         {
-        "players": {
+          "players": {
             "P1": [
-            { "pokemon": "Golduck", "move": "Cloud 9 Skill Swap onto Add", "item": "Choice Scarf" },
-            { "pokemon": "Typhlosion", "move": "Flamethrower", "item": "Expert Belt" },
-            { "pokemon": "Chandelure", "move": "Flamethrower", "item": "Charcoal" },
-            { "pokemon": "Magmortar", "move": "Flamethrower", "item": "Flame Plate" },
-            { "pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs" },
-            { "pokemon": "Darmanitan", "move": "Flare Blitz", "item": "Choice Band" }
+              {
+                "pokemon": "Golduck",
+                "move": "Cloud 9 Skill Swap onto Add",
+                "item": "Choice Scarf"
+              },
+              {
+                "pokemon": "Typhlosion",
+                "move": "Flamethrower",
+                "item": "Expert Belt"
+              },
+              {
+                "pokemon": "Chandelure",
+                "move": "Flamethrower",
+                "item": "Charcoal"
+              },
+              {
+                "pokemon": "Magmortar",
+                "move": "Flamethrower",
+                "item": "Flame Plate"
+              },
+              {
+                "pokemon": "Volcarona",
+                "move": "Flamethrower",
+                "item": "Choice Specs"
+              },
+              {
+                "pokemon": "Darmanitan",
+                "move": "Flare Blitz",
+                "item": "Choice Band"
+              }
             ],
             "P2": [
-            { "pokemon": "Magmortar", "move": "Incinerate", "item": "Flame Plate" },
-            { "pokemon": "Typhlosion", "move": "Flamethrower", "item": "Expert Belt" },
-            { "pokemon": "Chandelure", "move": "Flamethrower", "item": "Charcoal" },
-            { "pokemon": null, "move": "Rocky Helmet", "item": "Rocky Helmet" },
-            { "pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs" },
-            { "pokemon": "Darmanitan", "move": "Flare Blitz", "item": "Choice Band" }
+              {
+                "pokemon": "Magmortar",
+                "move": "Incinerate",
+                "item": "Flame Plate"
+              },
+              {
+                "pokemon": "Typhlosion",
+                "move": "Flamethrower",
+                "item": "Expert Belt"
+              },
+              {
+                "pokemon": "Chandelure",
+                "move": "Flamethrower",
+                "item": "Charcoal"
+              },
+              {
+                "pokemon": "",
+                "move": "Rocky Helmet",
+                "item": "Rocky Helmet"
+              },
+              {
+                "pokemon": "Volcarona",
+                "move": "Flamethrower",
+                "item": "Choice Specs"
+              },
+              {
+                "pokemon": "Darmanitan",
+                "move": "Flare Blitz",
+                "item": "Choice Band"
+              }
             ],
             "P3": [
-            { "pokemon": null, "move": "Prankster Tailwind", "item": null },
-            { "pokemon": "Typhlosion", "move": "Flamethrower", "item": "Expert Belt" },
-            { "pokemon": "Chandelure", "move": "Flamethrower", "item": "Charcoal" },
-            { "pokemon": null, "move": "Rocky Helmet", "item": "Rocky Helmet" },
-            { "pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs" },
-            { "pokemon": "Darmanitan", "move": "Flare Blitz", "item": "Choice Band" }
+              {
+                "pokemon": "",
+                "move": "Prankster Tailwind",
+                "item": ""
+              },
+              {
+                "pokemon": "Typhlosion",
+                "move": "Flamethrower",
+                "item": "Expert Belt"
+              },
+              {
+                "pokemon": "Chandelure",
+                "move": "Flamethrower",
+                "item": "Charcoal"
+              },
+              {
+                "pokemon": "",
+                "move": "Rocky Helmet",
+                "item": "Rocky Helmet"
+              },
+              {
+                "pokemon": "Volcarona",
+                "move": "Flamethrower",
+                "item": "Choice Specs"
+              },
+              {
+                "pokemon": "Darmanitan",
+                "move": "Flare Blitz",
+                "item": "Choice Band"
+              }
             ],
             "P4": [
-            { "pokemon": "Chandelure", "move": "Flamethrower", "item": "Charcoal" },
-            { "pokemon": "Typhlosion", "move": "Flamethrower", "item": "Expert Belt" },
-            { "pokemon": null, "move": "Prankster Haze", "item": null },
-            { "pokemon": null, "move": "Rocky Helmet", "item": "Rocky Helmet" },
-            { "pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs" },
-            { "pokemon": "Darmanitan", "move": "Flare Blitz", "item": "Choice Band" }
+              {
+                "pokemon": "Chandelure",
+                "move": "Flamethrower",
+                "item": "Charcoal"
+              },
+              {
+                "pokemon": "Typhlosion",
+                "move": "Flamethrower",
+                "item": "Expert Belt"
+              },
+              {
+                "pokemon": "",
+                "move": "Prankster Haze",
+                "item": ""
+              },
+              {
+                "pokemon": "",
+                "move": "Rocky Helmet",
+                "item": "Rocky Helmet"
+              },
+              {
+                "pokemon": "Volcarona",
+                "move": "Flamethrower",
+                "item": "Choice Specs"
+              },
+              {
+                "pokemon": "Darmanitan",
+                "move": "Flare Blitz",
+                "item": "Choice Band"
+              }
             ]
-        },
-        "health_remaining": [92.5, 62.5, 40, 32.5, 0, 0],
-        "notes": [
+          },
+          "health_remaining": [
+            92.5,
+            62.5,
+            40,
+            32.5,
+            0,
+            0
+          ],
+          "notes": [
             "100% Swords Dance",
             "66% agility",
             "40% swords dance",
             "33% Flurry of attacks",
             "",
             ""
-        ]
+          ]
         }
       ]
     },
     {
-      "name": "Beartic 3★",
+      "name": "Beartic",
       "description": "3★ Beartic seasonal raid boss.",
       "ability": "Snow Plow",
       "held_item": "Wide Lens",
@@ -374,65 +1047,190 @@
         "special_defense": 80
       },
       "moves": [
-        {"name": "Icicle Crash⭐️", "type": "Ice"},
-        {"name": "Earthquake", "type": "Ground"},
-        {"name": "Close Combat", "type": "Fighting"},
-        {"name": "Stone Edge", "type": "Rock"}
+        {
+          "name": "Icicle Crash⭐️",
+          "type": "Ice"
+        },
+        {
+          "name": "Earthquake",
+          "type": "Ground"
+        },
+        {
+          "name": "Close Combat",
+          "type": "Fighting"
+        },
+        {
+          "name": "Stone Edge",
+          "type": "Rock"
+        }
       ],
       "phase_effects": [
-        {"health": 100, "effect": "Snowscape"},
-        {"health": 66, "effect": "[Roar⭐️]"},
-        {"health": 40, "effect": "[Boss Boost] [Omniboost]"},
-        {"health": 25, "effect": "[Snowscape]"}
-      ],
-        "variations": [
         {
-        "players": {
+          "health": 100,
+          "effect": "Snowscape"
+        },
+        {
+          "health": 66,
+          "effect": "[Roar⭐️]"
+        },
+        {
+          "health": 40,
+          "effect": "[Boss Boost] [Omniboost]"
+        },
+        {
+          "health": 25,
+          "effect": "[Snowscape]"
+        }
+      ],
+      "variations": [
+        {
+          "players": {
             "P1": [
-            { "pokemon": "Golduck", "move": "Cloud 9 Skill Swap onto Add", "item": "Choice Scarf" },
-            { "pokemon": "Ninetales", "move": "Weather Ball", "item": "Expert Belt" },
-            { "pokemon": "Typhlosion", "move": "Flamethrower", "item": "Expert Belt" },
-            { "pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs" },
-            { "pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate" },
-            { "pokemon": "Medicham", "move": "Close Combat", "item": "Fist Plate" }
+              {
+                "pokemon": "Golduck",
+                "move": "Cloud 9 Skill Swap onto Add",
+                "item": "Choice Scarf"
+              },
+              {
+                "pokemon": "Ninetales",
+                "move": "Weather Ball",
+                "item": "Expert Belt"
+              },
+              {
+                "pokemon": "Typhlosion",
+                "move": "Flamethrower",
+                "item": "Expert Belt"
+              },
+              {
+                "pokemon": "Volcarona",
+                "move": "Flamethrower",
+                "item": "Choice Specs"
+              },
+              {
+                "pokemon": "Chandelure",
+                "move": "Flamethrower",
+                "item": "Flame Plate"
+              },
+              {
+                "pokemon": "Medicham",
+                "move": "Close Combat",
+                "item": "Fist Plate"
+              }
             ],
             "P2": [
-            { "pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate" },
-            { "pokemon": "Ninetales", "move": "Weather Ball", "item": "Expert Belt" },
-            { "pokemon": "Typhlosion", "move": "Flamethrower", "item": "Expert Belt" },
-            { "pokemon": null, "move": "Prankster Haze", "item": "Rocky Helmet" },
-            { "pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs" },
-            { "pokemon": "Medicham", "move": "Close Combat", "item": "Fist Plate" }
+              {
+                "pokemon": "Chandelure",
+                "move": "Flamethrower",
+                "item": "Flame Plate"
+              },
+              {
+                "pokemon": "Ninetales",
+                "move": "Weather Ball",
+                "item": "Expert Belt"
+              },
+              {
+                "pokemon": "Typhlosion",
+                "move": "Flamethrower",
+                "item": "Expert Belt"
+              },
+              {
+                "pokemon": "",
+                "move": "Prankster Haze",
+                "item": "Rocky Helmet"
+              },
+              {
+                "pokemon": "Volcarona",
+                "move": "Flamethrower",
+                "item": "Choice Specs"
+              },
+              {
+                "pokemon": "Medicham",
+                "move": "Close Combat",
+                "item": "Fist Plate"
+              }
             ],
             "P3": [
-            { "pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate" },
-            { "pokemon": "Ninetales", "move": "Weather Ball", "item": "Expert Belt" },
-            { "pokemon": "Typhlosion", "move": "Flamethrower", "item": "Expert Belt" },
-            { "pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs" },
-            { "pokemon": "Darmanitan", "move": "Flare Blitz", "item": "Expert Belt" },
-            { "pokemon": "Medicham", "move": "Close Combat", "item": "Fist Plate" }
+              {
+                "pokemon": "Chandelure",
+                "move": "Flamethrower",
+                "item": "Flame Plate"
+              },
+              {
+                "pokemon": "Ninetales",
+                "move": "Weather Ball",
+                "item": "Expert Belt"
+              },
+              {
+                "pokemon": "Typhlosion",
+                "move": "Flamethrower",
+                "item": "Expert Belt"
+              },
+              {
+                "pokemon": "Volcarona",
+                "move": "Flamethrower",
+                "item": "Choice Specs"
+              },
+              {
+                "pokemon": "Darmanitan",
+                "move": "Flare Blitz",
+                "item": "Expert Belt"
+              },
+              {
+                "pokemon": "Medicham",
+                "move": "Close Combat",
+                "item": "Fist Plate"
+              }
             ],
             "P4": [
-            { "pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate" },
-            { "pokemon": "Ninetales", "move": "Weather Ball", "item": "Expert Belt" },
-            { "pokemon": "Typhlosion", "move": "Flamethrower", "item": "Expert Belt" },
-            { "pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs" },
-            { "pokemon": "Darmanitan", "move": "Flare Blitz", "item": "Expert Belt" },
-            { "pokemon": "Medicham", "move": "Close Combat", "item": "Fist Plate" }
+              {
+                "pokemon": "Chandelure",
+                "move": "Flamethrower",
+                "item": "Flame Plate"
+              },
+              {
+                "pokemon": "Ninetales",
+                "move": "Weather Ball",
+                "item": "Expert Belt"
+              },
+              {
+                "pokemon": "Typhlosion",
+                "move": "Flamethrower",
+                "item": "Expert Belt"
+              },
+              {
+                "pokemon": "Volcarona",
+                "move": "Flamethrower",
+                "item": "Choice Specs"
+              },
+              {
+                "pokemon": "Darmanitan",
+                "move": "Flare Blitz",
+                "item": "Expert Belt"
+              },
+              {
+                "pokemon": "Medicham",
+                "move": "Close Combat",
+                "item": "Fist Plate"
+              }
             ]
-        },
-        "health_remaining": [77.5, 47.5, 17.5, 0],
-        "notes": [
+          },
+          "health_remaining": [
+            77.5,
+            47.5,
+            17.5,
+            0
+          ],
+          "notes": [
             "100% snowscape. Skill swap to prevent boss ability",
             "66% Roar. If P2's Murkrow gets swapped in, hard switch",
             "40% Boss Boost (Omniboost), 25% Snowscape",
             ""
-        ]
+          ]
         }
-    ]
+      ]
     },
     {
-      "name": "Clefable 3★",
+      "name": "Clefable",
       "description": "3★ Clefable seasonal raid boss.",
       "ability": "Magic Guard",
       "held_item": "Chesto Berry",
@@ -444,65 +1242,190 @@
         "special_defense": 90
       },
       "moves": [
-        {"name": "Double-Edge⭐️", "type": "Normal"},
-        {"name": "Drain Punch", "type": "Fighting"},
-        {"name": "Thief", "type": "Dark"},
-        {"name": "Fire Punch", "type": "Fire"}
+        {
+          "name": "Double-Edge⭐️",
+          "type": "Normal"
+        },
+        {
+          "name": "Drain Punch",
+          "type": "Fighting"
+        },
+        {
+          "name": "Thief",
+          "type": "Dark"
+        },
+        {
+          "name": "Fire Punch",
+          "type": "Fire"
+        }
       ],
       "phase_effects": [
-        {"health": 100, "effect": "Substitute"},
-        {"health": 75, "effect": "Belly Drum"},
-        {"health": 50, "effect": "Stat Guard [Prevents stat reduction]"},
-        {"health": 25, "effect": "Rest"}
-      ],    
-    "variations": [
-    {
-        "players": {
+        {
+          "health": 100,
+          "effect": "Substitute"
+        },
+        {
+          "health": 75,
+          "effect": "Belly Drum"
+        },
+        {
+          "health": 50,
+          "effect": "Stat Guard [Prevents stat reduction]"
+        },
+        {
+          "health": 25,
+          "effect": "Rest"
+        }
+      ],
+      "variations": [
+        {
+          "players": {
             "P1": [
-            { "pokemon": "Medicham", "move": "Close Combat", "item": "Fist Plate" },
-            { "pokemon": "Mienshao", "move": "Close Combat", "item": "Black Belt" },
-            { "pokemon": "Hitmonlee", "move": "Close Combat", "item": "Fighting Gem" },
-            { "pokemon": "Gallade", "move": "Sacred Sword", "item": "Expert Belt" },
-            { "pokemon": "Primeape", "move": "Close Combat", "item": "Choice Band" },
-            { "pokemon": "Heracross", "move": "Close Combat", "item": "Life Orb" }
+              {
+                "pokemon": "Medicham",
+                "move": "Close Combat",
+                "item": "Fist Plate"
+              },
+              {
+                "pokemon": "Mienshao",
+                "move": "Close Combat",
+                "item": "Black Belt"
+              },
+              {
+                "pokemon": "Hitmonlee",
+                "move": "Close Combat",
+                "item": "Fighting Gem"
+              },
+              {
+                "pokemon": "Gallade",
+                "move": "Sacred Sword",
+                "item": "Expert Belt"
+              },
+              {
+                "pokemon": "Primeape",
+                "move": "Close Combat",
+                "item": "Choice Band"
+              },
+              {
+                "pokemon": "Heracross",
+                "move": "Close Combat",
+                "item": "Life Orb"
+              }
             ],
             "P2": [
-            { "pokemon": "Medicham", "move": "Close Combat", "item": "Fist Plate" },
-            { "pokemon": "Mienshao", "move": "Close Combat", "item": "Black Belt" },
-            { "pokemon": "Hitmonlee", "move": "Close Combat", "item": "Fighting Gem" },
-            { "pokemon": "Gallade", "move": "Sacred Sword", "item": "Expert Belt" },
-            { "pokemon": "Primeape", "move": "Close Combat", "item": "Choice Band" },
-            { "pokemon": "Heracross", "move": "Close Combat", "item": "Life Orb" }
+              {
+                "pokemon": "Medicham",
+                "move": "Close Combat",
+                "item": "Fist Plate"
+              },
+              {
+                "pokemon": "Mienshao",
+                "move": "Close Combat",
+                "item": "Black Belt"
+              },
+              {
+                "pokemon": "Hitmonlee",
+                "move": "Close Combat",
+                "item": "Fighting Gem"
+              },
+              {
+                "pokemon": "Gallade",
+                "move": "Sacred Sword",
+                "item": "Expert Belt"
+              },
+              {
+                "pokemon": "Primeape",
+                "move": "Close Combat",
+                "item": "Choice Band"
+              },
+              {
+                "pokemon": "Heracross",
+                "move": "Close Combat",
+                "item": "Life Orb"
+              }
             ],
             "P3": [
-            { "pokemon": "Medicham", "move": "Close Combat", "item": "Fist Plate" },
-            { "pokemon": "Mienshao", "move": "Close Combat", "item": "Black Belt" },
-            { "pokemon": "Hitmonlee", "move": "Close Combat", "item": "Fighting Gem" },
-            { "pokemon": "Gallade", "move": "Sacred Sword", "item": "Expert Belt" },
-            { "pokemon": "Primeape", "move": "Close Combat", "item": "Choice Band" },
-            { "pokemon": "Heracross", "move": "Close Combat", "item": "Life Orb" }
+              {
+                "pokemon": "Medicham",
+                "move": "Close Combat",
+                "item": "Fist Plate"
+              },
+              {
+                "pokemon": "Mienshao",
+                "move": "Close Combat",
+                "item": "Black Belt"
+              },
+              {
+                "pokemon": "Hitmonlee",
+                "move": "Close Combat",
+                "item": "Fighting Gem"
+              },
+              {
+                "pokemon": "Gallade",
+                "move": "Sacred Sword",
+                "item": "Expert Belt"
+              },
+              {
+                "pokemon": "Primeape",
+                "move": "Close Combat",
+                "item": "Choice Band"
+              },
+              {
+                "pokemon": "Heracross",
+                "move": "Close Combat",
+                "item": "Life Orb"
+              }
             ],
             "P4": [
-            { "pokemon": "Medicham", "move": "Close Combat", "item": "Fist Plate" },
-            { "pokemon": "Mienshao", "move": "Close Combat", "item": "Black Belt" },
-            { "pokemon": "Hitmonlee", "move": "Close Combat", "item": "Fighting Gem" },
-            { "pokemon": "Gallade", "move": "Sacred Sword", "item": "Expert Belt" },
-            { "pokemon": "Primeape", "move": "Close Combat", "item": "Choice Band" },
-            { "pokemon": "Heracross", "move": "Close Combat", "item": "Life Orb" }
+              {
+                "pokemon": "Medicham",
+                "move": "Close Combat",
+                "item": "Fist Plate"
+              },
+              {
+                "pokemon": "Mienshao",
+                "move": "Close Combat",
+                "item": "Black Belt"
+              },
+              {
+                "pokemon": "Hitmonlee",
+                "move": "Close Combat",
+                "item": "Fighting Gem"
+              },
+              {
+                "pokemon": "Gallade",
+                "move": "Sacred Sword",
+                "item": "Expert Belt"
+              },
+              {
+                "pokemon": "Primeape",
+                "move": "Close Combat",
+                "item": "Choice Band"
+              },
+              {
+                "pokemon": "Heracross",
+                "move": "Close Combat",
+                "item": "Life Orb"
+              }
             ]
-        },
-        "health_remaining": [100, 75, 50, 25],
-        "notes": [
+          },
+          "health_remaining": [
+            100,
+            75,
+            50,
+            25
+          ],
+          "notes": [
             "100% Substitute",
             "75% Belly Drum",
             "50% Stat Guard (prevents stat drops)",
             "25% Rest"
-        ]
+          ]
         }
-    ]
+      ]
     },
     {
-      "name": "Tangrowth 4★",
+      "name": "Tangrowth",
       "description": "4★ Tangrowth seasonal raid boss.",
       "ability": "Chlorophyll",
       "held_item": "Miracle Seed",
@@ -514,68 +1437,194 @@
         "special_defense": 50
       },
       "moves": [
-        {"name": "Solar Beam⭐️", "type": "Grass"},
-        {"name": "Earthquake", "type": "Ground"},
-        {"name": "Hidden Power Rock⭐️", "type": "Rock"},
-        {"name": "Brick Break", "type": "Fighting"}
-      ],
-        "phase_effects": [
-            {"health": 100, "effect": "Sunny Day⭐️"},
-            {"health": 75, "effect": "Growth⭐️"},
-            {"health": 50, "effect": "Ingrain"},
-            {"health": 33, "effect": "Adaptation [Pokemon's type changes to the damage type it received most until now]"}
-        ],
-      
-    "variations": [
         {
-        "players": {
+          "name": "Solar Beam⭐️",
+          "type": "Grass"
+        },
+        {
+          "name": "Earthquake",
+          "type": "Ground"
+        },
+        {
+          "name": "Hidden Power Rock⭐️",
+          "type": "Rock"
+        },
+        {
+          "name": "Brick Break",
+          "type": "Fighting"
+        }
+      ],
+      "phase_effects": [
+        {
+          "health": 100,
+          "effect": "Sunny Day⭐️"
+        },
+        {
+          "health": 75,
+          "effect": "Growth⭐️"
+        },
+        {
+          "health": 50,
+          "effect": "Ingrain"
+        },
+        {
+          "health": 33,
+          "effect": "Adaptation [Pokemon's type changes to the damage type it received most until now]"
+        }
+      ],
+      "variations": [
+        {
+          "players": {
             "P1": [
-            { "pokemon": null, "move": "Prankster Tailwind", "item": null },
-            { "pokemon": "Chandelure", "move": "Flamethrower", "item": "Charcoal" },
-            { "pokemon": "Typhlosion", "move": "Flamethrower", "item": "Expert Belt" },
-            { "pokemon": "Charizard", "move": "Weather Ball", "item": "Flame Plate" },
-            { "pokemon": "Jynx", "move": "Ice Beam", "item": "Icicle Plate" },
-            { "pokemon": "Volcarona", "move": "Bug Buzz", "item": "Insect Plate" }
+              {
+                "pokemon": "",
+                "move": "Prankster Tailwind",
+                "item": ""
+              },
+              {
+                "pokemon": "Chandelure",
+                "move": "Flamethrower",
+                "item": "Charcoal"
+              },
+              {
+                "pokemon": "Typhlosion",
+                "move": "Flamethrower",
+                "item": "Expert Belt"
+              },
+              {
+                "pokemon": "Charizard",
+                "move": "Weather Ball",
+                "item": "Flame Plate"
+              },
+              {
+                "pokemon": "Jynx",
+                "move": "Ice Beam",
+                "item": "Icicle Plate"
+              },
+              {
+                "pokemon": "Volcarona",
+                "move": "Bug Buzz",
+                "item": "Insect Plate"
+              }
             ],
             "P2": [
-            { "pokemon": "Charizard", "move": "Weather Ball", "item": "Flame Plate" },
-            { "pokemon": "Chandelure", "move": "Flamethrower", "item": "Charcoal" },
-            { "pokemon": null, "move": "Choice Scarf Fast Smeargle Heal Block", "item": null },
-            { "pokemon": "Typhlosion", "move": "Flamethrower", "item": "Expert Belt" },
-            { "pokemon": "Jynx", "move": "Ice Beam", "item": "Icicle Plate" },
-            { "pokemon": "Volcarona", "move": "Bug Buzz", "item": "Insect Plate" }
+              {
+                "pokemon": "Charizard",
+                "move": "Weather Ball",
+                "item": "Flame Plate"
+              },
+              {
+                "pokemon": "Chandelure",
+                "move": "Flamethrower",
+                "item": "Charcoal"
+              },
+              {
+                "pokemon": "",
+                "move": "Choice Scarf Fast Smeargle Heal Block",
+                "item": ""
+              },
+              {
+                "pokemon": "Typhlosion",
+                "move": "Flamethrower",
+                "item": "Expert Belt"
+              },
+              {
+                "pokemon": "Jynx",
+                "move": "Ice Beam",
+                "item": "Icicle Plate"
+              },
+              {
+                "pokemon": "Volcarona",
+                "move": "Bug Buzz",
+                "item": "Insect Plate"
+              }
             ],
             "P3": [
-            { "pokemon": "Charizard", "move": "Weather Ball", "item": "Flame Plate" },
-            { "pokemon": "Chandelure", "move": "Flamethrower", "item": "Charcoal" },
-            { "pokemon": "Typhlosion", "move": "Flamethrower", "item": "Expert Belt" },
-            { "pokemon": "Jynx", "move": "Ice Beam", "item": "Icicle Plate" },
-            { "pokemon": null, "move": "Prankster Haze", "item": null },
-            { "pokemon": "Volcarona", "move": "Bug Buzz", "item": "Insect Plate" }
+              {
+                "pokemon": "Charizard",
+                "move": "Weather Ball",
+                "item": "Flame Plate"
+              },
+              {
+                "pokemon": "Chandelure",
+                "move": "Flamethrower",
+                "item": "Charcoal"
+              },
+              {
+                "pokemon": "Typhlosion",
+                "move": "Flamethrower",
+                "item": "Expert Belt"
+              },
+              {
+                "pokemon": "Jynx",
+                "move": "Ice Beam",
+                "item": "Icicle Plate"
+              },
+              {
+                "pokemon": "",
+                "move": "Prankster Haze",
+                "item": ""
+              },
+              {
+                "pokemon": "Volcarona",
+                "move": "Bug Buzz",
+                "item": "Insect Plate"
+              }
             ],
             "P4": [
-            { "pokemon": "Charizard", "move": "Weather Ball", "item": "Flame Plate" },
-            { "pokemon": "Chandelure", "move": "Flamethrower", "item": "Charcoal" },
-            { "pokemon": "Typhlosion", "move": "Flamethrower", "item": "Expert Belt" },
-            { "pokemon": "Jynx", "move": "Ice Beam", "item": "Icicle Plate" },
-            { "pokemon": null, "move": "Prankster Tailwind", "item": null },
-            { "pokemon": "Volcarona", "move": "Bug Buzz", "item": "Insect Plate" }
+              {
+                "pokemon": "Charizard",
+                "move": "Weather Ball",
+                "item": "Flame Plate"
+              },
+              {
+                "pokemon": "Chandelure",
+                "move": "Flamethrower",
+                "item": "Charcoal"
+              },
+              {
+                "pokemon": "Typhlosion",
+                "move": "Flamethrower",
+                "item": "Expert Belt"
+              },
+              {
+                "pokemon": "Jynx",
+                "move": "Ice Beam",
+                "item": "Icicle Plate"
+              },
+              {
+                "pokemon": "",
+                "move": "Prankster Tailwind",
+                "item": ""
+              },
+              {
+                "pokemon": "Volcarona",
+                "move": "Bug Buzz",
+                "item": "Insect Plate"
+              }
             ]
-        },
-        "health_remaining": [82, 58, 40, 22, 10, 0],
-        "notes": [
+          },
+          "health_remaining": [
+            82,
+            58,
+            40,
+            22,
+            10,
+            0
+          ],
+          "notes": [
             "100% sunny day",
             "75% Growth",
             "50% Ingrain",
             "33% Adaptation",
             "",
             ""
-        ]
+          ]
         }
-    ]
+      ]
     },
     {
-      "name": "Vanilluxe 4★",
+      "name": "Vanilluxe",
       "description": "4★ Vanilluxe seasonal raid boss.",
       "ability": "Snow Warning⭐️",
       "held_item": "Petaya Berry",
@@ -587,67 +1636,194 @@
         "special_defense": 95
       },
       "moves": [
-        {"name": "Blizzard", "type": "Ice"},
-        {"name": "Water Pulse", "type": "Water"},
-        {"name": "Ice Beam", "type": "Ice"},
-        {"name": "Hyper Beam", "type": "Normal"}
+        {
+          "name": "Blizzard",
+          "type": "Ice"
+        },
+        {
+          "name": "Water Pulse",
+          "type": "Water"
+        },
+        {
+          "name": "Ice Beam",
+          "type": "Ice"
+        },
+        {
+          "name": "Hyper Beam",
+          "type": "Normal"
+        }
       ],
       "phase_effects": [
-        {"health": 100, "effect": "Light Screen"},
-        {"health": 66, "effect": "Acid Armor [+2 defense]⭐️"},
-        {"health": 40, "effect": "Autotomize [+2 speed]⭐️"},
-        {"health": 25, "effect": "Inverted Space [Type Inversion]"}
-      ],
-    "variations": [
         {
-        "players": {
+          "health": 100,
+          "effect": "Light Screen"
+        },
+        {
+          "health": 66,
+          "effect": "Acid Armor [+2 defense]⭐️"
+        },
+        {
+          "health": 40,
+          "effect": "Autotomize [+2 speed]⭐️"
+        },
+        {
+          "health": 25,
+          "effect": "Inverted Space [Type Inversion]"
+        }
+      ],
+      "variations": [
+        {
+          "players": {
             "P1": [
-            { "pokemon": "Golduck", "move": "Cloud 9 Skill Swap onto Add", "item": "Rocky Helmet" },
-            { "pokemon": "Darmanitan", "move": "Flare Blitz", "item": "Choice Band" },
-            { "pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs" },
-            { "pokemon": "Chandelure", "move": "Flamethrower", "item": "Charcoal" },
-            { "pokemon": "Jynx", "move": "Ice Beam", "item": "Icicle Plate" },
-            { "pokemon": "Cryogonal", "move": "Ice Beam", "item": "NeverMeltIce" }
+              {
+                "pokemon": "Golduck",
+                "move": "Cloud 9 Skill Swap onto Add",
+                "item": "Rocky Helmet"
+              },
+              {
+                "pokemon": "Darmanitan",
+                "move": "Flare Blitz",
+                "item": "Choice Band"
+              },
+              {
+                "pokemon": "Volcarona",
+                "move": "Flamethrower",
+                "item": "Choice Specs"
+              },
+              {
+                "pokemon": "Chandelure",
+                "move": "Flamethrower",
+                "item": "Charcoal"
+              },
+              {
+                "pokemon": "Jynx",
+                "move": "Ice Beam",
+                "item": "Icicle Plate"
+              },
+              {
+                "pokemon": "Cryogonal",
+                "move": "Ice Beam",
+                "item": "NeverMeltIce"
+              }
             ],
             "P2": [
-            { "pokemon": null, "move": "Prankster Defog", "item": "Rocky Helmet" },
-            { "pokemon": "Darmanitan", "move": "Flare Blitz", "item": "Choice Band" },
-            { "pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs" },
-            { "pokemon": "Chandelure", "move": "Flamethrower", "item": "Charcoal" },
-            { "pokemon": "Jynx", "move": "Ice Beam", "item": "Icicle Plate" },
-            { "pokemon": "Cryogonal", "move": "Ice Beam", "item": "NeverMeltIce" }
+              {
+                "pokemon": "",
+                "move": "Prankster Defog",
+                "item": "Rocky Helmet"
+              },
+              {
+                "pokemon": "Darmanitan",
+                "move": "Flare Blitz",
+                "item": "Choice Band"
+              },
+              {
+                "pokemon": "Volcarona",
+                "move": "Flamethrower",
+                "item": "Choice Specs"
+              },
+              {
+                "pokemon": "Chandelure",
+                "move": "Flamethrower",
+                "item": "Charcoal"
+              },
+              {
+                "pokemon": "Jynx",
+                "move": "Ice Beam",
+                "item": "Icicle Plate"
+              },
+              {
+                "pokemon": "Cryogonal",
+                "move": "Ice Beam",
+                "item": "NeverMeltIce"
+              }
             ],
             "P3": [
-            { "pokemon": "Medicham", "move": "Close Combat", "item": "Fist Plate" },
-            { "pokemon": "Darmanitan", "move": "Flare Blitz", "item": "Choice Band" },
-            { "pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs" },
-            { "pokemon": "Chandelure", "move": "Flamethrower", "item": "Charcoal" },
-            { "pokemon": "Jynx", "move": "Ice Beam", "item": "Icicle Plate" },
-            { "pokemon": "Cryogonal", "move": "Ice Beam", "item": "NeverMeltIce" }
+              {
+                "pokemon": "Medicham",
+                "move": "Close Combat",
+                "item": "Fist Plate"
+              },
+              {
+                "pokemon": "Darmanitan",
+                "move": "Flare Blitz",
+                "item": "Choice Band"
+              },
+              {
+                "pokemon": "Volcarona",
+                "move": "Flamethrower",
+                "item": "Choice Specs"
+              },
+              {
+                "pokemon": "Chandelure",
+                "move": "Flamethrower",
+                "item": "Charcoal"
+              },
+              {
+                "pokemon": "Jynx",
+                "move": "Ice Beam",
+                "item": "Icicle Plate"
+              },
+              {
+                "pokemon": "Cryogonal",
+                "move": "Ice Beam",
+                "item": "NeverMeltIce"
+              }
             ],
             "P4": [
-            { "pokemon": "Medicham", "move": "Close Combat", "item": "Fist Plate" },
-            { "pokemon": "Darmanitan", "move": "Flare Blitz", "item": "Choice Band" },
-            { "pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs" },
-            { "pokemon": null, "move": "Prankster Haze", "item": "Rocky Helmet" },
-            { "pokemon": "Jynx", "move": "Ice Beam", "item": "Icicle Plate" },
-            { "pokemon": "Cryogonal", "move": "Ice Beam", "item": "NeverMeltIce" }
+              {
+                "pokemon": "Medicham",
+                "move": "Close Combat",
+                "item": "Fist Plate"
+              },
+              {
+                "pokemon": "Darmanitan",
+                "move": "Flare Blitz",
+                "item": "Choice Band"
+              },
+              {
+                "pokemon": "Volcarona",
+                "move": "Flamethrower",
+                "item": "Choice Specs"
+              },
+              {
+                "pokemon": "",
+                "move": "Prankster Haze",
+                "item": "Rocky Helmet"
+              },
+              {
+                "pokemon": "Jynx",
+                "move": "Ice Beam",
+                "item": "Icicle Plate"
+              },
+              {
+                "pokemon": "Cryogonal",
+                "move": "Ice Beam",
+                "item": "NeverMeltIce"
+              }
             ]
-        },
-        "health_remaining": [88, 64, 40, 22, 0, 0],
-        "notes": [
+          },
+          "health_remaining": [
+            88,
+            64,
+            40,
+            22,
+            0,
+            0
+          ],
+          "notes": [
             "100% Light Screen",
             "66% Acid Armor",
             "With Tailwind and base 100 speed, you still outspeed Automize",
             "25% Type Inversion",
             "Use Pokemon with a base speed of 72 or greater to not need Tailwind",
             ""
-        ]
+          ]
         }
-    ]
+      ]
     },
     {
-      "name": "Togekiss 4★",
+      "name": "Togekiss",
       "description": "4★ Togekiss seasonal raid boss.",
       "ability": "Serene Grace",
       "held_item": "Starf Berry",
@@ -659,117 +1835,362 @@
         "special_defense": 115
       },
       "moves": [
-        {"name": "Tri Attack", "type": "Normal"},
-        {"name": "Air Slash", "type": "Flying"},
-        {"name": "Flamethrower", "type": "Fire"},
-        {"name": "Water Pulse", "type": "Water"}
+        {
+          "name": "Tri Attack",
+          "type": "Normal"
+        },
+        {
+          "name": "Air Slash",
+          "type": "Flying"
+        },
+        {
+          "name": "Flamethrower",
+          "type": "Fire"
+        },
+        {
+          "name": "Water Pulse",
+          "type": "Water"
+        }
       ],
       "phase_effects": [
-        {"health": 100, "effect": "Rainbow [doubles secondary effect chances. It doesn't stack with Serene Grace, so it'll have Super Luck for the raid most probably as it's ability [Rainer]]"},
-        {"health": 66, "effect": "Tailwind⭐️"},
-        {"health": 50, "effect": "Wish"},
-        {"health": 25, "effect": "Nasty Plot⭐️"}
-      ],
-      
-    "variations": [
         {
-        "players": {
+          "health": 100,
+          "effect": "Rainbow [doubles secondary effect chances. It doesn't stack with Serene Grace, so it'll have Super Luck for the raid most probably as it's ability [Rainer]]"
+        },
+        {
+          "health": 66,
+          "effect": "Tailwind⭐️"
+        },
+        {
+          "health": 50,
+          "effect": "Wish"
+        },
+        {
+          "health": 25,
+          "effect": "Nasty Plot⭐️"
+        }
+      ],
+      "variations": [
+        {
+          "players": {
             "P1": [
-            { "pokemon": null, "move": "Prankster Tailwind", "item": null },
-            { "pokemon": "Tyranitar", "move": "Stone Edge", "item": "Assault Vest" },
-            { "pokemon": "Tyranitar", "move": "Stone Edge", "item": "Assault Vest" },
-            { "pokemon": "Rampardos", "move": "Head Smash", "item": "Choice Scarf" },
-            { "pokemon": "Archeops", "move": "Head Smash", "item": "Choice Band" },
-            { "pokemon": "Minun", "move": "Thunder", "item": "Electric Gem" },
-            { "pokemon": "Plusle", "move": "Thunder", "item": "Choice Specs" }
+              {
+                "pokemon": "",
+                "move": "Prankster Tailwind",
+                "item": ""
+              },
+              {
+                "pokemon": "Tyranitar",
+                "move": "Stone Edge",
+                "item": "Assault Vest"
+              },
+              {
+                "pokemon": "Tyranitar",
+                "move": "Stone Edge",
+                "item": "Assault Vest"
+              },
+              {
+                "pokemon": "Rampardos",
+                "move": "Head Smash",
+                "item": "Choice Scarf"
+              },
+              {
+                "pokemon": "Archeops",
+                "move": "Head Smash",
+                "item": "Choice Band"
+              },
+              {
+                "pokemon": "Minun",
+                "move": "Thunder",
+                "item": "Electric Gem"
+              },
+              {
+                "pokemon": "Plusle",
+                "move": "Thunder",
+                "item": "Choice Specs"
+              }
             ],
             "P2": [
-            { "pokemon": null, "move": "Fast Frail Sweet Scent", "item": null },
-            { "pokemon": "Tyranitar", "move": "Stone Edge", "item": "Assault Vest" },
-            { "pokemon": "Tyranitar", "move": "Stone Edge", "item": "Assault Vest" },
-            { "pokemon": "Rampardos", "move": "Head Smash", "item": "Choice Scarf" },
-            { "pokemon": "Archeops", "move": "Head Smash", "item": "Choice Band" },
-            { "pokemon": "Minun", "move": "Thunder", "item": "Electric Gem" },
-            { "pokemon": "Plusle", "move": "Thunder", "item": "Choice Specs" }
+              {
+                "pokemon": "",
+                "move": "Fast Frail Sweet Scent",
+                "item": ""
+              },
+              {
+                "pokemon": "Tyranitar",
+                "move": "Stone Edge",
+                "item": "Assault Vest"
+              },
+              {
+                "pokemon": "Tyranitar",
+                "move": "Stone Edge",
+                "item": "Assault Vest"
+              },
+              {
+                "pokemon": "Rampardos",
+                "move": "Head Smash",
+                "item": "Choice Scarf"
+              },
+              {
+                "pokemon": "Archeops",
+                "move": "Head Smash",
+                "item": "Choice Band"
+              },
+              {
+                "pokemon": "Minun",
+                "move": "Thunder",
+                "item": "Electric Gem"
+              },
+              {
+                "pokemon": "Plusle",
+                "move": "Thunder",
+                "item": "Choice Specs"
+              }
             ],
             "P3": [
-            { "pokemon": "Rhyperior", "move": "Rock Wrecker", "item": null },
-            { "pokemon": "Tyranitar", "move": "Stone Edge", "item": "Assault Vest" },
-            { "pokemon": "Tyranitar", "move": "Stone Edge", "item": "Assault Vest" },
-            { "pokemon": "Fast Smeargle", "move": "Heal Block", "item": "Choice Scarf" },
-            { "pokemon": "Archeops", "move": "Head Smash", "item": "Choice Band" },
-            { "pokemon": "Minun", "move": "Thunder", "item": "Electric Gem" },
-            { "pokemon": "Plusle", "move": "Thunder", "item": "Choice Specs" }
+              {
+                "pokemon": "Rhyperior",
+                "move": "Rock Wrecker",
+                "item": ""
+              },
+              {
+                "pokemon": "Tyranitar",
+                "move": "Stone Edge",
+                "item": "Assault Vest"
+              },
+              {
+                "pokemon": "Tyranitar",
+                "move": "Stone Edge",
+                "item": "Assault Vest"
+              },
+              {
+                "pokemon": "Fast Smeargle",
+                "move": "Heal Block",
+                "item": "Choice Scarf"
+              },
+              {
+                "pokemon": "Archeops",
+                "move": "Head Smash",
+                "item": "Choice Band"
+              },
+              {
+                "pokemon": "Minun",
+                "move": "Thunder",
+                "item": "Electric Gem"
+              },
+              {
+                "pokemon": "Plusle",
+                "move": "Thunder",
+                "item": "Choice Specs"
+              }
             ],
             "P4": [
-            { "pokemon": "Absol", "move": "Knock Off", "item": "Dark Gem" },
-            { "pokemon": "Tyranitar", "move": "Stone Edge", "item": "Assault Vest" },
-            { "pokemon": "Tyranitar", "move": "Stone Edge", "item": "Assault Vest" },
-            { "pokemon": "Rampardos", "move": "Head Smash", "item": "Choice Scarf" },
-            { "pokemon": null, "move": "Prankster Tailwind", "item": null },
-            { "pokemon": "Archeops", "move": "Head Smash", "item": "Choice Band" },
-            { "pokemon": "Plusle", "move": "Thunder", "item": "Choice Specs" }
+              {
+                "pokemon": "Absol",
+                "move": "Knock Off",
+                "item": "Dark Gem"
+              },
+              {
+                "pokemon": "Tyranitar",
+                "move": "Stone Edge",
+                "item": "Assault Vest"
+              },
+              {
+                "pokemon": "Tyranitar",
+                "move": "Stone Edge",
+                "item": "Assault Vest"
+              },
+              {
+                "pokemon": "Rampardos",
+                "move": "Head Smash",
+                "item": "Choice Scarf"
+              },
+              {
+                "pokemon": "",
+                "move": "Prankster Tailwind",
+                "item": ""
+              },
+              {
+                "pokemon": "Archeops",
+                "move": "Head Smash",
+                "item": "Choice Band"
+              },
+              {
+                "pokemon": "Plusle",
+                "move": "Thunder",
+                "item": "Choice Specs"
+              }
             ]
-        },
-        "health_remaining": [93, 69, 51, 27, 9, 0],
-        "notes": [
+          },
+          "health_remaining": [
+            93,
+            69,
+            51,
+            27,
+            9,
+            0
+          ],
+          "notes": [
             "100% Rainbow",
             "",
             "",
             "66% Tailwind, 50% Wish",
             "",
             "25% Nasty Plot, Starf Berry consumed"
-        ]
+          ]
         },
         {
-        "players": {
+          "players": {
             "P1": [
-            { "pokemon": "Murkrow", "move": "Tailwind", "item": null },
-            { "pokemon": "Cloyster", "move": "Icicle Spear", "item": "Life Orb" },
-            { "pokemon": "Rampardos", "move": "Head Smash", "item": "Choice Scarf" },
-            { "pokemon": "Archeops", "move": "Head Smash", "item": "Stone Plate" },
-            { "pokemon": "Weavile", "move": "Icicle Crash", "item": "Choice Band" },
-            { "pokemon": "Pikachu", "move": "Volt Tackle", "item": "Light Ball" }
+              {
+                "pokemon": "Murkrow",
+                "move": "Tailwind",
+                "item": ""
+              },
+              {
+                "pokemon": "Cloyster",
+                "move": "Icicle Spear",
+                "item": "Life Orb"
+              },
+              {
+                "pokemon": "Rampardos",
+                "move": "Head Smash",
+                "item": "Choice Scarf"
+              },
+              {
+                "pokemon": "Archeops",
+                "move": "Head Smash",
+                "item": "Stone Plate"
+              },
+              {
+                "pokemon": "Weavile",
+                "move": "Icicle Crash",
+                "item": "Choice Band"
+              },
+              {
+                "pokemon": "Pikachu",
+                "move": "Volt Tackle",
+                "item": "Light Ball"
+              }
             ],
             "P2": [
-            { "pokemon": "Cloyster", "move": "Icicle Spear", "item": "Life Orb" },
-            { "pokemon": "Murkrow", "move": "Defog", "item": null },
-            { "pokemon": "Rampardos", "move": "Head Smash", "item": "Choice Scarf" },
-            { "pokemon": "Archeops", "move": "Head Smash", "item": "Stone Plate" },
-            { "pokemon": "Weavile", "move": "Icicle Crash", "item": "Choice Band" },
-            { "pokemon": "Pikachu", "move": "Volt Tackle", "item": "Light Ball" }
+              {
+                "pokemon": "Cloyster",
+                "move": "Icicle Spear",
+                "item": "Life Orb"
+              },
+              {
+                "pokemon": "Murkrow",
+                "move": "Defog",
+                "item": ""
+              },
+              {
+                "pokemon": "Rampardos",
+                "move": "Head Smash",
+                "item": "Choice Scarf"
+              },
+              {
+                "pokemon": "Archeops",
+                "move": "Head Smash",
+                "item": "Stone Plate"
+              },
+              {
+                "pokemon": "Weavile",
+                "move": "Icicle Crash",
+                "item": "Choice Band"
+              },
+              {
+                "pokemon": "Pikachu",
+                "move": "Volt Tackle",
+                "item": "Light Ball"
+              }
             ],
             "P3": [
-            { "pokemon": "Cloyster", "move": "Icicle Spear", "item": "Life Orb" },
-            { "pokemon": "Tyranitar", "move": "Stone Edge", "item": "Choice Scarf" },
-            { "pokemon": "Archeops", "move": "Head Smash", "item": "Stone Plate" },
-            { "pokemon": "Gothitelle", "move": "Heal Block", "item": null },
-            { "pokemon": "Weavile", "move": "Icicle Crash", "item": "Choice Band" },
-            { "pokemon": "Pikachu", "move": "Volt Tackle", "item": "Light Ball" }
+              {
+                "pokemon": "Cloyster",
+                "move": "Icicle Spear",
+                "item": "Life Orb"
+              },
+              {
+                "pokemon": "Tyranitar",
+                "move": "Stone Edge",
+                "item": "Choice Scarf"
+              },
+              {
+                "pokemon": "Archeops",
+                "move": "Head Smash",
+                "item": "Stone Plate"
+              },
+              {
+                "pokemon": "Gothitelle",
+                "move": "Heal Block",
+                "item": ""
+              },
+              {
+                "pokemon": "Weavile",
+                "move": "Icicle Crash",
+                "item": "Choice Band"
+              },
+              {
+                "pokemon": "Pikachu",
+                "move": "Volt Tackle",
+                "item": "Light Ball"
+              }
             ],
             "P4": [
-            { "pokemon": "Cloyster", "move": "Icicle Spear", "item": "Life Orb" },
-            { "pokemon": "Infernape", "move": "Knock Off", "item": "Dread Plate" },
-            { "pokemon": "Rampardos", "move": "Head Smash", "item": "Choice Scarf" },
-            { "pokemon": "Archeops", "move": "Head Smash", "item": "Stone Plate" },
-            { "pokemon": "Murkrow", "move": "Tailwind", "item": null },
-            { "pokemon": "Pikachu", "move": "Volt Tackle", "item": "Light Ball" }
+              {
+                "pokemon": "Cloyster",
+                "move": "Icicle Spear",
+                "item": "Life Orb"
+              },
+              {
+                "pokemon": "Infernape",
+                "move": "Knock Off",
+                "item": "Dread Plate"
+              },
+              {
+                "pokemon": "Rampardos",
+                "move": "Head Smash",
+                "item": "Choice Scarf"
+              },
+              {
+                "pokemon": "Archeops",
+                "move": "Head Smash",
+                "item": "Stone Plate"
+              },
+              {
+                "pokemon": "Murkrow",
+                "move": "Tailwind",
+                "item": ""
+              },
+              {
+                "pokemon": "Pikachu",
+                "move": "Volt Tackle",
+                "item": "Light Ball"
+              }
             ]
-        },
-        "health_remaining": [82, 69, 45, 27, 9, 0],
-        "notes": [
+          },
+          "health_remaining": [
+            82,
+            69,
+            45,
+            27,
+            9,
+            0
+          ],
+          "notes": [
             "",
             "Activates Tailwind mid turn",
             "Activates Wish mid turn",
             "",
             "Activates Nasty Plot mid turn and Starf Berry is consumed",
             ""
-        ]
+          ]
         }
-    ]
+      ]
     },
     {
-      "name": "Gardevoir 4★",
+      "name": "Gardevoir",
       "description": "4★ Gardevoir seasonal raid boss.",
       "ability": "Synchronize",
       "held_item": "Expert Belt",
@@ -781,66 +2202,192 @@
         "special_defense": 115
       },
       "moves": [
-        {"name": "Psyshock", "type": "Psychic"},
-        {"name": "Aura Sphere", "type": "Fighting"},
-        {"name": "Shadow Ball", "type": "Ghost"},
-        {"name": "Grass Knot", "type": "Grass"}
+        {
+          "name": "Psyshock",
+          "type": "Psychic"
+        },
+        {
+          "name": "Aura Sphere",
+          "type": "Fighting"
+        },
+        {
+          "name": "Shadow Ball",
+          "type": "Ghost"
+        },
+        {
+          "name": "Grass Knot",
+          "type": "Grass"
+        }
       ],
       "phase_effects": [
-        {"health": 100, "effect": "Ally Guard"},
-        {"health": 80, "effect": "Reflect"},
-        {"health": 60, "effect": "Trick Room"},
-        {"health": 33, "effect": "Trick Room"}
-      ],
-    "variations": [
         {
-        "players": {
+          "health": 100,
+          "effect": "Ally Guard"
+        },
+        {
+          "health": 80,
+          "effect": "Reflect"
+        },
+        {
+          "health": 60,
+          "effect": "Trick Room"
+        },
+        {
+          "health": 33,
+          "effect": "Trick Room"
+        }
+      ],
+      "variations": [
+        {
+          "players": {
             "P1": [
-            { "pokemon": "Weavile", "move": "Beat Up", "item": "Dread Plate" },
-            { "pokemon": null, "move": "Prankster Defog", "item": null },
-            { "pokemon": "Absol", "move": "Sucker Punch", "item": "Dark Gem" },
-            { "pokemon": "Crawdaunt", "move": "Fling (Explosion TM)", "item": null },
-            { "pokemon": "Shiftry", "move": "Assurance", "item": "Expert Belt" },
-            { "pokemon": "Krookodile", "move": "Assurance", "item": "Black Glasses" }
+              {
+                "pokemon": "Weavile",
+                "move": "Beat Up",
+                "item": "Dread Plate"
+              },
+              {
+                "pokemon": "",
+                "move": "Prankster Defog",
+                "item": ""
+              },
+              {
+                "pokemon": "Absol",
+                "move": "Sucker Punch",
+                "item": "Dark Gem"
+              },
+              {
+                "pokemon": "Crawdaunt",
+                "move": "Fling (Explosion TM)",
+                "item": ""
+              },
+              {
+                "pokemon": "Shiftry",
+                "move": "Assurance",
+                "item": "Expert Belt"
+              },
+              {
+                "pokemon": "Krookodile",
+                "move": "Assurance",
+                "item": "Black Glasses"
+              }
             ],
             "P2": [
-            { "pokemon": "Weavile", "move": "Beat Up", "item": "Dread Plate" },
-            { "pokemon": "Bisharp", "move": "Sucker Punch", "item": "Dark Gem" },
-            { "pokemon": "Honchkrow", "move": "Assurance", "item": "Choice Band" },
-            { "pokemon": "Volcarona", "move": "Bug Buzz", "item": "Bug Gem" },
-            { "pokemon": "Absol", "move": "Sucker Punch", "item": "Dark Gem" },
-            { "pokemon": "Krookodile", "move": "Assurance", "item": "Black Glasses" }
+              {
+                "pokemon": "Weavile",
+                "move": "Beat Up",
+                "item": "Dread Plate"
+              },
+              {
+                "pokemon": "Bisharp",
+                "move": "Sucker Punch",
+                "item": "Dark Gem"
+              },
+              {
+                "pokemon": "Honchkrow",
+                "move": "Assurance",
+                "item": "Choice Band"
+              },
+              {
+                "pokemon": "Volcarona",
+                "move": "Bug Buzz",
+                "item": "Bug Gem"
+              },
+              {
+                "pokemon": "Absol",
+                "move": "Sucker Punch",
+                "item": "Dark Gem"
+              },
+              {
+                "pokemon": "Krookodile",
+                "move": "Assurance",
+                "item": "Black Glasses"
+              }
             ],
             "P3": [
-            { "pokemon": "Weavile", "move": "Beat Up", "item": "Dread Plate" },
-            { "pokemon": "Bisharp", "move": "Assurance", "item": "Life Orb" },
-            { "pokemon": "Honchkrow", "move": "Assurance", "item": "Choice Band" },
-            { "pokemon": "Volcarona", "move": "Bug Buzz", "item": "Bug Gem" },
-            { "pokemon": "Shiftry", "move": "Assurance", "item": "Expert Belt" },
-            { "pokemon": "Absol", "move": "Sucker Punch", "item": "Dark Gem" }
+              {
+                "pokemon": "Weavile",
+                "move": "Beat Up",
+                "item": "Dread Plate"
+              },
+              {
+                "pokemon": "Bisharp",
+                "move": "Assurance",
+                "item": "Life Orb"
+              },
+              {
+                "pokemon": "Honchkrow",
+                "move": "Assurance",
+                "item": "Choice Band"
+              },
+              {
+                "pokemon": "Volcarona",
+                "move": "Bug Buzz",
+                "item": "Bug Gem"
+              },
+              {
+                "pokemon": "Shiftry",
+                "move": "Assurance",
+                "item": "Expert Belt"
+              },
+              {
+                "pokemon": "Absol",
+                "move": "Sucker Punch",
+                "item": "Dark Gem"
+              }
             ],
             "P4": [
-            { "pokemon": "Weavile", "move": "Beat Up", "item": "Dread Plate" },
-            { "pokemon": "Bisharp", "move": "Assurance", "item": "Life Orb" },
-            { "pokemon": "Honchkrow", "move": "Assurance", "item": "Choice Band" },
-            { "pokemon": "Volcarona", "move": "Bug Buzz", "item": "Bug Gem" },
-            { "pokemon": "Shiftry", "move": "Assurance", "item": "Expert Belt" },
-            { "pokemon": "Krookodile", "move": "Assurance", "item": "Black Glasses" }
+              {
+                "pokemon": "Weavile",
+                "move": "Beat Up",
+                "item": "Dread Plate"
+              },
+              {
+                "pokemon": "Bisharp",
+                "move": "Assurance",
+                "item": "Life Orb"
+              },
+              {
+                "pokemon": "Honchkrow",
+                "move": "Assurance",
+                "item": "Choice Band"
+              },
+              {
+                "pokemon": "Volcarona",
+                "move": "Bug Buzz",
+                "item": "Bug Gem"
+              },
+              {
+                "pokemon": "Shiftry",
+                "move": "Assurance",
+                "item": "Expert Belt"
+              },
+              {
+                "pokemon": "Krookodile",
+                "move": "Assurance",
+                "item": "Black Glasses"
+              }
             ]
-        },
-        "health_remaining": [76, 58, 34, 10, 0],
-        "notes": [
+          },
+          "health_remaining": [
+            76,
+            58,
+            34,
+            10,
+            0
+          ],
+          "notes": [
             "100% Ally Guard, 80% Reflect",
             "60% Trick Room",
             "",
             "33% Trick Room. Trick Room is reversed to normal. Can replace Crawdaunt with Honchkrow Sucker Punch",
             ""
-            ]
+          ]
         }
-    ]
+      ]
     },
     {
-      "name": "Salamence 4★",
+      "name": "Salamence",
       "description": "4★ Salamence seasonal raid boss.",
       "ability": "Moxie",
       "held_item": "Protective Pads",
@@ -852,67 +2399,194 @@
         "special_defense": 80
       },
       "moves": [
-        {"name": "Dragon Claw⭐️", "type": "Dragon"},
-        {"name": "Earthquake", "type": "Ground"},
-        {"name": "Crunch", "type": "Dark"},
-        {"name": "Fire Fang⭐️", "type": "Fire"}
+        {
+          "name": "Dragon Claw⭐️",
+          "type": "Dragon"
+        },
+        {
+          "name": "Earthquake",
+          "type": "Ground"
+        },
+        {
+          "name": "Crunch",
+          "type": "Dark"
+        },
+        {
+          "name": "Fire Fang⭐️",
+          "type": "Fire"
+        }
       ],
       "phase_effects": [
-        {"health": 100, "effect": "Roar⭐️"},
-        {"health": 66, "effect": "Wish"},
-        {"health": 33, "effect": "Taunt Aura"},
-        {"health": 25, "effect": "Tailwind⭐️"}
-      ],
-    "variations": [
         {
-        "players": {
+          "health": 100,
+          "effect": "Roar⭐️"
+        },
+        {
+          "health": 66,
+          "effect": "Wish"
+        },
+        {
+          "health": 33,
+          "effect": "Taunt Aura"
+        },
+        {
+          "health": 25,
+          "effect": "Tailwind⭐️"
+        }
+      ],
+      "variations": [
+        {
+          "players": {
             "P1": [
-            { "pokemon": "Soundproof Abomasnow", "move": "Ice Beam", "item": "Choice Specs" },
-            { "pokemon": "Smeargle", "move": "Heal Block", "item": "Choice Scarf" },
-            { "pokemon": "Cloyster", "move": "Icicle Spear", "item": "Choice Band" },
-            { "pokemon": "Haxorus", "move": "Dragon Claw", "item": "Draco Plate" },
-            { "pokemon": "Hydreigon", "move": "Draco Meteor", "item": "Expert Belt" },
-            { "pokemon": "Weavile", "move": "Icicle Spear", "item": "Dice" }
+              {
+                "pokemon": "Soundproof Abomasnow",
+                "move": "Ice Beam",
+                "item": "Choice Specs"
+              },
+              {
+                "pokemon": "Smeargle",
+                "move": "Heal Block",
+                "item": "Choice Scarf"
+              },
+              {
+                "pokemon": "Cloyster",
+                "move": "Icicle Spear",
+                "item": "Choice Band"
+              },
+              {
+                "pokemon": "Haxorus",
+                "move": "Dragon Claw",
+                "item": "Draco Plate"
+              },
+              {
+                "pokemon": "Hydreigon",
+                "move": "Draco Meteor",
+                "item": "Expert Belt"
+              },
+              {
+                "pokemon": "Weavile",
+                "move": "Icicle Spear",
+                "item": "Dice"
+              }
             ],
             "P2": [
-            { "pokemon": "Soundproof Abomasnow", "move": "Ice Beam", "item": "Choice Specs" },
-            { "pokemon": "Cloyster", "move": "Icicle Spear", "item": "Choice Band" },
-            { "pokemon": "Glaceon", "move": "Ice Beam", "item": "Icicle Plate" },
-            { "pokemon": "Haxorus", "move": "Dragon Claw", "item": "Draco Plate" },
-            { "pokemon": "Hydreigon", "move": "Draco Meteor", "item": "Expert Belt" },
-            { "pokemon": "Weavile", "move": "Icicle Spear", "item": "Dice" }
+              {
+                "pokemon": "Soundproof Abomasnow",
+                "move": "Ice Beam",
+                "item": "Choice Specs"
+              },
+              {
+                "pokemon": "Cloyster",
+                "move": "Icicle Spear",
+                "item": "Choice Band"
+              },
+              {
+                "pokemon": "Glaceon",
+                "move": "Ice Beam",
+                "item": "Icicle Plate"
+              },
+              {
+                "pokemon": "Haxorus",
+                "move": "Dragon Claw",
+                "item": "Draco Plate"
+              },
+              {
+                "pokemon": "Hydreigon",
+                "move": "Draco Meteor",
+                "item": "Expert Belt"
+              },
+              {
+                "pokemon": "Weavile",
+                "move": "Icicle Spear",
+                "item": "Dice"
+              }
             ],
             "P3": [
-            { "pokemon": "Magic Bounce Xatu", "move": "Tailwind", "item": "Rocky Helmet" },
-            { "pokemon": "Cloyster", "move": "Icicle Spear", "item": "Choice Band" },
-            { "pokemon": "Glaceon", "move": "Ice Beam", "item": "Choice Specs" },
-            { "pokemon": "Haxorus", "move": "Dragon Claw", "item": "Draco Plate" },
-            { "pokemon": "Hydreigon", "move": "Draco Meteor", "item": "Expert Belt" },
-            { "pokemon": "Weavile", "move": "Icicle Spear", "item": "Dice" }
+              {
+                "pokemon": "Magic Bounce Xatu",
+                "move": "Tailwind",
+                "item": "Rocky Helmet"
+              },
+              {
+                "pokemon": "Cloyster",
+                "move": "Icicle Spear",
+                "item": "Choice Band"
+              },
+              {
+                "pokemon": "Glaceon",
+                "move": "Ice Beam",
+                "item": "Choice Specs"
+              },
+              {
+                "pokemon": "Haxorus",
+                "move": "Dragon Claw",
+                "item": "Draco Plate"
+              },
+              {
+                "pokemon": "Hydreigon",
+                "move": "Draco Meteor",
+                "item": "Expert Belt"
+              },
+              {
+                "pokemon": "Weavile",
+                "move": "Icicle Spear",
+                "item": "Dice"
+              }
             ],
             "P4": [
-            { "pokemon": "Soundproof Abomasnow", "move": "Ice Beam", "item": "Choice Specs" },
-            { "pokemon": "Cloyster", "move": "Icicle Spear", "item": "Choice Band" },
-            { "pokemon": "Glaceon", "move": "Ice Beam", "item": "Icicle Plate" },
-            { "pokemon": "Haxorus", "move": "Dragon Claw", "item": "Draco Plate" },
-            { "pokemon": "Murkrow", "move": "Tailwind", "item": "Mental Herb" },
-            { "pokemon": "Weavile", "move": "Icicle Spear", "item": "Dice" }
+              {
+                "pokemon": "Soundproof Abomasnow",
+                "move": "Ice Beam",
+                "item": "Choice Specs"
+              },
+              {
+                "pokemon": "Cloyster",
+                "move": "Icicle Spear",
+                "item": "Choice Band"
+              },
+              {
+                "pokemon": "Glaceon",
+                "move": "Ice Beam",
+                "item": "Icicle Plate"
+              },
+              {
+                "pokemon": "Haxorus",
+                "move": "Dragon Claw",
+                "item": "Draco Plate"
+              },
+              {
+                "pokemon": "Murkrow",
+                "move": "Tailwind",
+                "item": "Mental Herb"
+              },
+              {
+                "pokemon": "Weavile",
+                "move": "Icicle Spear",
+                "item": "Dice"
+              }
             ]
-        },
-        "health_remaining": [82, 64, 40, 16, 0, 0],
-        "notes": [
+          },
+          "health_remaining": [
+            82,
+            64,
+            40,
+            16,
+            0,
+            0
+          ],
+          "notes": [
             "100% Roar",
             "66% Wish",
             "",
             "33% Taunt Aura, 25% Tailwind",
             "",
             ""
-            ]
-          }
-        ]
+          ]
+        }
+      ]
     },
     {
-      "name": "Jirachi 4★",
+      "name": "Jirachi",
       "description": "4★ Jirachi seasonal raid boss.",
       "ability": "Serene Grace",
       "held_item": "Room Service",
@@ -924,63 +2598,194 @@
         "special_defense": 100
       },
       "moves": [
-        {"name": "Psychic", "type": "Psychic"},
-        {"name": "Iron Head⭐️", "type": "Steel"},
-        {"name": "Drain Punch", "type": "Fighting"},
-        {"name": "Hidden Power Rock⭐️", "type": "Rock"}
+        {
+          "name": "Psychic",
+          "type": "Psychic"
+        },
+        {
+          "name": "Iron Head⭐️",
+          "type": "Steel"
+        },
+        {
+          "name": "Drain Punch",
+          "type": "Fighting"
+        },
+        {
+          "name": "Hidden Power Rock⭐️",
+          "type": "Rock"
+        }
       ],
       "phase_effects": [
-        {"health": 100, "effect": "Doom Desire⭐️"},
-        {"health": 75, "effect": "Doom Desire⭐️"},
-        {"health": 50, "effect": "Protective Shield"},
-        {"health": 25, "effect": "Trick Room"}
+        {
+          "health": 100,
+          "effect": "Doom Desire⭐️"
+        },
+        {
+          "health": 75,
+          "effect": "Doom Desire⭐️"
+        },
+        {
+          "health": 50,
+          "effect": "Protective Shield"
+        },
+        {
+          "health": 25,
+          "effect": "Trick Room"
+        }
       ],
-
       "variations": [
         {
           "players": {
-            "P1": [ {"pokemon": "Any", "move": "Eruption", "item": "Choice Specs"},
-                    {"pokemon": "Volcarona", "move": "Overheat", "item": "Assault Vest"},
-                    {"pokemon": "Whimsicott", "move": "Fake Tears", "item": "Focus Sash"},
-                    {"pokemon": "Any", "move": "Flamethrower", "item": ""},
-                    {"pokemon": "Any Slow", "move": "Flamethrower/Overheat/Flare Blitz", "item": ""},
-                    {"pokemon": "Any Slow", "move": "Flamethrower/Overheat/Flare Blitz", "item": ""}
-                ],
-            "P2": [ {"pokemon": "Prankster", "move": "Tailwind", "item": ""},
-                    {"pokemon": "Darmanitan", "move": "Flare Blitz", "item": "Focus Sash"},
-                    {"pokemon": "Volcarona", "move": "Overheat/Fiery Dance", "item": "Assault Vest"},
-                    {"pokemon": "Charizard", "move": "Weather Ball", "item": "Charcoal"},
-                    {"pokemon": "Chandelure", "move": "Flamethrower", "item": "Flame Plate"},
-                    {"pokemon": "Volcarona", "move": "Flamethrower", "item": "Choice Specs"} 
-                ],
-            "P3": [ {"pokemon": "Vulpix HA", "move": "Overheat", "item": "Heat Rock"},
-                    {"pokemon": "Darmanitan", "move": "Flare Blitz", "item": "Focus Sash"},
-                    {"pokemon": "Volcarona", "move": "Overheat/Fiery Dance", "item": "Assault Vest"},
-                    {"pokemon": "Any", "move": "Flamethrower", "item": ""},
-                    {"pokemon": "Any Slow", "move": "Flamethrower/Overheat/Flare Blitz", "item": ""},
-                    {"pokemon": "Any Slow", "move": "Flamethrower/Overheat/Flare Blitz", "item": ""}
-                ],  
-            "P4": [ {"pokemon": "Any", "move": "Eruption", "item": "Choice Specs"},
-                    {"pokemon": "Darmanitan", "move": "Flare Blitz", "item": "Focus Sash"},
-                    {"pokemon": "Volcarona", "move": "Overheat/Fiery Dance", "item": "Assault Vest"},  
-                    {"pokemon": "Any", "move": "Flamethrower", "item": ""},
-                    {"pokemon": "Any Slow", "move": "Flamethrower/Overheat/Flare Blitz", "item": ""},
-                    {"pokemon": "Any Slow", "move": "Flamethrower/Overheat/Flare Blitz", "item": ""}
-                ]
+            "P1": [
+              {
+                "pokemon": "Any",
+                "move": "Eruption",
+                "item": "Choice Specs"
+              },
+              {
+                "pokemon": "Volcarona",
+                "move": "Overheat",
+                "item": "Assault Vest"
+              },
+              {
+                "pokemon": "Whimsicott",
+                "move": "Fake Tears",
+                "item": "Focus Sash"
+              },
+              {
+                "pokemon": "Any",
+                "move": "Flamethrower",
+                "item": ""
+              },
+              {
+                "pokemon": "Any Slow",
+                "move": "Flamethrower/Overheat/Flare Blitz",
+                "item": ""
+              },
+              {
+                "pokemon": "Any Slow",
+                "move": "Flamethrower/Overheat/Flare Blitz",
+                "item": ""
+              }
+            ],
+            "P2": [
+              {
+                "pokemon": "Prankster",
+                "move": "Tailwind",
+                "item": ""
+              },
+              {
+                "pokemon": "Darmanitan",
+                "move": "Flare Blitz",
+                "item": "Focus Sash"
+              },
+              {
+                "pokemon": "Volcarona",
+                "move": "Overheat/Fiery Dance",
+                "item": "Assault Vest"
+              },
+              {
+                "pokemon": "Charizard",
+                "move": "Weather Ball",
+                "item": "Charcoal"
+              },
+              {
+                "pokemon": "Chandelure",
+                "move": "Flamethrower",
+                "item": "Flame Plate"
+              },
+              {
+                "pokemon": "Volcarona",
+                "move": "Flamethrower",
+                "item": "Choice Specs"
+              }
+            ],
+            "P3": [
+              {
+                "pokemon": "Vulpix HA",
+                "move": "Overheat",
+                "item": "Heat Rock"
+              },
+              {
+                "pokemon": "Darmanitan",
+                "move": "Flare Blitz",
+                "item": "Focus Sash"
+              },
+              {
+                "pokemon": "Volcarona",
+                "move": "Overheat/Fiery Dance",
+                "item": "Assault Vest"
+              },
+              {
+                "pokemon": "Any",
+                "move": "Flamethrower",
+                "item": ""
+              },
+              {
+                "pokemon": "Any Slow",
+                "move": "Flamethrower/Overheat/Flare Blitz",
+                "item": ""
+              },
+              {
+                "pokemon": "Any Slow",
+                "move": "Flamethrower/Overheat/Flare Blitz",
+                "item": ""
+              }
+            ],
+            "P4": [
+              {
+                "pokemon": "Any",
+                "move": "Eruption",
+                "item": "Choice Specs"
+              },
+              {
+                "pokemon": "Darmanitan",
+                "move": "Flare Blitz",
+                "item": "Focus Sash"
+              },
+              {
+                "pokemon": "Volcarona",
+                "move": "Overheat/Fiery Dance",
+                "item": "Assault Vest"
+              },
+              {
+                "pokemon": "Any",
+                "move": "Flamethrower",
+                "item": ""
+              },
+              {
+                "pokemon": "Any Slow",
+                "move": "Flamethrower/Overheat/Flare Blitz",
+                "item": ""
+              },
+              {
+                "pokemon": "Any Slow",
+                "move": "Flamethrower/Overheat/Flare Blitz",
+                "item": ""
+              }
+            ]
           },
-          "health_remaining": [77.5, 55, 32.5, 2.5, 0, 0],
-          "notes": ["Vulpix/Ninetales should be P3 or P4 to die to right side add. Eruption must be P1/P2 and faster than Vulpix/Ninetales",
-                    "All Volcarona's can be replaced with 252 Spdef 252 Atk Assault Vest Blaze Emboar w Flare",
-                    "T3 Fake tear can be in any position not limited to P2",
-                    "Volcarona doesn't need any Hp or Spdef Evs",
-                    "Charizard with 31 speed iv 252 ev NEUTRAL nature outslows jirachi w Ironball. I'd recommend Charizard 252 HP and 252 Spdef as it's used in 5* Jirachi",
-                    "Good slow pokemon -> Quiet nature 0 speed iv: Magmortar, Heatmor, Chandelure, Iron ball charizard (HA makes it hit super hard)"
-                  ]
+          "health_remaining": [
+            77.5,
+            55,
+            32.5,
+            2.5,
+            0,
+            0
+          ],
+          "notes": [
+            "Vulpix/Ninetales should be P3 or P4 to die to right side add. Eruption must be P1/P2 and faster than Vulpix/Ninetales",
+            "All Volcarona's can be replaced with 252 Spdef 252 Atk Assault Vest Blaze Emboar w Flare",
+            "T3 Fake tear can be in any position not limited to P2",
+            "Volcarona doesn't need any Hp or Spdef Evs",
+            "Charizard with 31 speed iv 252 ev NEUTRAL nature outslows jirachi w Ironball. I'd recommend Charizard 252 HP and 252 Spdef as it's used in 5* Jirachi",
+            "Good slow pokemon -\u003e Quiet nature 0 speed iv: Magmortar, Heatmor, Chandelure, Iron ball charizard (HA makes it hit super hard)"
+          ]
         }
       ]
     },
     {
-      "name": "Jirachi 5★",
+      "name": "Jirachi",
       "description": "5★ Jirachi seasonal raid boss.",
       "ability": "Serene Grace",
       "held_item": "Room Service",
@@ -991,157 +2796,638 @@
         "defense": 100,
         "special_defense": 100
       },
-
       "moves": [
-        {"name": "Psychic⭐️ ", "type": "Psychic"},
-        {"name": "Iron Head⭐️", "type": "Steel"},
-        {"name": "Drain Punch⭐️", "type": "Fighting"},
-        {"name": "Hidden Power Rock⭐️", "type": "Rock"}
+        {
+          "name": "Psychic⭐️ ",
+          "type": "Psychic"
+        },
+        {
+          "name": "Iron Head⭐️",
+          "type": "Steel"
+        },
+        {
+          "name": "Drain Punch⭐️",
+          "type": "Fighting"
+        },
+        {
+          "name": "Hidden Power Rock⭐️",
+          "type": "Rock"
+        }
       ],
-
       "phase_effects": [
-        {"health": 100, "effect": "Doom Desire⭐️"},
-        {"health": 75, "effect": "Doom Desire⭐️"},
-        {"health": 66, "effect": "Inverted Space"},
-        {"health": 50, "effect": "Protective Shield"},
-        {"health": 33, "effect": "Trick Room"}
+        {
+          "health": 100,
+          "effect": "Doom Desire⭐️"
+        },
+        {
+          "health": 75,
+          "effect": "Doom Desire⭐️"
+        },
+        {
+          "health": 66,
+          "effect": "Inverted Space"
+        },
+        {
+          "health": 50,
+          "effect": "Protective Shield"
+        },
+        {
+          "health": 33,
+          "effect": "Trick Room"
+        }
       ],
       "variations": [
         {
           "players": {
-            "P1": [ { "pokemon": "Typhlosion", "move": "Eruption", "item": "Choice Specs" },
-                    { "pokemon": "Charizard", "move": "Blast Burn", "item": "Assault Gear" },
-                    { "pokemon": "Fast Darmanitan", "move": "Flare Blitz", "item": "Focus Sash" },
-                    { "pokemon": "Riolu", "move": "Screech", "item": "Rocky Helmet" },
-                    {"pokemon": "Staraptor HA", "move": "Brave Bird", "item": "Choice Band"},
-                    {"pokemon": "Sharpness Gallade", "move": "Psycho Cut", "item": "Iron Ball"} 
-                ],
-            "P2": [ { "pokemon": "Alakazam", "move": "Gravity", "item": "Rocky Helmet" },
-                    { "pokemon": "Typhlosion", "move": "Blast Burn", "item": "Assault Gear" },
-                    { "pokemon": "Medicham", "move": "Zen Headbutt", "item": "Focus Sash" },
-                    { "pokemon": "Honchkrow", "move": "Brave Bird", "item": "Choice Band" },    
-                    { "pokemon": "Rhyperior", "move": "Rock Wrecker", "item": "Hard Stone/Life Orb/Choice Band" },
-                    {"pokemon": "Sharpness Gallade", "move": "Psycho Cut", "item": "Iron Ball"} 
-                ],
-            "P3": [ {"pokemon": "Medicham", "move": "Close combat", "item": "Fist Plate"},
-                    { "pokemon": "Typhlosion", "move": "Blast Burn", "item": "Assault Gear" },
-                    { "pokemon": "Medicham", "move": "Zen Headbutt", "item": "Focus Sash" },
-                    { "pokemon": "Honchkrow", "move": "Brave Bird", "item": "Choice Band" },    
-                    { "pokemon": "Rhyperior", "move": "Rock Wrecker", "item": "Hard Stone/Life Orb/Choice Band" },
-                    {"pokemon": "Sharpness Gallade", "move": "Psycho Cut", "item": "Iron Ball"}
-                ],  
-            "P4": [ {"pokemon": "Medicham", "move": "Close combat", "item": "Fist plate"},
-                    { "pokemon": "Typhlosion", "move": "Blast Burn", "item": "Assault Gear" },
-                    { "pokemon": "Medicham", "move": "Zen Headbutt", "item": "Focus Sash" },
-                    { "pokemon": "Honchkrow", "move": "Brave Bird", "item": "Choice Band" },    
-                    { "pokemon": "Rhyperior", "move": "Rock Wrecker", "item": "Hard Stone/Life Orb/Choice Band" },
-                    {"pokemon": "Sharpness Gallade", "move": "Psycho Cut", "item": "Iron Ball"}
-                ]
+            "P1": [
+              {
+                "pokemon": "Typhlosion",
+                "move": "Eruption",
+                "item": "Choice Specs"
+              },
+              {
+                "pokemon": "Charizard",
+                "move": "Blast Burn",
+                "item": "Assault Gear"
+              },
+              {
+                "pokemon": "Fast Darmanitan",
+                "move": "Flare Blitz",
+                "item": "Focus Sash"
+              },
+              {
+                "pokemon": "Riolu",
+                "move": "Screech",
+                "item": "Rocky Helmet"
+              },
+              {
+                "pokemon": "Staraptor HA",
+                "move": "Brave Bird",
+                "item": "Choice Band"
+              },
+              {
+                "pokemon": "Sharpness Gallade",
+                "move": "Psycho Cut",
+                "item": "Iron Ball"
+              }
+            ],
+            "P2": [
+              {
+                "pokemon": "Alakazam",
+                "move": "Gravity",
+                "item": "Rocky Helmet"
+              },
+              {
+                "pokemon": "Typhlosion",
+                "move": "Blast Burn",
+                "item": "Assault Gear"
+              },
+              {
+                "pokemon": "Medicham",
+                "move": "Zen Headbutt",
+                "item": "Focus Sash"
+              },
+              {
+                "pokemon": "Honchkrow",
+                "move": "Brave Bird",
+                "item": "Choice Band"
+              },
+              {
+                "pokemon": "Rhyperior",
+                "move": "Rock Wrecker",
+                "item": "Hard Stone/Life Orb/Choice Band"
+              },
+              {
+                "pokemon": "Sharpness Gallade",
+                "move": "Psycho Cut",
+                "item": "Iron Ball"
+              }
+            ],
+            "P3": [
+              {
+                "pokemon": "Medicham",
+                "move": "Close combat",
+                "item": "Fist Plate"
+              },
+              {
+                "pokemon": "Typhlosion",
+                "move": "Blast Burn",
+                "item": "Assault Gear"
+              },
+              {
+                "pokemon": "Medicham",
+                "move": "Zen Headbutt",
+                "item": "Focus Sash"
+              },
+              {
+                "pokemon": "Honchkrow",
+                "move": "Brave Bird",
+                "item": "Choice Band"
+              },
+              {
+                "pokemon": "Rhyperior",
+                "move": "Rock Wrecker",
+                "item": "Hard Stone/Life Orb/Choice Band"
+              },
+              {
+                "pokemon": "Sharpness Gallade",
+                "move": "Psycho Cut",
+                "item": "Iron Ball"
+              }
+            ],
+            "P4": [
+              {
+                "pokemon": "Medicham",
+                "move": "Close combat",
+                "item": "Fist plate"
+              },
+              {
+                "pokemon": "Typhlosion",
+                "move": "Blast Burn",
+                "item": "Assault Gear"
+              },
+              {
+                "pokemon": "Medicham",
+                "move": "Zen Headbutt",
+                "item": "Focus Sash"
+              },
+              {
+                "pokemon": "Honchkrow",
+                "move": "Brave Bird",
+                "item": "Choice Band"
+              },
+              {
+                "pokemon": "Rhyperior",
+                "move": "Rock Wrecker",
+                "item": "Hard Stone/Life Orb/Choice Band"
+              },
+              {
+                "pokemon": "Sharpness Gallade",
+                "move": "Psycho Cut",
+                "item": "Iron Ball"
+              }
+            ]
           },
-          "health_remaining": [77.5, 55, 32.5, 2.5, 0, 0],
-          "notes": ["","","", "", "", ""]
+          "health_remaining": [
+            77.5,
+            55,
+            32.5,
+            2.5,
+            0,
+            0
+          ],
+          "notes": [
+            "",
+            "",
+            "",
+            "",
+            "",
+            ""
+          ]
         },
         {
           "players": {
-            "P1": [ { "pokemon": "Typhlosion", "move": "Eruption", "item": "Choice Specs" },
-                    { "pokemon": "Charizard", "move": "Blast Burn", "item": "Assault Gear" },
-                    { "pokemon": "Fast Darmanitan", "move": "Flare Blitz", "item": "Focus Sash" },
-                    { "pokemon": "Riolu", "move": "Screech", "item": "Rocky Helmet" },
-                    { "pokemon": "Archeops", "move": "Head Smash", "item": "Life Orb" }, 
-                    { "pokemon": "Reuniclus", "move": "Psychic", "item": "Choice Specs" } 
-                ],
-            "P2": [ { "pokemon": "Alakazam", "move": "Gravity", "item": "Rocky Helmet" },
-                    { "pokemon": "Charizard", "move": "Blast Burn", "item": "Assault Gear" },
-                    { "pokemon": "Porygon-Z", "move": "Hyper Beam", "item": "Focus Sash" },
-                    { "pokemon": "Archeops", "move": "Head Smash", "item": "Life Orb" },    
-                    { "pokemon": "Aggron", "move": "Heavy Slam", "item": "Choice Band" },
-                    { "pokemon": "Reuniclus", "move": "Psychic", "item": "Choice Specs" } 
-                ],
-            "P3": [ {"pokemon": "Medicham", "move": "Close combat", "item": "Fist Plate"},
-                    { "pokemon": "Charizard", "move": "Blast Burn", "item": "Assault Gear" },
-                    { "pokemon": "Porygon-Z", "move": "Hyper Beam", "item": "Focus Sash" },
-                    { "pokemon": "Archeops", "move": "Head Smash", "item": "Life Orb" },    
-                    { "pokemon": "Aggron", "move": "Heavy Slam", "item": "Choice Band" },
-                    { "pokemon": "Reuniclus", "move": "Psychic", "item": "Choice Specs" }
-                ],  
-            "P4": [ {"pokemon": "Medicham", "move": "Close combat", "item": "Fist plate"},
-                    { "pokemon": "Charizard", "move": "Blast Burn", "item": "Assault Gear" },
-                    { "pokemon": "Porygon-Z", "move": "Hyper Beam", "item": "Focus Sash" },
-                    { "pokemon": "Archeops", "move": "Head Smash", "item": "Life Orb" },    
-                    { "pokemon": "Aggron", "move": "Heavy Slam", "item": "Choice Band" },
-                    { "pokemon": "Reuniclus", "move": "Psychic", "item": "Choice Specs" }
-                ]
+            "P1": [
+              {
+                "pokemon": "Typhlosion",
+                "move": "Eruption",
+                "item": "Choice Specs"
+              },
+              {
+                "pokemon": "Charizard",
+                "move": "Blast Burn",
+                "item": "Assault Gear"
+              },
+              {
+                "pokemon": "Fast Darmanitan",
+                "move": "Flare Blitz",
+                "item": "Focus Sash"
+              },
+              {
+                "pokemon": "Riolu",
+                "move": "Screech",
+                "item": "Rocky Helmet"
+              },
+              {
+                "pokemon": "Archeops",
+                "move": "Head Smash",
+                "item": "Life Orb"
+              },
+              {
+                "pokemon": "Reuniclus",
+                "move": "Psychic",
+                "item": "Choice Specs"
+              }
+            ],
+            "P2": [
+              {
+                "pokemon": "Alakazam",
+                "move": "Gravity",
+                "item": "Rocky Helmet"
+              },
+              {
+                "pokemon": "Charizard",
+                "move": "Blast Burn",
+                "item": "Assault Gear"
+              },
+              {
+                "pokemon": "Porygon-Z",
+                "move": "Hyper Beam",
+                "item": "Focus Sash"
+              },
+              {
+                "pokemon": "Archeops",
+                "move": "Head Smash",
+                "item": "Life Orb"
+              },
+              {
+                "pokemon": "Aggron",
+                "move": "Heavy Slam",
+                "item": "Choice Band"
+              },
+              {
+                "pokemon": "Reuniclus",
+                "move": "Psychic",
+                "item": "Choice Specs"
+              }
+            ],
+            "P3": [
+              {
+                "pokemon": "Medicham",
+                "move": "Close combat",
+                "item": "Fist Plate"
+              },
+              {
+                "pokemon": "Charizard",
+                "move": "Blast Burn",
+                "item": "Assault Gear"
+              },
+              {
+                "pokemon": "Porygon-Z",
+                "move": "Hyper Beam",
+                "item": "Focus Sash"
+              },
+              {
+                "pokemon": "Archeops",
+                "move": "Head Smash",
+                "item": "Life Orb"
+              },
+              {
+                "pokemon": "Aggron",
+                "move": "Heavy Slam",
+                "item": "Choice Band"
+              },
+              {
+                "pokemon": "Reuniclus",
+                "move": "Psychic",
+                "item": "Choice Specs"
+              }
+            ],
+            "P4": [
+              {
+                "pokemon": "Medicham",
+                "move": "Close combat",
+                "item": "Fist plate"
+              },
+              {
+                "pokemon": "Charizard",
+                "move": "Blast Burn",
+                "item": "Assault Gear"
+              },
+              {
+                "pokemon": "Porygon-Z",
+                "move": "Hyper Beam",
+                "item": "Focus Sash"
+              },
+              {
+                "pokemon": "Archeops",
+                "move": "Head Smash",
+                "item": "Life Orb"
+              },
+              {
+                "pokemon": "Aggron",
+                "move": "Heavy Slam",
+                "item": "Choice Band"
+              },
+              {
+                "pokemon": "Reuniclus",
+                "move": "Psychic",
+                "item": "Choice Specs"
+              }
+            ]
           },
-          "health_remaining": [77.5, 55, 32.5, 2.5, 0, 0],
-          "notes": ["","","", "", "", ""]
+          "health_remaining": [
+            77.5,
+            55,
+            32.5,
+            2.5,
+            0,
+            0
+          ],
+          "notes": [
+            "",
+            "",
+            "",
+            "",
+            "",
+            ""
+          ]
         },
         {
           "players": {
-            "P1": [ { "pokemon": "Typhlosion", "move": "Eruption", "item": "Choice Specs" },
-                    { "pokemon": "Charizard", "move": "Blast Burn", "item": "Assault Gear" },
-                    { "pokemon": "Fast Darmanitan", "move": "Flare Blitz", "item": "Focus Sash" },
-                    { "pokemon": "Riolu", "move": "Screech", "item": "Rocky Helmet" },
-                    {"pokemon": "Staraptor HA", "move": "Brave Bird", "item": "Choice Band"},
-                    {"pokemon": "Sharpness Gallade", "move": "Psycho Cut", "item": "Iron Ball"} 
-                ],
-            "P2": [ { "pokemon": "Alakazam", "move": "Gravity", "item": "Rocky Helmet" },
-                    { "pokemon": "Typhlosion", "move": "Blast Burn", "item": "Assault Gear" },
-                    { "pokemon": "Medicham", "move": "Zen Headbutt", "item": "Focus Sash" },
-                    { "pokemon": "Cloyster", "move": "Icicle Spear", "item": "Choice Band" },    
-                    { "pokemon": "Snorlax", "move": "Giga Impact", "item": "Normal Gem/Choice Band" },
-                    {"pokemon": "Sharpness Gallade", "move": "Psycho Cut", "item": "Iron Ball"} 
-                ],
-            "P3": [ {"pokemon": "Medicham", "move": "Close combat", "item": "Fist Plate"},
-                    { "pokemon": "Typhlosion", "move": "Blast Burn", "item": "Assault Gear" },
-                    { "pokemon": "Medicham", "move": "Zen Headbutt", "item": "Focus Sash" },
-                    { "pokemon": "Cloyster", "move": "Icicle Spear", "item": "Choice Band" },  
-                    { "pokemon": "Snorlax", "move": "Giga Impact", "item": "Normal Gem/Choice Band" },
-                    {"pokemon": "Sharpness Gallade", "move": "Psycho Cut", "item": "Iron Ball"}
-                ],  
-            "P4": [ {"pokemon": "Medicham", "move": "Close combat", "item": "Fist plate"},
-                    { "pokemon": "Typhlosion", "move": "Blast Burn", "item": "Assault Gear" },
-                    { "pokemon": "Medicham", "move": "Zen Headbutt", "item": "Focus Sash" },
-                    { "pokemon": "Cloyster", "move": "Icicle Spear", "item": "Choice Band" },    
-                    { "pokemon": "Snorlax", "move": "Giga Impact", "item": "Normal Gem/Choice Band" },
-                    {"pokemon": "Sharpness Gallade", "move": "Psycho Cut", "item": "Iron Ball"}
-                ]
+            "P1": [
+              {
+                "pokemon": "Typhlosion",
+                "move": "Eruption",
+                "item": "Choice Specs"
+              },
+              {
+                "pokemon": "Charizard",
+                "move": "Blast Burn",
+                "item": "Assault Gear"
+              },
+              {
+                "pokemon": "Fast Darmanitan",
+                "move": "Flare Blitz",
+                "item": "Focus Sash"
+              },
+              {
+                "pokemon": "Riolu",
+                "move": "Screech",
+                "item": "Rocky Helmet"
+              },
+              {
+                "pokemon": "Staraptor HA",
+                "move": "Brave Bird",
+                "item": "Choice Band"
+              },
+              {
+                "pokemon": "Sharpness Gallade",
+                "move": "Psycho Cut",
+                "item": "Iron Ball"
+              }
+            ],
+            "P2": [
+              {
+                "pokemon": "Alakazam",
+                "move": "Gravity",
+                "item": "Rocky Helmet"
+              },
+              {
+                "pokemon": "Typhlosion",
+                "move": "Blast Burn",
+                "item": "Assault Gear"
+              },
+              {
+                "pokemon": "Medicham",
+                "move": "Zen Headbutt",
+                "item": "Focus Sash"
+              },
+              {
+                "pokemon": "Cloyster",
+                "move": "Icicle Spear",
+                "item": "Choice Band"
+              },
+              {
+                "pokemon": "Snorlax",
+                "move": "Giga Impact",
+                "item": "Normal Gem/Choice Band"
+              },
+              {
+                "pokemon": "Sharpness Gallade",
+                "move": "Psycho Cut",
+                "item": "Iron Ball"
+              }
+            ],
+            "P3": [
+              {
+                "pokemon": "Medicham",
+                "move": "Close combat",
+                "item": "Fist Plate"
+              },
+              {
+                "pokemon": "Typhlosion",
+                "move": "Blast Burn",
+                "item": "Assault Gear"
+              },
+              {
+                "pokemon": "Medicham",
+                "move": "Zen Headbutt",
+                "item": "Focus Sash"
+              },
+              {
+                "pokemon": "Cloyster",
+                "move": "Icicle Spear",
+                "item": "Choice Band"
+              },
+              {
+                "pokemon": "Snorlax",
+                "move": "Giga Impact",
+                "item": "Normal Gem/Choice Band"
+              },
+              {
+                "pokemon": "Sharpness Gallade",
+                "move": "Psycho Cut",
+                "item": "Iron Ball"
+              }
+            ],
+            "P4": [
+              {
+                "pokemon": "Medicham",
+                "move": "Close combat",
+                "item": "Fist plate"
+              },
+              {
+                "pokemon": "Typhlosion",
+                "move": "Blast Burn",
+                "item": "Assault Gear"
+              },
+              {
+                "pokemon": "Medicham",
+                "move": "Zen Headbutt",
+                "item": "Focus Sash"
+              },
+              {
+                "pokemon": "Cloyster",
+                "move": "Icicle Spear",
+                "item": "Choice Band"
+              },
+              {
+                "pokemon": "Snorlax",
+                "move": "Giga Impact",
+                "item": "Normal Gem/Choice Band"
+              },
+              {
+                "pokemon": "Sharpness Gallade",
+                "move": "Psycho Cut",
+                "item": "Iron Ball"
+              }
+            ]
           },
-          "health_remaining": [77.5, 55, 32.5, 2.5, 0, 0],
-          "notes": ["","","", "", "", ""]
+          "health_remaining": [
+            77.5,
+            55,
+            32.5,
+            2.5,
+            0,
+            0
+          ],
+          "notes": [
+            "",
+            "",
+            "",
+            "",
+            "",
+            ""
+          ]
         },
         {
           "players": {
-            "P1": [ { "pokemon": "Typhlosion", "move": "Eruption", "item": "Choice Specs" },
-                    { "pokemon": "Charizard", "move": "Blast Burn", "item": "Assault Gear" },
-                    { "pokemon": "Fast Darmanitan", "move": "Flare Blitz", "item": "Focus Sash" },
-                    { "pokemon": "Riolu", "move": "Screech", "item": "Rocky Helmet" },
-                    { "pokemon": "Rampardos", "move": "Head Smash", "item": "Choice Scarf" }, 
-                    { "pokemon": "Reuniclus", "move": "Psychic", "item": "Choice Specs" } 
-                ],
-            "P2": [ { "pokemon": "Alakazam", "move": "Gravity", "item": "Rocky Helmet" },
-                    { "pokemon": "Charizard", "move": "Blast Burn", "item": "Assault Gear" },
-                    { "pokemon": "Porygon-Z", "move": "Hyper Beam", "item": "Focus Sash" },
-                    { "pokemon": "Rampardos", "move": "Head Smash", "item": "Choice Scarf" },     
-                    { "pokemon": "Aggron", "move": "Heavy Slam", "item": "Choice Band" },
-                    { "pokemon": "Reuniclus", "move": "Psychic", "item": "Choice Specs" } 
-                ],
-            "P3": [ {"pokemon": "Medicham", "move": "Close combat", "item": "Fist Plate"},
-                    { "pokemon": "Charizard", "move": "Blast Burn", "item": "Assault Gear" },
-                    { "pokemon": "Porygon-Z", "move": "Hyper Beam", "item": "Focus Sash" },
-                    { "pokemon": "Rampardos", "move": "Head Smash", "item": "Choice Scarf" },     
-                    { "pokemon": "Aggron", "move": "Heavy Slam", "item": "Choice Band" },
-                    { "pokemon": "Reuniclus", "move": "Psychic", "item": "Choice Specs" }
-                ],  
-            "P4": [ {"pokemon": "Medicham", "move": "Close combat", "item": "Fist plate"},
-                    { "pokemon": "Charizard", "move": "Blast Burn", "item": "Assault Gear" },
-                    { "pokemon": "Porygon-Z", "move": "Hyper Beam", "item": "Focus Sash" },
-                    { "pokemon": "Rampardos", "move": "Head Smash", "item": "Choice Scarf" },     
-                    { "pokemon": "Aggron", "move": "Heavy Slam", "item": "Choice Band" },
-                    { "pokemon": "Reuniclus", "move": "Psychic", "item": "Choice Specs" }
-                ]
+            "P1": [
+              {
+                "pokemon": "Typhlosion",
+                "move": "Eruption",
+                "item": "Choice Specs"
+              },
+              {
+                "pokemon": "Charizard",
+                "move": "Blast Burn",
+                "item": "Assault Gear"
+              },
+              {
+                "pokemon": "Fast Darmanitan",
+                "move": "Flare Blitz",
+                "item": "Focus Sash"
+              },
+              {
+                "pokemon": "Riolu",
+                "move": "Screech",
+                "item": "Rocky Helmet"
+              },
+              {
+                "pokemon": "Rampardos",
+                "move": "Head Smash",
+                "item": "Choice Scarf"
+              },
+              {
+                "pokemon": "Reuniclus",
+                "move": "Psychic",
+                "item": "Choice Specs"
+              }
+            ],
+            "P2": [
+              {
+                "pokemon": "Alakazam",
+                "move": "Gravity",
+                "item": "Rocky Helmet"
+              },
+              {
+                "pokemon": "Charizard",
+                "move": "Blast Burn",
+                "item": "Assault Gear"
+              },
+              {
+                "pokemon": "Porygon-Z",
+                "move": "Hyper Beam",
+                "item": "Focus Sash"
+              },
+              {
+                "pokemon": "Rampardos",
+                "move": "Head Smash",
+                "item": "Choice Scarf"
+              },
+              {
+                "pokemon": "Aggron",
+                "move": "Heavy Slam",
+                "item": "Choice Band"
+              },
+              {
+                "pokemon": "Reuniclus",
+                "move": "Psychic",
+                "item": "Choice Specs"
+              }
+            ],
+            "P3": [
+              {
+                "pokemon": "Medicham",
+                "move": "Close combat",
+                "item": "Fist Plate"
+              },
+              {
+                "pokemon": "Charizard",
+                "move": "Blast Burn",
+                "item": "Assault Gear"
+              },
+              {
+                "pokemon": "Porygon-Z",
+                "move": "Hyper Beam",
+                "item": "Focus Sash"
+              },
+              {
+                "pokemon": "Rampardos",
+                "move": "Head Smash",
+                "item": "Choice Scarf"
+              },
+              {
+                "pokemon": "Aggron",
+                "move": "Heavy Slam",
+                "item": "Choice Band"
+              },
+              {
+                "pokemon": "Reuniclus",
+                "move": "Psychic",
+                "item": "Choice Specs"
+              }
+            ],
+            "P4": [
+              {
+                "pokemon": "Medicham",
+                "move": "Close combat",
+                "item": "Fist plate"
+              },
+              {
+                "pokemon": "Charizard",
+                "move": "Blast Burn",
+                "item": "Assault Gear"
+              },
+              {
+                "pokemon": "Porygon-Z",
+                "move": "Hyper Beam",
+                "item": "Focus Sash"
+              },
+              {
+                "pokemon": "Rampardos",
+                "move": "Head Smash",
+                "item": "Choice Scarf"
+              },
+              {
+                "pokemon": "Aggron",
+                "move": "Heavy Slam",
+                "item": "Choice Band"
+              },
+              {
+                "pokemon": "Reuniclus",
+                "move": "Psychic",
+                "item": "Choice Specs"
+              }
+            ]
           },
-          "health_remaining": [77.5, 55, 32.5, 2.5, 0, 0],
-          "notes": ["","","", "", "", ""]
+          "health_remaining": [
+            77.5,
+            55,
+            32.5,
+            2.5,
+            0,
+            0
+          ],
+          "notes": [
+            "",
+            "",
+            "",
+            "",
+            "",
+            ""
+          ]
         }
       ]
     }
