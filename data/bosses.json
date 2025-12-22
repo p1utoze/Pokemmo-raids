@@ -199,44 +199,6 @@
             "",
             ""
           ]
-        },
-        {
-          "players": {
-            "P1": [
-              {
-                "pokemon": "Chansey",
-                "move": "Covet",
-                "item": "Moon Ball"
-              }
-            ],
-            "P2": [
-              {
-                "pokemon": "",
-                "move": "",
-                "item": ""
-              }
-            ],
-            "P3": [
-              {
-                "pokemon": "",
-                "move": "",
-                "item": ""
-              }
-            ],
-            "P4": [
-              {
-                "pokemon": "",
-                "move": "",
-                "item": ""
-              }
-            ]
-          },
-          "health_remaining": [
-            100
-          ],
-          "notes": [
-            ""
-          ]
         }
       ]
     },
