@@ -1,4 +1,5 @@
-{
+[
+  {
   "season": "Christmas",
   "raid_bosses": [
     {
@@ -3433,3 +3434,4 @@
     }
   ]
 }
+]
