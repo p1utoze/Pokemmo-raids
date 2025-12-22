@@ -537,7 +537,7 @@ func setupRoutes() {
 
 // loadTemplates loads all template files
 func (a *App) loadTemplates() error {
-	templateNames := []string{"index.html", "boss.html", "build_team.html", "base.html", "admin.html", "admin_login.html", "auth_login.html", "auth_reset.html", "admin_build_team.html"}
+	templateNames := []string{"index.html", "boss.html", "build_team.html", "base.html", "admin.html", "admin_login.html", "auth_login.html", "auth_reset.html", "auth_reset_sent.html", "admin_build_team.html"}
 	for _, name := range templateNames {
 		tpl, err := pongo2.FromFile(templatesPath + name)
 		if err != nil {
@@ -1385,8 +1385,17 @@ func (a *App) authResetRequestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Respond with success (do not leak the token or email status)
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"status": "sent"})
+	if strings.Contains(r.Header.Get("Accept"), "application/json") {
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{"status": "sent"})
+		return
+	}
+
+	// Default: render a simple status page
+	ctx := pongo2.Context{
+		"message": "If the account exists and is eligible, a reset link has been sent to the email provided.",
+	}
+	renderTemplate(w, a.templates["auth_reset_sent.html"], ctx)
 }
 
 // authResetHandler serves the reset page (GET) and completes reset (POST)

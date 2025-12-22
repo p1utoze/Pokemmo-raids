@@ -12,15 +12,34 @@
     </form>
 
     <hr style="margin: 18px 0; opacity: 0.2;" />
-    <h2>Forgot Password?</h2>
-    <p class="lead">Enter your username and the email where you want to receive the reset link. Note: Admin accounts
-        cannot be reset here.</p>
-    <form method="post" action="/auth/reset/request">
-        <label>Username</label>
-        <input name="username" />
-        <label>Email</label>
-        <input type="email" name="email" />
-        <button type="submit">Send Reset Link</button>
-    </form>
+    <button type="button" class="btn-secondary" id="toggleReset">Forgot Password?</button>
+    <div id="resetSection" class="hidden">
+        <h2>Forgot Password?</h2>
+        <p class="lead">Enter your username and the email where you want to receive the reset link. Note: Admin accounts
+            cannot be reset here.</p>
+        <form method="post" action="/auth/reset/request">
+            <label>Username</label>
+            <input name="username" />
+            <label>Email</label>
+            <input type="email" name="email" />
+            <button type="submit">Send Reset Link</button>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const btn = document.getElementById('toggleReset');
+            const section = document.getElementById('resetSection');
+            if (btn && section) {
+                btn.addEventListener('click', function () {
+                    section.classList.remove('hidden');
+                    btn.style.display = 'none';
+                    const userInput = section.querySelector('input[name="username"]');
+                    if (userInput) userInput.focus();
+                    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+            }
+        });
+    </script>
 </section>
 {% endblock %}
