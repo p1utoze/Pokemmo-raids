@@ -511,8 +511,10 @@ func setupRoutes() {
 	http.HandleFunc("/build-team", app.buildTeamHandler)
 	http.HandleFunc("/api/pokemon-data", app.pokemonDataHandler)
 	http.HandleFunc("/api/pokemon-info", app.pokemonInfoHandler)
+	http.HandleFunc("/api/boss-edit-data", app.bossEditDataHandler)
 	http.HandleFunc("/api/checklist", app.checklistHandler)
 	http.HandleFunc("/api/checklist/toggle", app.toggleChecklistHandler)
+	http.HandleFunc("/api/checklist/save", app.saveChecklistHandler)
 	http.HandleFunc("/api/user/role", app.userRoleHandler)
 	// Admin UI and API
 	http.HandleFunc("/admin/login", app.adminLoginHandler)
@@ -526,6 +528,7 @@ func setupRoutes() {
 	// password reset endpoints
 	http.HandleFunc("/auth/reset/request", app.authResetRequestHandler)
 	http.HandleFunc("/auth/reset", app.authResetHandler)
+	http.HandleFunc("/api/boss/save-variation", app.saveVariationHandler)
 	http.HandleFunc("/api/admin/types", app.adminTypesHandler)
 	http.HandleFunc("/api/admin/pokemon", app.adminPokemonHandler)
 	http.HandleFunc("/api/admin/extras", app.adminExtrasHandler)
@@ -577,8 +580,28 @@ func (a *App) bossHandler(w http.ResponseWriter, r *http.Request) {
 
 // buildTeamHandler renders the team builder page
 func (a *App) buildTeamHandler(w http.ResponseWriter, r *http.Request) {
+	// Require authentication (author/mod/admin)
+	if !isAuthRequest(r) {
+		http.Redirect(w, r, "/auth/login", http.StatusSeeOther)
+		return
+	}
 	bossName := r.URL.Query().Get("boss")
-	variationIdx := r.URL.Query().Get("variation")
+
+	// If no boss is selected, render selection form
+	if bossName == "" {
+		// Build list of bosses for current season
+		bossNames := make([]string, 0, len(a.season.RaidBosses))
+		for _, b := range a.season.RaidBosses {
+			bossNames = append(bossNames, b.Name)
+		}
+		ctx := pongo2.Context{
+			"season_name": a.season.SeasonName,
+			"bosses":      bossNames,
+			"user_role":   getRoleFromRequest(r),
+		}
+		renderTemplate(w, a.templates["build_team.html"], ctx)
+		return
+	}
 
 	boss := a.findBoss(bossName)
 	if boss == nil {
@@ -586,128 +609,58 @@ func (a *App) buildTeamHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// If variation == "new" we present the full pokemon list (from monster.json)
-	var pokemonData map[string]interface{}
-	var teamData []byte
-	if variationIdx == "new" {
-		// build empty variation and load global pokemon + items
-		emptyVar := Variation{Players: map[string][]Player{"P1": {}, "P2": {}, "P3": {}, "P4": {}}, HealthRemaining: []float64{}, Notes: []string{}}
-		td, err := json.Marshal(emptyVar)
-		if err != nil {
-			renderError(w, "Failed to marshal team data", http.StatusInternalServerError)
-			return
-		}
-		teamData = td
-
-		// load monster.json for all pokemon names
-		monsFile, err := os.Open("data/monster.json")
-		if err != nil {
-			renderError(w, "Failed to open monster data", http.StatusInternalServerError)
-			return
-		}
-		defer monsFile.Close()
-		var mons []map[string]interface{}
-		if err := json.NewDecoder(monsFile).Decode(&mons); err != nil {
-			renderError(w, "Failed to decode monster data", http.StatusInternalServerError)
-			return
-		}
-		pokemonList := make([]string, 0, len(mons))
-		for _, m := range mons {
-			if n, ok := m["name"].(string); ok && n != "" {
-				pokemonList = append(pokemonList, n)
-			}
-		}
-
-		// load items from held_items.json
-		itemsFile, err := os.Open("data/held_items.json")
-		if err != nil {
-			renderError(w, "Failed to open items data", http.StatusInternalServerError)
-			return
-		}
-		defer itemsFile.Close()
-		var itemsRoot map[string][]string
-		if err := json.NewDecoder(itemsFile).Decode(&itemsRoot); err != nil {
-			renderError(w, "Failed to decode items data", http.StatusInternalServerError)
-			return
-		}
-		itemList := itemsRoot["items"]
-
-		pokemonData = map[string]interface{}{"pokemon": pokemonList, "moves": []string{}, "items": itemList}
-	} else {
-		// parse numeric variation index
-		var varIdx int
-		vi, err := strconv.Atoi(variationIdx)
-		if err != nil {
-			renderError(w, "Invalid variation index", http.StatusBadRequest)
-			return
-		}
-		varIdx = vi
-		if varIdx < 0 || varIdx >= len(boss.Variations) {
-			http.NotFound(w, r)
-			return
-		}
-		variation := &boss.Variations[varIdx]
-		td, err := json.Marshal(variation)
-		if err != nil {
-			renderError(w, "Failed to marshal team data", http.StatusInternalServerError)
-			return
-		}
-		teamData = td
-
-		// Get all unique Pokemon, moves, and items from this variation
-		pokemonSet := make(map[string]bool)
-		moveSet := make(map[string]bool)
-		itemSet := make(map[string]bool)
-
-		for _, players := range variation.Players {
-			for _, p := range players {
-				if p.Pokemon != "" {
-					pokemonSet[p.Pokemon] = true
-				}
-				if p.Move != "" {
-					moveSet[p.Move] = true
-				}
-				if p.Item != "" {
-					itemSet[p.Item] = true
-				}
-			}
-		}
-
-		pokemonList := make([]string, 0, len(pokemonSet))
-		for p := range pokemonSet {
-			pokemonList = append(pokemonList, p)
-		}
-		moveList := make([]string, 0, len(moveSet))
-		for m := range moveSet {
-			moveList = append(moveList, m)
-		}
-		itemList := make([]string, 0, len(itemSet))
-		for i := range itemSet {
-			itemList = append(itemList, i)
-		}
-
-		pokemonData = map[string]interface{}{"pokemon": pokemonList, "moves": moveList, "items": itemList}
+	// Always present empty variation for creating new
+	emptyVar := Variation{Players: map[string][]Player{"P1": {}, "P2": {}, "P3": {}, "P4": {}}, HealthRemaining: []float64{}, Notes: []string{}}
+	teamData, err := json.Marshal(emptyVar)
+	if err != nil {
+		renderError(w, "Failed to marshal team data", http.StatusInternalServerError)
+		return
 	}
+
+	// Load monster.json for all pokemon names
+	monsFile, err := os.Open("data/monster.json")
+	if err != nil {
+		renderError(w, "Failed to open monster data", http.StatusInternalServerError)
+		return
+	}
+	defer monsFile.Close()
+	var mons []map[string]interface{}
+	if err := json.NewDecoder(monsFile).Decode(&mons); err != nil {
+		renderError(w, "Failed to decode monster data", http.StatusInternalServerError)
+		return
+	}
+	pokemonList := make([]string, 0, len(mons))
+	for _, m := range mons {
+		if n, ok := m["name"].(string); ok && n != "" {
+			pokemonList = append(pokemonList, n)
+		}
+	}
+
+	// Load items from held_items.json
+	itemsFile, err := os.Open("data/held_items.json")
+	if err != nil {
+		renderError(w, "Failed to open items data", http.StatusInternalServerError)
+		return
+	}
+	defer itemsFile.Close()
+	var itemsRoot map[string][]string
+	if err := json.NewDecoder(itemsFile).Decode(&itemsRoot); err != nil {
+		renderError(w, "Failed to decode items data", http.StatusInternalServerError)
+		return
+	}
+
+	pokemonData := map[string]interface{}{"pokemon": pokemonList, "moves": []string{}, "items": itemsRoot["items"]}
 	pokemonDataJSON, _ := json.Marshal(pokemonData)
 
-	// prepare a human friendly variation display
-	var varDisplay string
-	if variationIdx == "new" {
-		varDisplay = "New"
-	} else {
-		if vi, err := strconv.Atoi(variationIdx); err == nil {
-			varDisplay = fmt.Sprintf("%d", vi+1)
-		} else {
-			varDisplay = variationIdx
-		}
-	}
-
+	// Marshal boss to JSON for client-side save logic
+	bossJSON, _ := json.Marshal(boss)
 	ctx := pongo2.Context{
-		"boss_name":       bossName,
-		"variation_index": varDisplay,
-		"pokemon_data":    string(pokemonDataJSON),
-		"team_data":       string(teamData),
-		"range":           []int{1, 2, 3, 4},
+		"boss_name":    bossName,
+		"pokemon_data": string(pokemonDataJSON),
+		"team_data":    string(teamData),
+		"bossJSON":     string(bossJSON),
+		"range":        []int{1, 2, 3, 4},
+		"user_role":    getRoleFromRequest(r),
 	}
 	renderTemplate(w, a.templates["build_team.html"], ctx)
 }
@@ -841,6 +794,37 @@ func (a *App) findBoss(name string) *RaidBoss {
 	return nil
 }
 
+// bossEditDataHandler returns monster.json and held_items.json for in-place editing
+func (a *App) bossEditDataHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	monsFile, err := os.Open("data/monster.json")
+	if err != nil {
+		renderError(w, "Failed to open monster.json", http.StatusInternalServerError)
+		return
+	}
+	defer monsFile.Close()
+	var mons []map[string]interface{}
+	if err := json.NewDecoder(monsFile).Decode(&mons); err != nil {
+		renderError(w, "Failed to decode monster.json", http.StatusInternalServerError)
+		return
+	}
+
+	itemsFile, err := os.Open("data/held_items.json")
+	if err != nil {
+		renderError(w, "Failed to open held_items.json", http.StatusInternalServerError)
+		return
+	}
+	defer itemsFile.Close()
+	var itemsRoot map[string][]string
+	if err := json.NewDecoder(itemsFile).Decode(&itemsRoot); err != nil {
+		renderError(w, "Failed to decode held_items.json", http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]interface{}{"monsters": mons, "items": itemsRoot["items"]})
+}
+
 // checklistHandler returns the complete checklist data from the database
 func (a *App) checklistHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
@@ -954,6 +938,61 @@ func (a *App) toggleChecklistHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(map[string]int{"completed": newStatus})
+}
+
+// saveChecklistHandler saves checklist pokemon edits (admin only)
+func (a *App) saveChecklistHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Check admin role
+	role := getRoleFromRequest(r)
+	if role != "admin" {
+		http.Error(w, "forbidden", http.StatusForbidden)
+		return
+	}
+
+	var req struct {
+		Pokemon []struct {
+			PokemonName string `json:"pokemon_name"`
+			HeldItem    string `json:"held_item"`
+			Moves       string `json:"moves"`
+			Notes       string `json:"notes"`
+		} `json:"pokemon"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		log.Printf("Error decoding request body: %v", err)
+		http.Error(w, "invalid request", http.StatusBadRequest)
+		return
+	}
+
+	log.Printf("Received checklist save request with %d pokemon", len(req.Pokemon))
+
+	// Update each pokemon in the checklist
+	for i, pokemon := range req.Pokemon {
+		log.Printf("Updating pokemon %d: name=%s, item=%s, moves=%s, notes=%s",
+			i, pokemon.PokemonName, pokemon.HeldItem, pokemon.Moves, pokemon.Notes)
+
+		result, err := a.db.Exec(
+			"UPDATE pokemon_checklist SET held_item = ?, moves = ?, notes = ? WHERE pokemon_name = ?",
+			pokemon.HeldItem, pokemon.Moves, pokemon.Notes, pokemon.PokemonName,
+		)
+		if err != nil {
+			log.Printf("Error updating pokemon %s: %v", pokemon.PokemonName, err)
+			http.Error(w, "Failed to update checklist", http.StatusInternalServerError)
+			return
+		}
+
+		rowsAffected, _ := result.RowsAffected()
+		log.Printf("Rows affected for %s: %d", pokemon.PokemonName, rowsAffected)
+	}
+
+	log.Printf("Checklist save completed successfully")
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"status": "success"})
 }
 
 // userRoleHandler returns the current user's role
@@ -1406,6 +1445,64 @@ func (a *App) authResetHandler(w http.ResponseWriter, r *http.Request) {
 func (a *App) authLogoutHandler(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{Name: "auth_token", Value: "", HttpOnly: true, Path: "/", Expires: time.Unix(0, 0)})
 	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+// saveVariationHandler handles saving new variation data (appends to boss variations)
+func (a *App) saveVariationHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Only authenticated users can save
+	role := getRoleFromRequest(r)
+	if role == "" {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var req struct {
+		BossName        string              `json:"boss_name"`
+		Players         map[string][]Player `json:"players"`
+		HealthRemaining []float64           `json:"health_remaining"`
+		Notes           []string            `json:"notes"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	// Find the boss
+	boss := a.findBoss(req.BossName)
+	if boss == nil {
+		http.Error(w, "boss not found", http.StatusNotFound)
+		return
+	}
+
+	// Create new variation
+	newVariation := Variation{
+		Index:           len(boss.Variations) + 1,
+		Index0:          len(boss.Variations),
+		Players:         req.Players,
+		HealthRemaining: req.HealthRemaining,
+		Notes:           req.Notes,
+	}
+
+	// Build the HTML table for this variation
+	newVariation.TableHTML = a.buildVariationTable(&newVariation)
+
+	// Append to boss variations
+	boss.Variations = append(boss.Variations, newVariation)
+
+	// Save to bosses.json
+	if err := a.saveBossesJSON(); err != nil {
+		http.Error(w, "failed to save changes", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"status": "success"})
 }
 
 // adminTypesHandler handles GET/POST/PUT/DELETE for types
