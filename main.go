@@ -1700,6 +1700,18 @@ func (a *App) authResetHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "token required", http.StatusBadRequest)
 			return
 		}
+		// Validate token exists and hasn't expired
+		var username string
+		var expires int64
+		row := a.adminDB.QueryRow("SELECT username, expires_at FROM password_resets WHERE token = ?", token)
+		if err := row.Scan(&username, &expires); err != nil {
+			http.Error(w, "invalid or expired reset token", http.StatusBadRequest)
+			return
+		}
+		if time.Now().Unix() > expires {
+			http.Error(w, "reset token has expired", http.StatusBadRequest)
+			return
+		}
 		tpl, err := pongo2.FromFile(templatesPath + "auth_reset.html")
 		if err != nil {
 			http.Error(w, "reset page not available", http.StatusInternalServerError)
@@ -1710,28 +1722,38 @@ func (a *App) authResetHandler(w http.ResponseWriter, r *http.Request) {
 		token := strings.TrimSpace(r.FormValue("token"))
 		newPassword := strings.TrimSpace(r.FormValue("new_password"))
 		if token == "" || newPassword == "" {
-			http.Error(w, "token and new_password required", http.StatusBadRequest)
+			tpl, _ := pongo2.FromFile(templatesPath + "auth_reset.html")
+			renderTemplate(w, tpl, pongo2.Context{"token": token, "error": "Token and password are required"})
+			return
+		}
+		if len(newPassword) < 8 {
+			tpl, _ := pongo2.FromFile(templatesPath + "auth_reset.html")
+			renderTemplate(w, tpl, pongo2.Context{"token": token, "error": "Password must be at least 8 characters"})
 			return
 		}
 		var username string
 		var expires int64
 		row := a.adminDB.QueryRow("SELECT username, expires_at FROM password_resets WHERE token = ?", token)
 		if err := row.Scan(&username, &expires); err != nil {
-			http.Error(w, "invalid token", http.StatusBadRequest)
+			tpl, _ := pongo2.FromFile(templatesPath + "auth_reset.html")
+			renderTemplate(w, tpl, pongo2.Context{"token": token, "error": "Invalid or already used reset token"})
 			return
 		}
 		if time.Now().Unix() > expires {
-			http.Error(w, "token expired", http.StatusBadRequest)
+			tpl, _ := pongo2.FromFile(templatesPath + "auth_reset.html")
+			renderTemplate(w, tpl, pongo2.Context{"token": token, "error": "Reset token has expired. Please request a new one."})
 			return
 		}
 		// Update password
 		hash, err := bcryptGenerateHash(newPassword)
 		if err != nil {
-			http.Error(w, "failed to hash password", http.StatusInternalServerError)
+			tpl, _ := pongo2.FromFile(templatesPath + "auth_reset.html")
+			renderTemplate(w, tpl, pongo2.Context{"token": token, "error": "Failed to process password"})
 			return
 		}
 		if _, err := a.adminDB.Exec("UPDATE users SET password_hash = ? WHERE username = ?", hash, username); err != nil {
-			http.Error(w, "failed to update password", http.StatusInternalServerError)
+			tpl, _ := pongo2.FromFile(templatesPath + "auth_reset.html")
+			renderTemplate(w, tpl, pongo2.Context{"token": token, "error": "Failed to update password"})
 			return
 		}
 		// Clean up token
