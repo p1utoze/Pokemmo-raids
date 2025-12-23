@@ -65,6 +65,7 @@ jobs:
       SMTP_PORT: ${{ vars.SMTP_PORT }}
       SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
       ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+      ADMIN_SECRET: ${{ secrets.ADMIN_SECRET }}  # Add this line
       SMTP_FROM: ${{ vars.SMTP_FROM }}
       MONGO_INITDB_USERNAME: ${{ vars.MONGO_INITDB_USERNAME }}
       MONGO_INITDB_PASSWORD: ${{ secrets.MONGO_INITDB_PASSWORD }}

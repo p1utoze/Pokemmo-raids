@@ -32,6 +32,7 @@ services:
       ADMIN_DB: "${ADMIN_DB:-/app/data/users.db}"
       DATA_PATH: "${DATA_PATH:-/app/data/bosses.json}"
       ADMIN_PASSWORD: "${ADMIN_PASSWORD:-adminpass}"
+      ADMIN_SECRET: "${ADMIN_SECRET:-devsecret}"
       SMTP_HOST: "${SMTP_HOST:-smtp.example.com}"
       SMTP_USER: "${SMTP_USER:-}"
       SMTP_PORT: "${SMTP_PORT:-587}"
