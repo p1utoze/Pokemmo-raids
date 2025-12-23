@@ -35,7 +35,12 @@ async function initAdmin() {
         // Tab switching
         document.getElementById('tab-checklist').addEventListener('click', () => switchTab('checklist'));
         document.getElementById('tab-raid-bosses').addEventListener('click', () => switchTab('raid-bosses'));
-        document.getElementById('tab-users').addEventListener('click', () => switchTab('users'));
+        const usersTabBtn = document.getElementById('tab-users');
+        usersTabBtn.addEventListener('click', () => switchTab('users'));
+        // Hide Users tab for non-admins
+        if (userRole !== 'admin') {
+            usersTabBtn.style.display = 'none';
+        }
 
         // Season switching via sidebar buttons
         seasonButtons.forEach(btn => {
@@ -86,7 +91,12 @@ function switchTab(tab) {
     } else if (tab === 'raid-bosses') {
         loadRaidBosses();
     } else if (tab === 'users') {
-        loadUsers();
+        if (userRole === 'admin') {
+            loadUsers();
+        } else {
+            const container = document.getElementById('admin-app');
+            container.innerHTML = '<div class="access-denied"><h2>Access Denied</h2><p>Only administrators can manage users.</p></div>';
+        }
     }
 }
 
@@ -306,6 +316,267 @@ function showAddPokemonForm() {
     `;
 
     setupPokemonFormHandlers(null);
+}
+
+// ============= RAID BOSSES TAB =============
+
+async function loadRaidBosses() {
+    const container = document.getElementById('admin-app');
+    container.innerHTML = '<p style="color:#a8c5e3">Loading raid bosses…</p>';
+    try {
+        const res = await fetch(`/api/admin/raid-bosses?season=${encodeURIComponent(currentSeason)}`);
+        if (!res.ok) {
+            const txt = await res.text();
+            container.innerHTML = `<p class="error">Failed to load raid bosses (${res.status}). ${txt}</p>`;
+            return;
+        }
+        const bosses = await res.json();
+        renderRaidBosses(bosses);
+    } catch (err) {
+        console.error('Error loading raid bosses:', err);
+        container.innerHTML = '<p class="error">Failed to load raid bosses</p>';
+    }
+}
+
+function renderRaidBosses(bosses) {
+    const container = document.getElementById('admin-app');
+    container.innerHTML = '';
+
+    const header = document.createElement('div');
+    header.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;';
+    const title = document.createElement('h2');
+    title.textContent = `Raid Bosses (${bosses.length})`;
+    title.style.cssText = 'margin:0;color:#fff;';
+    header.appendChild(title);
+    container.appendChild(header);
+
+    const grid = document.createElement('div');
+    grid.style.cssText = 'display:grid;gap:15px;grid-template-columns:repeat(auto-fit,minmax(400px,1fr));';
+
+    if (!bosses.length) {
+        grid.innerHTML = '<p style="color:#a8c5e3;padding:20px;">No raid bosses found.</p>';
+    } else {
+        bosses.forEach(b => {
+            const card = document.createElement('div');
+            card.style.cssText = 'background:#1e3a5f;padding:15px;border-radius:8px;display:flex;flex-direction:column;gap:8px;';
+
+            const nameRow = document.createElement('div');
+            nameRow.style.cssText = 'display:flex;gap:10px;align-items:center;';
+            const nameEl = document.createElement('strong');
+            nameEl.textContent = `${b.boss_name} ${b.stars}★`;
+            nameEl.style.cssText = 'color:#fff;font-size:18px;';
+            nameRow.appendChild(nameEl);
+            card.appendChild(nameRow);
+
+            const desc = document.createElement('div');
+            desc.style.cssText = 'color:#7a9bb8;font-size:14px;';
+            desc.textContent = b.description || '';
+            card.appendChild(desc);
+
+            const meta = document.createElement('div');
+            meta.style.cssText = 'color:#8eb3d1;font-size:13px;';
+            meta.innerHTML = `<strong>Ability:</strong> ${b.ability || '—'} • <strong>Item:</strong> ${b.held_item || '—'}`;
+            card.appendChild(meta);
+
+            const actions = document.createElement('div');
+            actions.style.cssText = 'display:flex;gap:8px;margin-top:6px;';
+            const edit = document.createElement('a');
+            edit.href = `/admin/raid-boss-builder?action=edit&season=${encodeURIComponent(currentSeason)}&id=${encodeURIComponent(b.id)}`;
+            edit.textContent = 'Edit';
+            edit.style.cssText = 'padding:8px 16px;border-radius:4px;background:#2d5a8a;color:white;text-decoration:none;';
+            actions.appendChild(edit);
+            if (userRole === 'admin') {
+                const delBtn = document.createElement('button');
+                delBtn.textContent = 'Delete';
+                delBtn.style.cssText = 'padding:8px 16px;border-radius:4px;background:#8a2d2d;color:white;border:none;cursor:pointer;';
+                delBtn.addEventListener('click', async () => {
+                    if (!confirmDelete('raid boss', b.boss_name)) return;
+                    await deleteRaidBoss(b.id);
+                });
+                actions.appendChild(delBtn);
+            }
+            card.appendChild(actions);
+
+            grid.appendChild(card);
+        });
+    }
+
+    container.appendChild(grid);
+}
+
+async function deleteRaidBoss(id) {
+    try {
+        const res = await fetch(`/api/admin/raid-bosses?season=${encodeURIComponent(currentSeason)}&id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+        if (!res.ok) {
+            alert('Failed to delete raid boss');
+            return;
+        }
+        await loadRaidBosses();
+    } catch (e) {
+        console.error('Delete raid boss failed', e);
+        alert('Error deleting raid boss');
+    }
+}
+
+// Backwards-compat alias for potential case-typo
+const loadRaidbosses = loadRaidBosses;
+
+// ============= USERS TAB =============
+
+async function loadUsers() {
+    const container = document.getElementById('admin-app');
+    if (userRole !== 'admin') {
+        container.innerHTML = '<div class="access-denied"><h2>Access Denied</h2><p>Only administrators can manage users.</p></div>';
+        return;
+    }
+    container.innerHTML = '<p style="color:#a8c5e3">Loading users…</p>';
+    try {
+        const res = await fetch('/api/admin/users');
+        if (!res.ok) {
+            const txt = await res.text();
+            container.innerHTML = `<p class="error">Failed to load users (${res.status}). ${txt}</p>`;
+            return;
+        }
+        const users = await res.json();
+        renderUsers(users);
+    } catch (err) {
+        console.error('Error loading users:', err);
+        container.innerHTML = '<p class="error">Failed to load users</p>';
+    }
+}
+
+function renderUsers(users) {
+    const container = document.getElementById('admin-app');
+    container.innerHTML = '';
+
+    const header = document.createElement('div');
+    header.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;';
+    const title = document.createElement('h2');
+    title.textContent = `Users (${users.length})`;
+    title.style.cssText = 'margin:0;color:#fff;';
+    header.appendChild(title);
+
+    const addBtn = document.createElement('button');
+    addBtn.textContent = '+ Add User';
+    addBtn.className = 'button';
+    addBtn.addEventListener('click', showAddUserForm);
+    header.appendChild(addBtn);
+    container.appendChild(header);
+
+    const list = document.createElement('div');
+    list.className = 'admin-user-list';
+    users.forEach(u => {
+        const row = document.createElement('div');
+        row.className = 'admin-user-row';
+
+        const nameEl = document.createElement('strong');
+        nameEl.textContent = u.username;
+        row.appendChild(nameEl);
+
+        const roleEl = document.createElement('span');
+        roleEl.className = 'role';
+        roleEl.textContent = u.role;
+        row.appendChild(roleEl);
+
+        const editBtn = document.createElement('button');
+        editBtn.className = 'edit';
+        editBtn.textContent = 'Edit';
+        editBtn.addEventListener('click', () => showEditUser(u));
+        row.appendChild(editBtn);
+
+        const delBtn = document.createElement('button');
+        delBtn.className = 'del';
+        delBtn.textContent = 'Delete';
+        delBtn.addEventListener('click', async () => {
+            if (confirmDelete('user', u.username)) {
+                await fetch('/api/admin/users?id=' + u.id, { method: 'DELETE' });
+                await loadUsers();
+            }
+        });
+        row.appendChild(delBtn);
+
+        list.appendChild(row);
+    });
+    container.appendChild(list);
+}
+
+function showAddUserForm() {
+    const container = document.getElementById('admin-app');
+    container.innerHTML = `
+        <h2>Create User</h2>
+        <form id="create-user">
+            <label>Username
+                <input name="username" required />
+            </label>
+            <label>Password <span class="admin-message info">Leave blank for random</span>
+                <input name="password" type="password" />
+            </label>
+            <label>Role
+                <select name="role"><option value="author">author</option><option value="mod">mod</option><option value="admin">admin</option></select>
+            </label>
+            <div class="admin-button-group">
+                <button type="submit">Create</button>
+                <button type="button" id="cancel">Cancel</button>
+            </div>
+        </form>
+        <div id="generated-password" class="generated-password-display" style="display:none;"></div>
+    `;
+    document.getElementById('cancel').addEventListener('click', loadUsers);
+    document.getElementById('create-user').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const f = e.target;
+        const payload = { username: f.username.value, password: f.password.value, role: f.role.value };
+        const res = await fetch('/api/admin/users', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if (res.ok) {
+            const data = await res.json();
+            if (data.generated_password) {
+                const pwdDiv = document.getElementById('generated-password');
+                pwdDiv.textContent = 'Generated password: ' + data.generated_password;
+                pwdDiv.style.display = 'block';
+            } else {
+                await loadUsers();
+            }
+        } else {
+            alert('Failed to create user');
+        }
+    });
+}
+
+function showEditUser(u) {
+    const container = document.getElementById('admin-app');
+    container.innerHTML = `
+        <h2>Edit User: ${u.username}</h2>
+        <form id="edit-user">
+            <input type="hidden" name="id" value="${u.id}" />
+            <label>Role
+                <select name="role">
+                    <option value="author" ${u.role === 'author' ? 'selected' : ''}>author</option>
+                    <option value="mod" ${u.role === 'mod' ? 'selected' : ''}>mod</option>
+                    <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>admin</option>
+                </select>
+            </label>
+            <label>New Password <span class="admin-message info">Leave blank to keep current</span>
+                <input name="password" type="password" />
+            </label>
+            <div class="admin-button-group">
+                <button type="submit">Save</button>
+                <button type="button" id="cancel">Cancel</button>
+            </div>
+        </form>
+    `;
+    document.getElementById('cancel').addEventListener('click', loadUsers);
+    document.getElementById('edit-user').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const f = e.target;
+        const payload = { id: parseInt(f.id.value), role: f.role.value };
+        if (f.password.value) payload.password = f.password.value;
+        const res = await fetch('/api/admin/users', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if (res.ok) {
+            await loadUsers();
+        } else {
+            alert('Failed to save user');
+        }
+    });
 }
 
 function showEditPokemonForm(pokemon) {
