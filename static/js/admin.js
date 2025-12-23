@@ -5,6 +5,8 @@ document.addEventListener('DOMContentLoaded', function () {
 let currentTab = 'checklist';
 let currentSeason = '';
 let userRole = '';
+let seasonsList = [];
+let manageSeasonEditing = null;
 
 /**
  * Common confirmation dialog for delete operations
@@ -20,17 +22,8 @@ function confirmDelete(itemType, itemName = '') {
 async function initAdmin() {
     try {
         userRole = window.USER_ROLE || '';
-        const seasonButtons = Array.from(document.querySelectorAll('.season-select-btn'));
-        const shell = document.querySelector('.admin-shell');
 
-        if (!seasonButtons.length) {
-            // Fallback to data attribute if buttons are missing
-            const fallbackSeason = shell?.dataset.initialSeason;
-            if (!fallbackSeason) {
-                throw new Error('No seasons available');
-            }
-            setSeason(fallbackSeason);
-        }
+        const shell = document.querySelector('.admin-shell');
 
         // Tab switching
         document.getElementById('tab-checklist').addEventListener('click', () => switchTab('checklist'));
@@ -42,23 +35,89 @@ async function initAdmin() {
             usersTabBtn.style.display = 'none';
         }
 
-        // Season switching via sidebar buttons
-        seasonButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                setSeason(btn.dataset.season);
-            });
-        });
-
-        // Initialize season to first button when available
-        if (seasonButtons.length) {
-            const initialSeason = seasonButtons[0].dataset.season;
-            setSeason(initialSeason);
+        const manageSeasonsBtn = document.getElementById('manage-seasons-btn');
+        if (manageSeasonsBtn) {
+            if (userRole !== 'admin') {
+                manageSeasonsBtn.style.display = 'none';
+            } else {
+                manageSeasonsBtn.addEventListener('click', () => {
+                    currentTab = 'manage-seasons';
+                    renderManageSeasons();
+                });
+            }
         }
 
         await loadExtras();
+
+        // Set default season button (admin only)
+        const setDefaultBtn = document.getElementById('set-default-season');
+        if (setDefaultBtn) {
+            if (userRole !== 'admin') {
+                setDefaultBtn.style.display = 'none';
+            } else {
+                setDefaultBtn.addEventListener('click', async () => {
+                    try {
+                        const res = await fetch('/api/admin/season/default', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ season: currentSeason }) });
+                        if (res.ok) {
+                            alert('Default season updated');
+                        } else {
+                            alert('Failed to set default season');
+                        }
+                    } catch (e) {
+                        alert('Failed to set default season');
+                    }
+                });
+            }
+        }
+
+        await refreshSeasons(shell?.dataset.initialSeason);
     } catch (err) {
         console.error(err);
         document.getElementById('admin-app').innerHTML = '<p class="error">Failed to load admin UI</p>';
+    }
+}
+
+function getSeasonLabel(code) {
+    const found = seasonsList.find(s => s.code === code);
+    if (found) return found.label || `${found.name} ${found.year || ''}`.trim();
+    const displayName = code.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    return displayName;
+}
+
+function renderSeasonButtons() {
+    const container = document.getElementById('season-select-sidebar');
+    if (!container) return;
+    container.innerHTML = '';
+    seasonsList.forEach(s => {
+        const btn = document.createElement('button');
+        btn.className = 'season-select-btn';
+        btn.dataset.season = s.code;
+        btn.id = `season-${s.code}`;
+        btn.textContent = s.label || s.code;
+        btn.addEventListener('click', () => setSeason(s.code));
+        container.appendChild(btn);
+    });
+}
+
+async function refreshSeasons(preferSeason) {
+    try {
+        const res = await fetch('/api/admin/seasons');
+        if (!res.ok) throw new Error('failed to fetch seasons');
+        seasonsList = await res.json();
+    } catch (e) {
+        console.error('Failed to refresh seasons', e);
+        seasonsList = [];
+    }
+    renderSeasonButtons();
+    const fallback = seasonsList.length ? seasonsList[0].code : '';
+    const target = preferSeason || currentSeason || fallback;
+    if (target) {
+        setSeason(target);
+    } else {
+        const container = document.getElementById('admin-app');
+        if (container) {
+            container.innerHTML = '<p class="error">No seasons available. Add one to get started.</p>';
+        }
     }
 }
 
@@ -71,11 +130,14 @@ function setSeason(season) {
     // Update chip label with formatted season name
     const chip = document.getElementById('selected-season-label');
     if (chip) {
-        const displayName = season.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-        chip.textContent = `Season: ${displayName}`;
+        chip.textContent = `Season: ${getSeasonLabel(season)}`;
     }
-    // Reload current tab data
-    switchTab(currentTab);
+    // Reload current tab data or re-render manage view
+    if (currentTab === 'manage-seasons') {
+        renderManageSeasons();
+    } else {
+        switchTab(currentTab);
+    }
 }
 
 function switchTab(tab) {
@@ -98,6 +160,161 @@ function switchTab(tab) {
             container.innerHTML = '<div class="access-denied"><h2>Access Denied</h2><p>Only administrators can manage users.</p></div>';
         }
     }
+}
+
+// ============= MANAGE SEASONS =============
+
+function normalizeSeasonCode(name, year) {
+    const slug = name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '').replace(/_+/g, '_');
+    const yr = parseInt(year, 10);
+    if (!slug || !yr) return '';
+    return `${slug}_${yr}`;
+}
+
+function renderManageSeasons() {
+    const container = document.getElementById('admin-app');
+    const editing = manageSeasonEditing ? seasonsList.find(s => s.code === manageSeasonEditing) : null;
+
+    container.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:12px;flex-wrap:wrap;">
+            <div>
+                <h2 style="margin:0;color:#fff;">Manage Seasons</h2>
+                <p style="margin:4px 0 0;color:#8eb3d1;font-size:13px;">Codes auto-format to lowercase <strong>name_year</strong>. These seasons drive raid bosses and checklists.</p>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;">
+                <button id="refresh-seasons" class="button btn-secondary">Refresh</button>
+                <button id="back-from-manage" class="button btn-secondary">Back</button>
+            </div>
+        </div>
+
+        <div class="season-form" style="background:#1e3a5f;padding:16px;border-radius:8px;margin-bottom:16px;">
+            <h3 style="margin-top:0;color:#fff;">${editing ? 'Edit Season' : 'Add Season'}</h3>
+            <form id="season-form" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;align-items:end;">
+                <label style="display:flex;flex-direction:column;gap:6px;color:#a8c5e3;">
+                    <span>Season Name</span>
+                    <input id="season-name" type="text" value="${editing ? editing.name : ''}" placeholder="e.g., Christmas" style="padding:8px;background:#0d1f2d;border:1px solid #2d5a8a;border-radius:4px;color:#fff;" required />
+                </label>
+                <label style="display:flex;flex-direction:column;gap:6px;color:#a8c5e3;">
+                    <span>Year</span>
+                    <input id="season-year" type="number" value="${editing ? editing.year : ''}" placeholder="2024" min="1" style="padding:8px;background:#0d1f2d;border:1px solid #2d5a8a;border-radius:4px;color:#fff;" required />
+                </label>
+                <div style="display:flex;flex-direction:column;gap:6px;color:#a8c5e3;">
+                    <span>Code Preview</span>
+                    <div id="season-code-preview" style="padding:10px;background:#0d1f2d;border:1px dashed #2d5a8a;border-radius:4px;color:#4a90e2;">${editing ? editing.code : 'name_year'}</div>
+                </div>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                    <button type="submit" class="button" style="padding:10px 18px;">${editing ? 'Save Changes' : 'Add Season'}</button>
+                    ${editing ? '<button type="button" id="cancel-edit-season" class="button btn-secondary">Cancel</button>' : ''}
+                </div>
+            </form>
+        </div>
+
+        <div class="season-list" style="display:flex;flex-direction:column;gap:10px;">
+            ${seasonsList.map(s => `
+                <div class="season-row" style="background:#12263a;padding:12px;border-radius:6px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+                    <div style="color:#fff;">
+                        <div style="font-weight:600;">${s.label || s.code}</div>
+                        <div style="color:#8eb3d1;font-size:13px;">Code: ${s.code}</div>
+                    </div>
+                    <div style="display:flex;gap:8px;">
+                        <button class="button btn-secondary edit-season" data-code="${s.code}">Edit</button>
+                        <button class="button delete-season" style="background:#8a2d2d;color:white;" data-code="${s.code}" data-label="${s.label || s.code}">Delete</button>
+                    </div>
+                </div>
+            `).join('') || '<p style="color:#a8c5e3;">No seasons found.</p>'}
+        </div>
+    `;
+
+    const nameInput = document.getElementById('season-name');
+    const yearInput = document.getElementById('season-year');
+    const codePreview = document.getElementById('season-code-preview');
+
+    const updatePreview = () => {
+        codePreview.textContent = normalizeSeasonCode(nameInput.value, yearInput.value) || 'name_year';
+    };
+
+    nameInput.addEventListener('input', updatePreview);
+    yearInput.addEventListener('input', updatePreview);
+
+    const form = document.getElementById('season-form');
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = nameInput.value.trim();
+        const year = parseInt(yearInput.value, 10);
+        if (!name || !year) {
+            alert('Name and year are required');
+            return;
+        }
+        const payload = { name, year };
+        const codeTarget = normalizeSeasonCode(name, year);
+        let method = 'POST';
+        if (manageSeasonEditing) {
+            payload.original_code = manageSeasonEditing;
+            method = 'PUT';
+        }
+        const res = await fetch('/api/admin/seasons', { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if (!res.ok) {
+            const txt = await res.text();
+            alert(`Failed to save season: ${txt || res.status}`);
+            return;
+        }
+        manageSeasonEditing = null;
+        await refreshSeasons(codeTarget);
+        currentTab = 'manage-seasons';
+        renderManageSeasons();
+    });
+
+    const refreshBtn = document.getElementById('refresh-seasons');
+    refreshBtn.addEventListener('click', async () => {
+        await refreshSeasons(currentSeason);
+        currentTab = 'manage-seasons';
+        renderManageSeasons();
+    });
+
+    const backBtn = document.getElementById('back-from-manage');
+    backBtn.addEventListener('click', () => {
+        currentTab = 'checklist';
+        switchTab('checklist');
+    });
+
+    const cancelEdit = document.getElementById('cancel-edit-season');
+    if (cancelEdit) {
+        cancelEdit.addEventListener('click', () => {
+            manageSeasonEditing = null;
+            renderManageSeasons();
+        });
+    }
+
+    document.querySelectorAll('.edit-season').forEach(btn => {
+        btn.addEventListener('click', () => {
+            manageSeasonEditing = btn.dataset.code;
+            renderManageSeasons();
+        });
+    });
+
+    document.querySelectorAll('.delete-season').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const code = btn.dataset.code;
+            const label = btn.dataset.label;
+            if (!confirmDelete('season', label)) return;
+            const res = await fetch(`/api/admin/seasons?code=${encodeURIComponent(code)}`, { method: 'DELETE' });
+            if (!res.ok) {
+                const txt = await res.text();
+                alert(`Failed to delete season: ${txt || res.status}`);
+                return;
+            }
+            // If we deleted the currently selected season, pick the first after refresh
+            if (currentSeason === code) {
+                currentSeason = '';
+            }
+            manageSeasonEditing = null;
+            await refreshSeasons();
+            currentTab = 'manage-seasons';
+            renderManageSeasons();
+        });
+    });
+
+    updatePreview();
 }
 
 // ============= CHECKLIST TAB =============

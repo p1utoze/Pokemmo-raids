@@ -3,11 +3,14 @@
 {% block admin_sidebar %}
 <a href="/" class="back-link">← Back to Public View</a>
 <h3 class="admin-title">Admin Panel</h3>
+<div class="sidebar-actions" style="display: flex; justify-content: flex-end; margin-bottom: 8px;">
+    <button id="manage-seasons-btn" class="button btn-secondary" style="padding: 6px 10px;">Manage Seasons</button>
+</div>
 <div class="admin-info">
     <label for="season-select-sidebar" style="margin-top: 12px;">Select Season</label>
     <div class="season-button-stack" id="season-select-sidebar">
         {% for s in seasons %}
-        <button class="season-select-btn" data-season="{{ s }}" id="season-{{ s }}">{{ s }}</button>
+        <button class="season-select-btn" data-season="{{ s.Code }}" id="season-{{ s.Code }}">{{ s.Label }}</button>
         {% endfor %}
     </div>
 </div>
@@ -15,11 +18,13 @@
 
 {% block content %}
 <link rel="stylesheet" href="/static/css/admin.css?v=2">
-<section class="admin-shell" data-initial-season="{{ seasons|first }}">
+<section class="admin-shell" data-initial-season="{% if seasons %}{{ seasons.0.Code }}{% endif %}">
     <h1>Admin Panel</h1>
     <div class="admin-header-row">
-        <div class="season-chip" id="selected-season-label">Season: {{ seasons|first }}</div>
+        <div class="season-chip" id="selected-season-label">Season: {% if seasons %}{{ seasons.0.Label }}{% endif %}
+        </div>
         <div class="admin-header-spacer"></div>
+        <button id="set-default-season" class="button btn-secondary">Set as Default</button>
         <a href="/auth/change" class="button btn-secondary">Change Password</a>
         <a href="/admin/logout" class="button btn-secondary">Logout</a>
     </div>

@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/smtp"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -106,12 +107,13 @@ type ChecklistResponse struct {
 }
 
 type App struct {
-	seasons     []Season
-	season      Season // current season for backwards compatibility
-	templates   map[string]*pongo2.Template
-	mongoDB     *mongo.Database
-	mongoClient *mongo.Client
-	adminDB     *sql.DB
+	seasons       []Season
+	season        Season // current season for backwards compatibility
+	templates     map[string]*pongo2.Template
+	mongoDB       *mongo.Database
+	mongoClient   *mongo.Client
+	adminDB       *sql.DB
+	defaultSeason string // code form e.g. "christmas_2024"
 }
 
 var app *App
@@ -235,6 +237,17 @@ func (a *App) openAdminDatabase() error {
 		return fmt.Errorf("failed to ensure password_resets table: %w", err)
 	}
 
+	// settings table for storing key/value configuration
+	_, err = a.adminDB.Exec(`
+		CREATE TABLE IF NOT EXISTS settings (
+			key TEXT PRIMARY KEY,
+			value TEXT
+		)
+	`)
+	if err != nil {
+		return fmt.Errorf("failed to ensure settings table: %w", err)
+	}
+
 	// Check if any users exist; if none, create a default admin using ADMIN_PASSWORD
 	var count int
 	row := a.adminDB.QueryRow("SELECT COUNT(1) FROM users")
@@ -256,6 +269,25 @@ func (a *App) openAdminDatabase() error {
 			return fmt.Errorf("failed to insert default admin: %w", err)
 		}
 		log.Println("Default admin user created from ADMIN_PASSWORD environment variable")
+	}
+
+	// load default season from settings, if present
+	var defaultCode string
+	row2 := a.adminDB.QueryRow("SELECT value FROM settings WHERE key='default_season'")
+	if err := row2.Scan(&defaultCode); err == nil && defaultCode != "" {
+		a.defaultSeason = defaultCode
+		// apply to current season if found
+		for _, s := range a.seasons {
+			code := strings.ToLower(strings.ReplaceAll(s.SeasonName, " ", "_"))
+			if s.Year > 0 {
+				code = fmt.Sprintf("%s_%d", code, s.Year)
+			}
+			if code == defaultCode {
+				a.season = s
+				a.preprocessVariations()
+				break
+			}
+		}
 	}
 	return nil
 }
@@ -594,6 +626,8 @@ func setupRoutes() {
 	http.HandleFunc("/api/admin/pokemon", app.adminPokemonHandler)
 	http.HandleFunc("/api/admin/extras", app.adminExtrasHandler)
 	http.HandleFunc("/api/admin/raid-bosses", app.adminRaidBossesHandler)
+	http.HandleFunc("/api/admin/seasons", app.adminSeasonsHandler)
+	http.HandleFunc("/api/admin/season/default", app.adminDefaultSeasonHandler)
 }
 
 // loadTemplates loads all template files
@@ -854,6 +888,42 @@ func (a *App) getSeasonName() string {
 	return seasonName
 }
 
+// seasonCode returns the canonical code for a given season
+func seasonCode(s Season) string {
+	name := strings.ToLower(strings.ReplaceAll(s.SeasonName, " ", "_"))
+	if s.Year > 0 {
+		return fmt.Sprintf("%s_%d", name, s.Year)
+	}
+	return name
+}
+
+func seasonLabel(s Season) string {
+	if s.Year > 0 {
+		return fmt.Sprintf("%s %d", s.SeasonName, s.Year)
+	}
+	return s.SeasonName
+}
+
+var slugNonAlnum = regexp.MustCompile(`[^a-z0-9]+`)
+
+func slugifyName(name string) string {
+	name = strings.TrimSpace(strings.ToLower(name))
+	name = slugNonAlnum.ReplaceAllString(name, "_")
+	name = strings.Trim(name, "_")
+	name = strings.ReplaceAll(name, "__", "_")
+	return name
+}
+
+// findSeasonIndexByCode finds season by code and returns index and true if found
+func (a *App) findSeasonIndexByCode(code string) (int, bool) {
+	for i, s := range a.seasons {
+		if seasonCode(s) == code {
+			return i, true
+		}
+	}
+	return -1, false
+}
+
 // findBoss searches for a boss by name
 func (a *App) findBoss(name string) *RaidBoss {
 	for i := range a.season.RaidBosses {
@@ -944,11 +1014,16 @@ func (a *App) checklistHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Convert map to sorted array
+	// Convert map to sorted array (sorted by type name)
 	var types []PokemonType
 	for _, pt := range typeMap {
 		types = append(types, *pt)
 	}
+
+	// Sort types alphabetically by name
+	sort.Slice(types, func(i, j int) bool {
+		return types[i].TypeName < types[j].TypeName
+	})
 
 	response := ChecklistResponse{Types: types}
 	json.NewEncoder(w).Encode(response)
@@ -1229,8 +1304,12 @@ func (a *App) adminPageHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "admin page not available", http.StatusInternalServerError)
 		return
 	}
-	// pass MongoDB season names for API queries
-	seasons := []string{a.getSeasonName()}
+	// pass all seasons with code and label for admin sidebar
+	type seasonVM struct{ Code, Label string }
+	var seasons []seasonVM
+	for _, s := range a.seasons {
+		seasons = append(seasons, seasonVM{Code: seasonCode(s), Label: seasonLabel(s)})
+	}
 	renderTemplate(w, tpl, pongo2.Context{"seasons": seasons, "user_role": role})
 }
 
@@ -1817,6 +1896,22 @@ func (a *App) adminPokemonHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "season required", http.StatusBadRequest)
 		return
 	}
+	// find target season by code
+	var target *Season
+	for i := range a.seasons {
+		code := strings.ToLower(strings.ReplaceAll(a.seasons[i].SeasonName, " ", "_"))
+		if a.seasons[i].Year > 0 {
+			code = fmt.Sprintf("%s_%d", code, a.seasons[i].Year)
+		}
+		if strings.EqualFold(season, code) {
+			target = &a.seasons[i]
+			break
+		}
+	}
+	if target == nil {
+		http.Error(w, "season not found", http.StatusNotFound)
+		return
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -1994,11 +2089,19 @@ func (a *App) adminRaidBossesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// find target season by code
+	idx, ok := a.findSeasonIndexByCode(season)
+	if !ok {
+		http.Error(w, "season not found", http.StatusNotFound)
+		return
+	}
+	target := &a.seasons[idx]
+
 	switch r.Method {
 	case http.MethodGet:
 		// Return raid bosses from in-memory season data
 		bosses := []map[string]interface{}{}
-		for i, boss := range a.season.RaidBosses {
+		for i, boss := range target.RaidBosses {
 			movesJSON, _ := json.Marshal(boss.Moves)
 			phasesJSON, _ := json.Marshal(boss.PhaseEffects)
 			variationsJSON, _ := json.Marshal(boss.Variations)
@@ -2073,7 +2176,7 @@ func (a *App) adminRaidBossesHandler(w http.ResponseWriter, r *http.Request) {
 			PhaseEffects: phases,
 			Variations:   variations,
 		}
-		a.season.RaidBosses = append(a.season.RaidBosses, newBoss)
+		target.RaidBosses = append(target.RaidBosses, newBoss)
 		if err := a.saveBossesJSON(); err != nil {
 			http.Error(w, "failed to save bosses", http.StatusInternalServerError)
 			return
@@ -2103,7 +2206,7 @@ func (a *App) adminRaidBossesHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "invalid body", http.StatusBadRequest)
 			return
 		}
-		if payload.ID < 0 || payload.ID >= len(a.season.RaidBosses) {
+		if payload.ID < 0 || payload.ID >= len(target.RaidBosses) {
 			http.Error(w, "boss not found", http.StatusNotFound)
 			return
 		}
@@ -2124,7 +2227,7 @@ func (a *App) adminRaidBossesHandler(w http.ResponseWriter, r *http.Request) {
 			variations = []Variation{}
 		}
 
-		a.season.RaidBosses[payload.ID] = RaidBoss{
+		target.RaidBosses[payload.ID] = RaidBoss{
 			Name:         payload.BossName,
 			Stars:        payload.Stars,
 			Description:  payload.Description,
@@ -2154,16 +2257,187 @@ func (a *App) adminRaidBossesHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		id, _ := strconv.Atoi(idStr)
-		if id < 0 || id >= len(a.season.RaidBosses) {
+		if id < 0 || id >= len(target.RaidBosses) {
 			http.Error(w, "boss not found", http.StatusNotFound)
 			return
 		}
-		a.season.RaidBosses = append(a.season.RaidBosses[:id], a.season.RaidBosses[id+1:]...)
+		target.RaidBosses = append(target.RaidBosses[:id], target.RaidBosses[id+1:]...)
 		if err := a.saveBossesJSON(); err != nil {
 			http.Error(w, "failed to save bosses", http.StatusInternalServerError)
 			return
 		}
 		json.NewEncoder(w).Encode(map[string]string{"status": "deleted"})
+
+	default:
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+// adminSeasonsHandler manages CRUD for seasons (admin only)
+func (a *App) adminSeasonsHandler(w http.ResponseWriter, r *http.Request) {
+	role := getRoleFromRequest(r)
+	if role == "" {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	if r.Method != http.MethodGet && role != "admin" {
+		http.Error(w, "forbidden", http.StatusForbidden)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+
+	buildList := func() []map[string]interface{} {
+		out := make([]map[string]interface{}, 0, len(a.seasons))
+		for _, s := range a.seasons {
+			out = append(out, map[string]interface{}{
+				"code":  seasonCode(s),
+				"label": seasonLabel(s),
+				"name":  s.SeasonName,
+				"year":  s.Year,
+			})
+		}
+		return out
+	}
+
+	switch r.Method {
+	case http.MethodGet:
+		json.NewEncoder(w).Encode(buildList())
+		return
+
+	case http.MethodPost:
+		var payload struct {
+			Name string `json:"name"`
+			Year int    `json:"year"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+			http.Error(w, "invalid body", http.StatusBadRequest)
+			return
+		}
+		name := strings.TrimSpace(payload.Name)
+		if name == "" || payload.Year <= 0 {
+			http.Error(w, "name and positive year required", http.StatusBadRequest)
+			return
+		}
+		code := seasonCode(Season{SeasonName: name, Year: payload.Year})
+		slug := slugifyName(name)
+		if slug == "" {
+			http.Error(w, "invalid name", http.StatusBadRequest)
+			return
+		}
+		code = fmt.Sprintf("%s_%d", slug, payload.Year)
+		if _, exists := a.findSeasonIndexByCode(code); exists {
+			http.Error(w, "season already exists", http.StatusConflict)
+			return
+		}
+		newSeason := Season{SeasonName: name, Year: payload.Year, RaidBosses: []RaidBoss{}}
+		a.seasons = append(a.seasons, newSeason)
+		if len(a.seasons) == 1 {
+			a.season = newSeason
+			a.preprocessVariations()
+		}
+		if err := a.saveBossesJSON(); err != nil {
+			http.Error(w, "failed to save", http.StatusInternalServerError)
+			return
+		}
+		json.NewEncoder(w).Encode(map[string]interface{}{"status": "created", "code": code, "seasons": buildList()})
+		return
+
+	case http.MethodPut:
+		var payload struct {
+			OriginalCode string `json:"original_code"`
+			Name         string `json:"name"`
+			Year         int    `json:"year"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+			http.Error(w, "invalid body", http.StatusBadRequest)
+			return
+		}
+		payload.Name = strings.TrimSpace(payload.Name)
+		if payload.OriginalCode == "" || payload.Name == "" || payload.Year <= 0 {
+			http.Error(w, "original_code, name and positive year required", http.StatusBadRequest)
+			return
+		}
+		idx, ok := a.findSeasonIndexByCode(payload.OriginalCode)
+		if !ok {
+			http.Error(w, "season not found", http.StatusNotFound)
+			return
+		}
+		slug := slugifyName(payload.Name)
+		if slug == "" {
+			http.Error(w, "invalid name", http.StatusBadRequest)
+			return
+		}
+		newCode := fmt.Sprintf("%s_%d", slug, payload.Year)
+		for i, s := range a.seasons {
+			if i == idx {
+				continue
+			}
+			if seasonCode(s) == newCode {
+				http.Error(w, "season already exists", http.StatusConflict)
+				return
+			}
+		}
+		// preserve raid bosses while updating metadata
+		s := a.seasons[idx]
+		s.SeasonName = payload.Name
+		s.Year = payload.Year
+		a.seasons[idx] = s
+
+		// update in-memory current and default season pointers
+		if seasonCode(a.season) == payload.OriginalCode {
+			a.season = s
+			a.preprocessVariations()
+		}
+		if a.defaultSeason == payload.OriginalCode {
+			a.defaultSeason = newCode
+			_, _ = a.adminDB.Exec("INSERT INTO settings(key,value) VALUES('default_season',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value", newCode)
+		}
+
+		if err := a.saveBossesJSON(); err != nil {
+			http.Error(w, "failed to save", http.StatusInternalServerError)
+			return
+		}
+		json.NewEncoder(w).Encode(map[string]interface{}{"status": "updated", "code": newCode, "seasons": buildList()})
+		return
+
+	case http.MethodDelete:
+		code := r.URL.Query().Get("code")
+		if code == "" {
+			http.Error(w, "code required", http.StatusBadRequest)
+			return
+		}
+		idx, ok := a.findSeasonIndexByCode(code)
+		if !ok {
+			http.Error(w, "season not found", http.StatusNotFound)
+			return
+		}
+		// remove from slice
+		removed := a.seasons[idx]
+		a.seasons = append(a.seasons[:idx], a.seasons[idx+1:]...)
+
+		// adjust current season if needed
+		if seasonCode(a.season) == code {
+			if len(a.seasons) > 0 {
+				a.season = a.seasons[0]
+				a.preprocessVariations()
+			} else {
+				a.season = Season{}
+			}
+		}
+
+		// clear default season if deleted
+		if a.defaultSeason == code {
+			a.defaultSeason = ""
+			_, _ = a.adminDB.Exec("DELETE FROM settings WHERE key='default_season'")
+		}
+
+		if err := a.saveBossesJSON(); err != nil {
+			http.Error(w, "failed to save", http.StatusInternalServerError)
+			return
+		}
+
+		json.NewEncoder(w).Encode(map[string]interface{}{"status": "deleted", "removed": seasonLabel(removed), "seasons": buildList()})
+		return
 
 	default:
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -2179,14 +2453,49 @@ func (a *App) saveBossesJSON() error {
 	defer file.Close()
 	encoder := json.NewEncoder(file)
 	encoder.SetIndent("", "  ")
-	// Update the current season in the seasons list
-	for i, s := range a.seasons {
-		if s.SeasonName == a.season.SeasonName {
-			a.seasons[i] = a.season
-			break
-		}
-	}
 	return encoder.Encode(a.seasons)
+}
+
+// adminDefaultSeasonHandler gets/sets the default season for public view (admin only)
+func (a *App) adminDefaultSeasonHandler(w http.ResponseWriter, r *http.Request) {
+	role := getRoleFromRequest(r)
+	if role != "admin" {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+
+	switch r.Method {
+	case http.MethodGet:
+		json.NewEncoder(w).Encode(map[string]string{"season": a.defaultSeason})
+		return
+	case http.MethodPost:
+		var payload struct {
+			Season string `json:"season"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil || payload.Season == "" {
+			http.Error(w, "invalid body", http.StatusBadRequest)
+			return
+		}
+		if _, ok := a.findSeasonIndexByCode(payload.Season); !ok {
+			http.Error(w, "season not found", http.StatusNotFound)
+			return
+		}
+		// upsert setting
+		_, err := a.adminDB.Exec("INSERT INTO settings(key,value) VALUES('default_season',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value", payload.Season)
+		if err != nil {
+			http.Error(w, "db error", http.StatusInternalServerError)
+			return
+		}
+		a.defaultSeason = payload.Season
+		if idx, ok := a.findSeasonIndexByCode(payload.Season); ok {
+			a.season = a.seasons[idx]
+			a.preprocessVariations()
+		}
+		json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+	default:
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	}
 }
 
 // renderTemplate renders a template with given context
