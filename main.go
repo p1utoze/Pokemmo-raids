@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -16,6 +17,10 @@ import (
 	"github.com/flosch/pongo2/v4"
 	"github.com/golang-jwt/jwt/v5"
 	_ "github.com/mattn/go-sqlite3"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -67,21 +72,28 @@ type Season struct {
 	RaidBosses []RaidBoss `json:"raid_bosses"`
 }
 
+// MongoDB Checklist Schema - Flexible document structure
 type PokemonChecklistEntry struct {
-	ID            int    `json:"id"`
-	TypeID        int    `json:"type_id"`
-	PokemonName   string `json:"pokemon_name"`
-	PhysSpecial   string `json:"phys_special"`
-	SecondaryType string `json:"secondary_type"`
-	HeldItem      string `json:"held_item"`
-	Ability       string `json:"ability"`
-	Moves         string `json:"moves"`
-	Notes         string `json:"notes"`
-	Completed     int    `json:"completed"`
+	Name      string   `json:"name" bson:"name"`
+	Usage     string   `json:"usage" bson:"usage"` // "Physical", "Special", "Support"
+	Types     []string `json:"types" bson:"types"` // ["Fire", "Flying"] for example
+	HeldItem  string   `json:"held_item,omitempty" bson:"held_item,omitempty"`
+	Ability   string   `json:"ability,omitempty" bson:"ability,omitempty"`
+	Moves     string   `json:"moves,omitempty" bson:"moves,omitempty"`
+	Notes     string   `json:"notes,omitempty" bson:"notes,omitempty"`
+	Completed bool     `json:"completed" bson:"completed"`
 }
 
+type ChecklistDocument struct {
+	ID        primitive.ObjectID      `json:"_id,omitempty" bson:"_id,omitempty"`
+	Season    string                  `json:"season" bson:"season"`
+	UserID    string                  `json:"user_id" bson:"user_id"`
+	Pokemon   []PokemonChecklistEntry `json:"pokemon" bson:"pokemon"`
+	UpdatedAt time.Time               `json:"updated_at" bson:"updated_at"`
+}
+
+// Frontend-compatible response format grouped by type
 type PokemonType struct {
-	ID          int                     `json:"id"`
 	TypeName    string                  `json:"type_name"`
 	MinRequired int                     `json:"min_required"`
 	Count       int                     `json:"count"`
@@ -94,11 +106,12 @@ type ChecklistResponse struct {
 }
 
 type App struct {
-	seasons   []Season
-	season    Season // current season for backwards compatibility
-	templates map[string]*pongo2.Template
-	db        *sql.DB
-	adminDB   *sql.DB
+	seasons     []Season
+	season      Season // current season for backwards compatibility
+	templates   map[string]*pongo2.Template
+	mongoDB     *mongo.Database
+	mongoClient *mongo.Client
+	adminDB     *sql.DB
 }
 
 var app *App
@@ -106,7 +119,8 @@ var app *App
 var (
 	dataPath      = getEnvOrDefault("DATA_PATH", "data/bosses.json")
 	templatesPath = "templates/"
-	dbPath        = getEnvOrDefault("CHECKLIST_DB", "data/checklist.db")
+	mongoURI      = getEnvOrDefault("MONGO_URI", "mongodb://pokemmo:pokemmo_local_dev@localhost:27017/")
+	mongoDB       = getEnvOrDefault("MONGO_DB", "pokemmo_raids")
 	adminDBPath   = getEnvOrDefault("ADMIN_DB", "data/users.db")
 )
 
@@ -136,47 +150,49 @@ func generateRandomPassword(length int) string {
 	return string(b)
 }
 
-// openDatabase opens the checklist database
-func (a *App) openDatabase() error {
-	var err error
-	a.db, err = sql.Open("sqlite3", dbPath)
+// openMongoDB opens the MongoDB connection for checklists
+func (a *App) openMongoDB() error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	clientOptions := options.Client().ApplyURI(mongoURI)
+	client, err := mongo.Connect(ctx, clientOptions)
 	if err != nil {
-		return fmt.Errorf("failed to open database: %w", err)
+		return fmt.Errorf("failed to connect to MongoDB: %w", err)
 	}
+
 	// Test the connection
-	if err := a.db.Ping(); err != nil {
-		return fmt.Errorf("failed to ping database: %w", err)
+	if err := client.Ping(ctx, nil); err != nil {
+		return fmt.Errorf("failed to ping MongoDB: %w", err)
 	}
 
-	// Ensure a case-insensitive unique index on types.type_name so we don't create duplicate type rows
-	if _, err := a.db.Exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_types_name ON types(type_name COLLATE NOCASE)"); err != nil {
-		// If index creation fails, log but continue
-		log.Printf("warning: failed to ensure unique index on types.type_name: %v", err)
-	}
+	a.mongoClient = client
+	a.mongoDB = client.Database(mongoDB)
 
-	// Create raid_bosses table if not exists
-	_, err = a.db.Exec(`
-		CREATE TABLE IF NOT EXISTS raid_bosses (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			season TEXT NOT NULL,
-			boss_name TEXT NOT NULL,
-			stars INTEGER DEFAULT 0,
-			description TEXT,
-			ability TEXT,
-			held_item TEXT,
-			speed_evs INTEGER DEFAULT 0,
-			base_stats_speed INTEGER DEFAULT 0,
-			base_stats_defense INTEGER DEFAULT 0,
-			base_stats_spdef INTEGER DEFAULT 0,
-			moves TEXT,
-			phase_effects TEXT,
-			variations TEXT,
-			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-		)
-	`)
+	// Create indexes for efficient querying
+	checklistCollection := a.mongoDB.Collection("checklists")
+
+	// Index on season + user_id for fast lookups
+	_, err = checklistCollection.Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys: bson.D{
+			{Key: "season", Value: 1},
+			{Key: "user_id", Value: 1},
+		},
+		Options: options.Index().SetUnique(true),
+	})
 	if err != nil {
-		log.Printf("warning: failed to create raid_bosses table: %v", err)
+		log.Printf("warning: failed to create season+user_id index: %v", err)
 	}
+
+	// Index on pokemon.name for searching
+	_, err = checklistCollection.Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys: bson.D{{Key: "pokemon.name", Value: 1}},
+	})
+	if err != nil {
+		log.Printf("warning: failed to create pokemon.name index: %v", err)
+	}
+
+	log.Println("✓ MongoDB connected successfully")
 	return nil
 }
 
@@ -519,9 +535,18 @@ func main() {
 		log.Fatalf("Failed to load data: %v", err)
 	}
 
-	if err := app.openDatabase(); err != nil {
-		log.Fatalf("Failed to open database: %v", err)
+	if err := app.openMongoDB(); err != nil {
+		log.Fatalf("Failed to open MongoDB: %v", err)
 	}
+	defer func() {
+		if app.mongoClient != nil {
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer cancel()
+			if err := app.mongoClient.Disconnect(ctx); err != nil {
+				log.Printf("Error disconnecting MongoDB: %v", err)
+			}
+		}
+	}()
 
 	if err := app.openAdminDatabase(); err != nil {
 		log.Fatalf("Failed to open admin database: %v", err)
@@ -820,8 +845,8 @@ func (a *App) pokemonInfoHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string][]string{"abilities": {}, "moves": {}})
 }
 
-// getSeasonTableName returns the table name for a season in format {season}_{year}
-func (a *App) getSeasonTableName() string {
+// getSeasonName returns the season name for MongoDB queries
+func (a *App) getSeasonName() string {
 	seasonName := strings.ToLower(strings.ReplaceAll(a.season.SeasonName, " ", "_"))
 	if a.season.Year > 0 {
 		return fmt.Sprintf("%s_%d", seasonName, a.season.Year)
@@ -874,67 +899,56 @@ func (a *App) bossEditDataHandler(w http.ResponseWriter, r *http.Request) {
 func (a *App) checklistHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	// Query all types
-	typeRows, err := a.db.Query("SELECT id, type_name, min_required FROM types ORDER BY type_name")
-	if err != nil {
-		log.Printf("Error querying types: %v", err)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// Get checklist for current season and default user
+	season := a.getSeasonName()
+	collection := a.mongoDB.Collection("checklists")
+
+	var doc ChecklistDocument
+	err := collection.FindOne(ctx, bson.M{
+		"season":  season,
+		"user_id": "default",
+	}).Decode(&doc)
+
+	if err == mongo.ErrNoDocuments {
+		// Return empty checklist if not found
+		log.Printf("No checklist found for season: %s", season)
+		json.NewEncoder(w).Encode(ChecklistResponse{Types: []PokemonType{}})
+		return
+	} else if err != nil {
+		log.Printf("Error querying checklist: %v", err)
 		http.Error(w, "Failed to fetch checklist", http.StatusInternalServerError)
 		return
 	}
-	defer typeRows.Close()
 
-	var types []PokemonType
+	// Group Pokemon by type for frontend compatibility
+	typeMap := make(map[string]*PokemonType)
 
-	for typeRows.Next() {
-		var typeID int
-		var typeName string
-		var minRequired int
-
-		if err := typeRows.Scan(&typeID, &typeName, &minRequired); err != nil {
-			log.Printf("Error scanning type: %v", err)
-			continue
-		}
-
-		// Query pokemon for this type
-		seasonTable := a.getSeasonTableName()
-		pokemonRows, err := a.db.Query(
-			fmt.Sprintf("SELECT id, type_id, pokemon_name, phys_special, secondary_type, held_item, ability, moves, notes, completed FROM %s WHERE type_id = ? ORDER BY pokemon_name", seasonTable),
-			typeID)
-		if err != nil {
-			log.Printf("Error querying pokemon: %v", err)
-			continue
-		}
-		defer pokemonRows.Close()
-
-		var pokemons []PokemonChecklistEntry
-		var completedCount int
-
-		for pokemonRows.Next() {
-			var entry PokemonChecklistEntry
-			if err := pokemonRows.Scan(&entry.ID, &entry.TypeID, &entry.PokemonName,
-				&entry.PhysSpecial, &entry.SecondaryType, &entry.HeldItem,
-				&entry.Ability, &entry.Moves, &entry.Notes, &entry.Completed); err != nil {
-				log.Printf("Error scanning pokemon: %v", err)
-				continue
+	for _, pokemon := range doc.Pokemon {
+		for _, typeName := range pokemon.Types {
+			if _, exists := typeMap[typeName]; !exists {
+				typeMap[typeName] = &PokemonType{
+					TypeName:    typeName,
+					MinRequired: 0, // Can be configured via admin
+					Pokemons:    []PokemonChecklistEntry{},
+				}
 			}
-			pokemons = append(pokemons, entry)
-			if entry.Completed == 1 {
-				completedCount++
+
+			typeMap[typeName].Pokemons = append(typeMap[typeName].Pokemons, pokemon)
+			typeMap[typeName].Count++
+			if pokemon.Completed {
+				typeMap[typeName].Completed++
 			}
 		}
-		pokemonRows.Close()
-
-		typeData := PokemonType{
-			ID:          typeID,
-			TypeName:    typeName,
-			MinRequired: minRequired,
-			Count:       len(pokemons),
-			Completed:   completedCount,
-			Pokemons:    pokemons,
-		}
-		types = append(types, typeData)
 	}
-	typeRows.Close()
+
+	// Convert map to sorted array
+	var types []PokemonType
+	for _, pt := range typeMap {
+		types = append(types, *pt)
+	}
 
 	response := ChecklistResponse{Types: types}
 	json.NewEncoder(w).Encode(response)
@@ -957,7 +971,8 @@ func (a *App) toggleChecklistHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var req struct {
-		PokemonID int `json:"pokemon_id"`
+		Name  string `json:"name"`
+		Usage string `json:"usage"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -965,26 +980,63 @@ func (a *App) toggleChecklistHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get current status
-	var completed int
-	seasonTable := a.getSeasonTableName()
-	err := a.db.QueryRow(fmt.Sprintf("SELECT completed FROM %s WHERE id = ?", seasonTable), req.PokemonID).Scan(&completed)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	season := a.getSeasonName()
+	collection := a.mongoDB.Collection("checklists")
+
+	// Find the pokemon and toggle completion
+	var doc ChecklistDocument
+	err := collection.FindOne(ctx, bson.M{
+		"season":  season,
+		"user_id": "default",
+	}).Decode(&doc)
+
 	if err != nil {
-		log.Printf("Error querying pokemon: %v", err)
+		log.Printf("Error finding checklist: %v", err)
+		http.Error(w, "Checklist not found", http.StatusNotFound)
+		return
+	}
+
+	// Find and toggle the pokemon
+	found := false
+	for i := range doc.Pokemon {
+		if doc.Pokemon[i].Name == req.Name && doc.Pokemon[i].Usage == req.Usage {
+			doc.Pokemon[i].Completed = !doc.Pokemon[i].Completed
+			found = true
+			break
+		}
+	}
+
+	if !found {
 		http.Error(w, "Pokemon not found", http.StatusNotFound)
 		return
 	}
 
-	// Toggle status
-	newStatus := 1 - completed
-	_, err = a.db.Exec(fmt.Sprintf("UPDATE %s SET completed = ? WHERE id = ?", seasonTable), newStatus, req.PokemonID)
+	// Update the document
+	doc.UpdatedAt = time.Now()
+	_, err = collection.ReplaceOne(ctx,
+		bson.M{
+			"season":  season,
+			"user_id": "default",
+		},
+		doc,
+	)
+
 	if err != nil {
-		log.Printf("Error updating pokemon: %v", err)
+		log.Printf("Error updating checklist: %v", err)
 		http.Error(w, "Failed to update checklist", http.StatusInternalServerError)
 		return
 	}
 
-	json.NewEncoder(w).Encode(map[string]int{"completed": newStatus})
+	// Return the new completion status
+	for i := range doc.Pokemon {
+		if doc.Pokemon[i].Name == req.Name && doc.Pokemon[i].Usage == req.Usage {
+			json.NewEncoder(w).Encode(map[string]bool{"completed": doc.Pokemon[i].Completed})
+			return
+		}
+	}
 }
 
 // saveChecklistHandler saves checklist pokemon edits (admin only)
@@ -1003,11 +1055,11 @@ func (a *App) saveChecklistHandler(w http.ResponseWriter, r *http.Request) {
 
 	var req struct {
 		Pokemon []struct {
-			ID          int    `json:"id"`
-			PokemonName string `json:"pokemon_name"`
-			HeldItem    string `json:"held_item"`
-			Moves       string `json:"moves"`
-			Notes       string `json:"notes"`
+			Name     string `json:"name"`
+			Usage    string `json:"usage"`
+			HeldItem string `json:"held_item"`
+			Moves    string `json:"moves"`
+			Notes    string `json:"notes"`
 		} `json:"pokemon"`
 	}
 
@@ -1017,52 +1069,57 @@ func (a *App) saveChecklistHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("Received checklist save request with %d pokemon", len(req.Pokemon))
-
 	if len(req.Pokemon) == 0 {
 		log.Printf("⚠️  WARNING: No pokemon data received in request!")
 		http.Error(w, "No pokemon data provided", http.StatusBadRequest)
 		return
 	}
 
-	// Update each pokemon in the checklist
-	seasonTable := a.getSeasonTableName()
-	// log.Printf("Using season table: %s", seasonTable)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 
-	// Verify the table exists
-	// var tableExists int
-	// err := a.db.QueryRow(fmt.Sprintf("SELECT COUNT(name) FROM sqlite_master WHERE type='table' AND name='%s'", seasonTable)).Scan(&tableExists)
-	// if err != nil || tableExists == 0 {
-	// 	log.Printf("❌ ERROR: Season table '%s' does not exist!", seasonTable)
-	// 	http.Error(w, fmt.Sprintf("Season table '%s' not found", seasonTable), http.StatusInternalServerError)
-	// 	return
-	// }
-	// log.Printf("✓ Verified season table '%s' exists", seasonTable)
+	season := a.getSeasonName()
+	collection := a.mongoDB.Collection("checklists")
 
-	for i, pokemon := range req.Pokemon {
-		// log.Printf("Updating pokemon %d: id=%d, name='%s', item='%s', moves='%s', notes='%s'",
-		// 	i, pokemon.ID, pokemon.PokemonName, pokemon.HeldItem, pokemon.Moves, pokemon.Notes)
+	// Find the checklist document
+	var doc ChecklistDocument
+	err := collection.FindOne(ctx, bson.M{
+		"season":  season,
+		"user_id": "default",
+	}).Decode(&doc)
 
-		query := fmt.Sprintf("UPDATE %s SET held_item = ?, moves = ?, notes = ? WHERE id = ?", seasonTable)
-		// log.Printf("SQL Query: %s | Params: item='%s', moves='%s', notes='%s', id=%d",
-		// 	query, pokemon.HeldItem, pokemon.Moves, pokemon.Notes, pokemon.ID)
+	if err != nil {
+		log.Printf("Error finding checklist: %v", err)
+		http.Error(w, "Checklist not found", http.StatusNotFound)
+		return
+	}
 
-		result, err := a.db.Exec(query,
-			pokemon.HeldItem, pokemon.Moves, pokemon.Notes, pokemon.ID,
-		)
-		if err != nil {
-			log.Printf("Error updating pokemon id=%d: %v", pokemon.ID, err)
-			http.Error(w, "Failed to update checklist", http.StatusInternalServerError)
-			return
+	// Update each pokemon in the request
+	for _, reqPokemon := range req.Pokemon {
+		for i := range doc.Pokemon {
+			if doc.Pokemon[i].Name == reqPokemon.Name && doc.Pokemon[i].Usage == reqPokemon.Usage {
+				doc.Pokemon[i].HeldItem = reqPokemon.HeldItem
+				doc.Pokemon[i].Moves = reqPokemon.Moves
+				doc.Pokemon[i].Notes = reqPokemon.Notes
+				break
+			}
 		}
+	}
 
-		rowsAffected, _ := result.RowsAffected()
-		if rowsAffected == 0 {
-			log.Printf("⚠️  WARNING: No rows affected for pokemon id=%d", pokemon.ID)
-		} else {
-			_ = i // Suppress unused variable warning
-			// log.Printf("✓ Successfully updated pokemon id=%d ('%s')", pokemon.ID, pokemon.PokemonName)
-		}
+	// Update the document
+	doc.UpdatedAt = time.Now()
+	_, err = collection.ReplaceOne(ctx,
+		bson.M{
+			"season":  season,
+			"user_id": "default",
+		},
+		doc,
+	)
+
+	if err != nil {
+		log.Printf("Error updating checklist: %v", err)
+		http.Error(w, "Failed to update checklist", http.StatusInternalServerError)
+		return
 	}
 
 	log.Printf("Checklist save completed successfully")
@@ -1172,8 +1229,8 @@ func (a *App) adminPageHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "admin page not available", http.StatusInternalServerError)
 		return
 	}
-	// pass season names for selection and user role
-	seasons := []string{a.season.SeasonName}
+	// pass MongoDB season names for API queries
+	seasons := []string{a.getSeasonName()}
 	renderTemplate(w, tpl, pongo2.Context{"seasons": seasons, "user_role": role})
 }
 
@@ -1685,7 +1742,7 @@ func (a *App) saveVariationHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"status": "success"})
 }
 
-// adminTypesHandler handles GET/POST/PUT/DELETE for types
+// adminTypesHandler returns all unique types from the checklist Pokemon for a season
 func (a *App) adminTypesHandler(w http.ResponseWriter, r *http.Request) {
 	role := getRoleFromRequest(r)
 	if role == "" {
@@ -1693,102 +1750,60 @@ func (a *App) adminTypesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	switch r.Method {
-	case http.MethodGet:
-		rows, err := a.db.Query("SELECT id, type_name, min_required FROM types ORDER BY type_name")
-		if err != nil {
-			http.Error(w, "db error", http.StatusInternalServerError)
-			return
-		}
-		defer rows.Close()
-		types := []PokemonType{}
-		for rows.Next() {
-			var t PokemonType
-			if err := rows.Scan(&t.ID, &t.TypeName, &t.MinRequired); err != nil {
-				continue
-			}
-			types = append(types, t)
-		}
-		json.NewEncoder(w).Encode(types)
-	case http.MethodPost:
-		// allowed for admin, mod, author
-		if role != "admin" && role != "mod" && role != "author" {
-			http.Error(w, "forbidden", http.StatusForbidden)
-			return
-		}
-		var payload struct {
-			TypeName    string `json:"type_name"`
-			MinRequired int    `json:"min_required"`
-		}
-		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-			http.Error(w, "invalid body", http.StatusBadRequest)
-			return
-		}
-		// Trim and normalize the type name
-		payload.TypeName = strings.TrimSpace(payload.TypeName)
-		if payload.TypeName == "" {
-			http.Error(w, "type_name required", http.StatusBadRequest)
-			return
-		}
 
-		// Use SQLite upsert so creating duplicate type names won't create multiple rows
-		_, err := a.db.Exec("INSERT INTO types (type_name, min_required) VALUES (?, ?) ON CONFLICT(type_name) DO UPDATE SET min_required = excluded.min_required", payload.TypeName, payload.MinRequired)
-		if err != nil {
-			http.Error(w, "db insert/update failed", http.StatusInternalServerError)
-			return
-		}
-		// return the id of the (possibly existing) type
-		var id int64
-		if err := a.db.QueryRow("SELECT id FROM types WHERE type_name = ?", payload.TypeName).Scan(&id); err != nil {
-			json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
-			return
-		}
-		json.NewEncoder(w).Encode(map[string]int64{"id": id})
-	case http.MethodPut:
-		// allowed for admin, mod, author
-		if role != "admin" && role != "mod" && role != "author" {
-			http.Error(w, "forbidden", http.StatusForbidden)
-			return
-		}
-		var payload struct {
-			ID          int    `json:"id"`
-			TypeName    string `json:"type_name"`
-			MinRequired int    `json:"min_required"`
-		}
-		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-			http.Error(w, "invalid body", http.StatusBadRequest)
-			return
-		}
-		_, err := a.db.Exec("UPDATE types SET type_name = ?, min_required = ? WHERE id = ?", payload.TypeName, payload.MinRequired, payload.ID)
-		if err != nil {
-			http.Error(w, "db update failed", http.StatusInternalServerError)
-			return
-		}
-		json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
-	case http.MethodDelete:
-		// only admin may delete types
-		if role != "admin" {
-			http.Error(w, "forbidden", http.StatusForbidden)
-			return
-		}
-		idStr := r.URL.Query().Get("id")
-		if idStr == "" {
-			http.Error(w, "id required", http.StatusBadRequest)
-			return
-		}
-		id, _ := strconv.Atoi(idStr)
-		_, err := a.db.Exec("DELETE FROM types WHERE id = ?", id)
-		if err != nil {
-			http.Error(w, "db delete failed", http.StatusInternalServerError)
-			return
-		}
-		json.NewEncoder(w).Encode(map[string]string{"status": "deleted"})
-	default:
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	season := r.URL.Query().Get("season")
+	if season == "" {
+		json.NewEncoder(w).Encode([]map[string]interface{}{})
+		return
 	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	collection := a.mongoDB.Collection("checklists")
+	var doc ChecklistDocument
+	err := collection.FindOne(ctx, bson.M{
+		"season":  season,
+		"user_id": "default",
+	}).Decode(&doc)
+
+	if err == mongo.ErrNoDocuments {
+		json.NewEncoder(w).Encode([]map[string]interface{}{})
+		return
+	} else if err != nil {
+		http.Error(w, "Failed to fetch checklist", http.StatusInternalServerError)
+		return
+	}
+
+	// Extract unique types from Pokemon
+	typeMap := make(map[string]*PokemonType)
+	for _, pokemon := range doc.Pokemon {
+		for _, typeName := range pokemon.Types {
+			if _, exists := typeMap[typeName]; !exists {
+				typeMap[typeName] = &PokemonType{
+					TypeName:    typeName,
+					MinRequired: 0, // Can be extended later
+					Pokemons:    []PokemonChecklistEntry{},
+				}
+			}
+			typeMap[typeName].Count++
+		}
+	}
+
+	// Convert to array for frontend
+	types := []map[string]interface{}{}
+	for _, pt := range typeMap {
+		types = append(types, map[string]interface{}{
+			"type_name":    pt.TypeName,
+			"min_required": pt.MinRequired,
+			"count":        pt.Count,
+		})
+	}
+
+	json.NewEncoder(w).Encode(types)
 }
 
-// adminPokemonHandler handles CRUD for season-specific pokemon checklists
+// adminPokemonHandler handles CRUD operations for checklist Pokemon
 func (a *App) adminPokemonHandler(w http.ResponseWriter, r *http.Request) {
 	role := getRoleFromRequest(r)
 	if role == "" {
@@ -1796,105 +1811,136 @@ func (a *App) adminPokemonHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
+
+	season := r.URL.Query().Get("season")
+	if season == "" {
+		http.Error(w, "season required", http.StatusBadRequest)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	collection := a.mongoDB.Collection("checklists")
+
 	switch r.Method {
+	case http.MethodGet:
+		// Return all Pokemon in the checklist
+		var doc ChecklistDocument
+		err := collection.FindOne(ctx, bson.M{
+			"season":  season,
+			"user_id": "default",
+		}).Decode(&doc)
+
+		if err == mongo.ErrNoDocuments {
+			json.NewEncoder(w).Encode([]PokemonChecklistEntry{})
+			return
+		} else if err != nil {
+			http.Error(w, "Failed to fetch checklist", http.StatusInternalServerError)
+			return
+		}
+
+		json.NewEncoder(w).Encode(doc.Pokemon)
+
 	case http.MethodPost:
-		// allow CRU for admin/mod/author
-		if role != "admin" && role != "mod" && role != "author" {
+		// Add new Pokemon
+		if role != "admin" && role != "mod" {
 			http.Error(w, "forbidden", http.StatusForbidden)
 			return
 		}
-		var p PokemonChecklistEntry
-		if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
-			http.Error(w, "invalid body", http.StatusBadRequest)
+
+		var newPokemon PokemonChecklistEntry
+		if err := json.NewDecoder(r.Body).Decode(&newPokemon); err != nil {
+			http.Error(w, "invalid request body", http.StatusBadRequest)
 			return
 		}
-		seasonTable := a.getSeasonTableName()
-		res, err := a.db.Exec(fmt.Sprintf(`INSERT INTO %s (type_id, pokemon_name, phys_special, secondary_type, held_item, ability, moves, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, seasonTable),
-			p.TypeID, p.PokemonName, p.PhysSpecial, p.SecondaryType, p.HeldItem, p.Ability, p.Moves, p.Notes)
+
+		// Add to Pokemon array
+		_, err := collection.UpdateOne(
+			ctx,
+			bson.M{"season": season, "user_id": "default"},
+			bson.M{"$push": bson.M{"pokemon": newPokemon}},
+			options.Update().SetUpsert(true),
+		)
+
 		if err != nil {
-			http.Error(w, "db insert failed", http.StatusInternalServerError)
+			log.Printf("Error adding Pokemon: %v", err)
+			http.Error(w, "Failed to add Pokemon", http.StatusInternalServerError)
 			return
 		}
-		id, _ := res.LastInsertId()
-		json.NewEncoder(w).Encode(map[string]int64{"id": id})
+
+		json.NewEncoder(w).Encode(map[string]string{"status": "success"})
+
 	case http.MethodPut:
-		// allowed for admin, mod, author
-		if role != "admin" && role != "mod" && role != "author" {
+		// Update existing Pokemon
+		if role != "admin" && role != "mod" {
 			http.Error(w, "forbidden", http.StatusForbidden)
 			return
 		}
-		var p PokemonChecklistEntry
-		if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
-			http.Error(w, "invalid body", http.StatusBadRequest)
+
+		var updateData struct {
+			OldName  string                `json:"old_name"`
+			OldUsage string                `json:"old_usage"`
+			Pokemon  PokemonChecklistEntry `json:"pokemon"`
+		}
+
+		if err := json.NewDecoder(r.Body).Decode(&updateData); err != nil {
+			http.Error(w, "invalid request body", http.StatusBadRequest)
 			return
 		}
-		seasonTable := a.getSeasonTableName()
-		_, err := a.db.Exec(fmt.Sprintf("UPDATE %s SET type_id=?, pokemon_name=?, phys_special=?, secondary_type=?, held_item=?, ability=?, moves=?, notes=?, completed=? WHERE id=?", seasonTable),
-			p.TypeID, p.PokemonName, p.PhysSpecial, p.SecondaryType, p.HeldItem, p.Ability, p.Moves, p.Notes, p.Completed, p.ID)
+
+		// Find and update Pokemon by name+usage composite key
+		_, err := collection.UpdateOne(
+			ctx,
+			bson.M{
+				"season":        season,
+				"user_id":       "default",
+				"pokemon.name":  updateData.OldName,
+				"pokemon.usage": updateData.OldUsage,
+			},
+			bson.M{"$set": bson.M{"pokemon.$": updateData.Pokemon}},
+		)
+
 		if err != nil {
-			http.Error(w, "db update failed", http.StatusInternalServerError)
+			log.Printf("Error updating Pokemon: %v", err)
+			http.Error(w, "Failed to update Pokemon", http.StatusInternalServerError)
 			return
 		}
-		json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+
+		json.NewEncoder(w).Encode(map[string]string{"status": "success"})
+
 	case http.MethodDelete:
-		// only admin may delete types
+		// Delete Pokemon
 		if role != "admin" {
 			http.Error(w, "forbidden", http.StatusForbidden)
 			return
 		}
-		idStr := r.URL.Query().Get("id")
-		if idStr == "" {
-			http.Error(w, "id required", http.StatusBadRequest)
+
+		pokemonName := r.URL.Query().Get("name")
+		pokemonUsage := r.URL.Query().Get("usage")
+
+		if pokemonName == "" || pokemonUsage == "" {
+			http.Error(w, "name and usage required", http.StatusBadRequest)
 			return
 		}
-		id, _ := strconv.Atoi(idStr)
-		seasonTable := a.getSeasonTableName()
-		_, err := a.db.Exec(fmt.Sprintf("DELETE FROM %s WHERE id = ?", seasonTable), id)
+
+		// Remove from Pokemon array
+		_, err := collection.UpdateOne(
+			ctx,
+			bson.M{"season": season, "user_id": "default"},
+			bson.M{"$pull": bson.M{"pokemon": bson.M{"name": pokemonName, "usage": pokemonUsage}}},
+		)
+
 		if err != nil {
-			http.Error(w, "db delete failed", http.StatusInternalServerError)
+			log.Printf("Error deleting Pokemon: %v", err)
+			http.Error(w, "Failed to delete Pokemon", http.StatusInternalServerError)
 			return
 		}
-		json.NewEncoder(w).Encode(map[string]string{"status": "deleted"})
-	case http.MethodGet:
-		// If id provided, return single row, otherwise list by type_id if provided
-		idStr := r.URL.Query().Get("id")
-		typeStr := r.URL.Query().Get("type_id")
-		seasonTable := a.getSeasonTableName()
-		if idStr != "" {
-			id, _ := strconv.Atoi(idStr)
-			row := a.db.QueryRow(fmt.Sprintf("SELECT id, type_id, pokemon_name, phys_special, secondary_type, held_item, ability, moves, notes, completed FROM %s WHERE id = ?", seasonTable), id)
-			var e PokemonChecklistEntry
-			if err := row.Scan(&e.ID, &e.TypeID, &e.PokemonName, &e.PhysSpecial, &e.SecondaryType, &e.HeldItem, &e.Ability, &e.Moves, &e.Notes, &e.Completed); err != nil {
-				http.Error(w, "not found", http.StatusNotFound)
-				return
-			}
-			json.NewEncoder(w).Encode(e)
-			return
-		}
-		var rows *sql.Rows
-		var err error
-		if typeStr != "" {
-			tid, _ := strconv.Atoi(typeStr)
-			rows, err = a.db.Query(fmt.Sprintf("SELECT id, type_id, pokemon_name, phys_special, secondary_type, held_item, ability, moves, notes, completed FROM %s WHERE type_id = ? ORDER BY pokemon_name", seasonTable), tid)
-		} else {
-			rows, err = a.db.Query(fmt.Sprintf("SELECT id, type_id, pokemon_name, phys_special, secondary_type, held_item, ability, moves, notes, completed FROM %s ORDER BY type_id, pokemon_name", seasonTable))
-		}
-		if err != nil {
-			http.Error(w, "db query failed", http.StatusInternalServerError)
-			return
-		}
-		defer rows.Close()
-		res := []PokemonChecklistEntry{}
-		for rows.Next() {
-			var e PokemonChecklistEntry
-			if err := rows.Scan(&e.ID, &e.TypeID, &e.PokemonName, &e.PhysSpecial, &e.SecondaryType, &e.HeldItem, &e.Ability, &e.Moves, &e.Notes, &e.Completed); err != nil {
-				continue
-			}
-			res = append(res, e)
-		}
-		json.NewEncoder(w).Encode(res)
+
+		json.NewEncoder(w).Encode(map[string]string{"status": "success"})
+
 	default:
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
 }
 
