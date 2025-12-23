@@ -133,11 +133,15 @@ function createTypeSection(typeData, typeIndex) {
     `;
     section.appendChild(header);
 
-    // Content (collapsible)
+    // Content (collapsible) - similar to variation structure
     const content = document.createElement('div');
     content.className = 'type-content';
     content.id = `content-${typeData.type_name}`;
     content.style.display = 'none';
+
+    // Create scrollable wrapper like variation-table
+    const tableWrapper = document.createElement('div');
+    tableWrapper.className = 'type-table-wrapper';
 
     // Create table
     const table = document.createElement('table');
@@ -165,7 +169,8 @@ function createTypeSection(typeData, typeIndex) {
         tbody.appendChild(row);
     });
 
-    content.appendChild(table);
+    tableWrapper.appendChild(table);
+    content.appendChild(tableWrapper);
     section.appendChild(content);
 
     // Add collapse event listener
@@ -258,10 +263,26 @@ function createPokemonRow(pokemon, currentType) {
     }
     row.appendChild(movesCell);
 
-    // Notes
+    // Notes - editable textarea with localStorage
     const notesCell = document.createElement('td');
     notesCell.className = 'notes-cell';
-    notesCell.textContent = pokemon.notes || '—';
+
+    const notesTextarea = document.createElement('textarea');
+    notesTextarea.className = 'notes-textarea';
+    notesTextarea.placeholder = pokemon.notes || 'Add custom notes...';
+    notesTextarea.rows = 2;
+
+    // Load custom note from localStorage
+    const notesKey = `pokemmoraids_note_${pokemonKey}`;
+    const savedNote = localStorage.getItem(notesKey);
+    notesTextarea.value = savedNote || '';
+
+    // Save to localStorage on input
+    notesTextarea.addEventListener('input', function () {
+        localStorage.setItem(notesKey, this.value);
+    });
+
+    notesCell.appendChild(notesTextarea);
     row.appendChild(notesCell);
 
     return row;
@@ -276,7 +297,7 @@ function toggleTypeContent(typeName) {
     const chevron = button.querySelector('.chevron');
 
     if (content.style.display === 'none') {
-        content.style.display = 'table';
+        content.style.display = 'block';
         button.parentElement.classList.add('expanded');
         chevron.textContent = '▲';
     } else {

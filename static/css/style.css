@@ -1150,14 +1150,8 @@ input.player-check:checked::after {
         min-width: 120px;
     }
 
-    /* Make checklist table scroll horizontally within type-content */
-    .type-content {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-    }
-
+    /* Checklist table adjustments for tablet */
     .checklist-table {
-        min-width: 600px;
         font-size: 12px;
     }
 
@@ -1414,34 +1408,43 @@ input.player-check:checked::after {
 }
 
 .type-content {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    /* Smooth scrolling on iOS */
+    padding: 16px;
 }
 
-/* Add scrollbar styling for checklist tables */
-.type-content::-webkit-scrollbar {
+/* Scrollable wrapper for checklist tables - like variation-table */
+.type-table-wrapper {
+    overflow-x: auto;
+    margin-bottom: 16px;
+    border-radius: 10px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(110, 231, 183, 0.3) rgba(255, 255, 255, 0.05);
+}
+
+.type-table-wrapper::-webkit-scrollbar {
     height: 8px;
 }
 
-.type-content::-webkit-scrollbar-track {
+.type-table-wrapper::-webkit-scrollbar-track {
     background: rgba(255, 255, 255, 0.05);
     border-radius: 4px;
 }
 
-.type-content::-webkit-scrollbar-thumb {
+.type-table-wrapper::-webkit-scrollbar-thumb {
     background: rgba(110, 231, 183, 0.3);
     border-radius: 4px;
 }
 
-.type-content::-webkit-scrollbar-thumb:hover {
+.type-table-wrapper::-webkit-scrollbar-thumb:hover {
     background: rgba(110, 231, 183, 0.5);
 }
 
 .checklist-table {
-    width: 100%;
     border-collapse: collapse;
     font-size: 13px;
+    width: 100%;
+    table-layout: auto;
+    min-width: 1000px;
 }
 
 .checklist-table thead {
@@ -1458,12 +1461,56 @@ input.player-check:checked::after {
     color: var(--muted);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     white-space: nowrap;
+    min-width: 90px;
 }
 
 .checklist-table td {
     padding: 10px 8px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     vertical-align: top;
+    min-width: 90px;
+}
+
+/* Column-specific widths */
+.check-col,
+.check-col th {
+    min-width: 40px;
+    width: 40px;
+}
+
+.name-col,
+.name-col th {
+    min-width: 110px;
+}
+
+.usage-col,
+.usage-col th {
+    min-width: 95px;
+}
+
+.types-col,
+.types-col th {
+    min-width: 140px;
+}
+
+.ability-col,
+.ability-col th {
+    min-width: 110px;
+}
+
+.item-col,
+.item-col th {
+    min-width: 110px;
+}
+
+.moves-col,
+.moves-col th {
+    min-width: 150px;
+}
+
+.notes-col,
+.notes-col th {
+    min-width: 140px;
 }
 
 .checklist-table tbody tr {
@@ -1483,37 +1530,30 @@ input.player-check:checked::after {
     color: var(--muted);
 }
 
-.check-col {
-    width: 40px;
-    text-align: center;
+/* Notes textarea styling */
+.notes-textarea {
+    width: 100%;
+    min-width: 150px;
+    padding: 6px 8px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    color: var(--text);
+    font-size: 12px;
+    font-family: inherit;
+    resize: vertical;
+    transition: border-color 0.2s, background 0.2s;
 }
 
-.name-col {
-    width: 140px;
+.notes-textarea:focus {
+    outline: none;
+    border-color: rgba(96, 165, 250, 0.5);
+    background: rgba(255, 255, 255, 0.05);
 }
 
-.type-col {
-    width: 110px;
-}
-
-.secondary-col {
-    width: 130px;
-}
-
-.ability-col {
-    width: 140px;
-}
-
-.item-col {
-    width: 130px;
-}
-
-.moves-col {
-    width: 200px;
-}
-
-.notes-col {
-    width: 150px;
+.notes-textarea::placeholder {
+    color: var(--muted);
+    opacity: 0.5;
 }
 
 .check-cell {
