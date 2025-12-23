@@ -163,6 +163,7 @@ body {
     /* Emerald green */
     border-radius: 0px 2px 2px 0px;
     transition: width 0.25s ease;
+    border-right: 2px solid rgba(255, 255, 255, 0.4);
 }
 
 .progress-post {
@@ -1715,38 +1716,6 @@ input.player-check:checked::after {
 
 .admin-tab-btn:hover:not(.active) {
     background: var(--glass);
-}
-
-.admin-raid-list,
-.admin-type-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 12px;
-    margin: 12px 0;
-}
-
-.admin-raid-card,
-.admin-type-card {
-    background: var(--card);
-    border: 1px solid var(--glass);
-    padding: 12px;
-    border-radius: 8px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.admin-raid-card h3,
-.admin-type-card h3 {
-    margin: 0;
-    color: var(--accent);
-}
-
-.admin-raid-card button,
-.admin-type-card button {
-    padding: 6px 12px;
-    font-size: 12px;
-    width: 100%;
 }
 
 /* Form Controls Styling */

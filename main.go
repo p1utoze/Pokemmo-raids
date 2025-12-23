@@ -94,6 +94,15 @@ type ChecklistDocument struct {
 	UpdatedAt time.Time               `json:"updated_at" bson:"updated_at"`
 }
 
+// TypeSettings stores configuration for Pokemon types per season
+type TypeSettings struct {
+	ID          primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	Season      string             `json:"season" bson:"season"`
+	TypeName    string             `json:"type_name" bson:"type_name"`
+	MinRequired int                `json:"min_required" bson:"min_required"`
+	UpdatedAt   time.Time          `json:"updated_at" bson:"updated_at"`
+}
+
 // Frontend-compatible response format grouped by type
 type PokemonType struct {
 	TypeName    string                  `json:"type_name"`
@@ -629,6 +638,7 @@ func setupRoutes() {
 	http.HandleFunc("/api/admin/raid-bosses", app.adminRaidBossesHandler)
 	http.HandleFunc("/api/admin/seasons", app.adminSeasonsHandler)
 	http.HandleFunc("/api/admin/season/default", app.adminDefaultSeasonHandler)
+	http.HandleFunc("/api/admin/type-settings", app.adminTypeSettingsHandler)
 }
 
 // loadTemplates loads all template files
@@ -1002,7 +1012,7 @@ func (a *App) checklistHandler(w http.ResponseWriter, r *http.Request) {
 			if _, exists := typeMap[typeName]; !exists {
 				typeMap[typeName] = &PokemonType{
 					TypeName:    typeName,
-					MinRequired: 0, // Can be configured via admin
+					MinRequired: 0, // Will be loaded from type_settings
 					Pokemons:    []PokemonChecklistEntry{},
 				}
 			}
@@ -1011,6 +1021,21 @@ func (a *App) checklistHandler(w http.ResponseWriter, r *http.Request) {
 			typeMap[typeName].Count++
 			if pokemon.Completed {
 				typeMap[typeName].Completed++
+			}
+		}
+	}
+
+	// Load min_required values from type_settings collection
+	typeSettingsCollection := a.mongoDB.Collection("type_settings")
+	cursor, err := typeSettingsCollection.Find(ctx, bson.M{"season": season})
+	if err == nil {
+		defer cursor.Close(ctx)
+		var settings []TypeSettings
+		if err := cursor.All(ctx, &settings); err == nil {
+			for _, s := range settings {
+				if pt, exists := typeMap[s.TypeName]; exists {
+					pt.MinRequired = s.MinRequired
+				}
 			}
 		}
 	}
@@ -2008,7 +2033,7 @@ func (a *App) adminPokemonHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Find and update Pokemon by name+usage composite key
-		_, err := collection.UpdateOne(
+		result, err := collection.UpdateOne(
 			ctx,
 			bson.M{
 				"season":        season,
@@ -2022,6 +2047,13 @@ func (a *App) adminPokemonHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Printf("Error updating Pokemon: %v", err)
 			http.Error(w, "Failed to update Pokemon", http.StatusInternalServerError)
+			return
+		}
+
+		// Check if any document was modified
+		if result.ModifiedCount == 0 {
+			log.Printf("Warning: No Pokemon updated. OldName=%s, OldUsage=%s, Season=%s", updateData.OldName, updateData.OldUsage, season)
+			http.Error(w, "Pokemon not found to update", http.StatusNotFound)
 			return
 		}
 
@@ -2516,6 +2548,98 @@ func (a *App) adminDefaultSeasonHandler(w http.ResponseWriter, r *http.Request) 
 			a.preprocessVariations()
 		}
 		json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+	default:
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+// adminTypeSettingsHandler handles GET/POST for type settings (min_required per type)
+func (a *App) adminTypeSettingsHandler(w http.ResponseWriter, r *http.Request) {
+	role := getRoleFromRequest(r)
+	if role != "admin" && role != "mod" && role != "author" {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+
+	season := r.URL.Query().Get("season")
+	if season == "" {
+		// Use current season if not specified
+		season = a.getSeasonName()
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	collection := a.mongoDB.Collection("type_settings")
+
+	switch r.Method {
+	case http.MethodGet:
+		// Fetch all type settings for the season
+		cursor, err := collection.Find(ctx, bson.M{"season": season})
+		if err != nil {
+			http.Error(w, "Failed to fetch type settings", http.StatusInternalServerError)
+			return
+		}
+		defer cursor.Close(ctx)
+
+		var settings []TypeSettings
+		if err := cursor.All(ctx, &settings); err != nil {
+			http.Error(w, "Failed to decode type settings", http.StatusInternalServerError)
+			return
+		}
+
+		// Return as map for easy lookup by frontend
+		result := make(map[string]int)
+		for _, s := range settings {
+			result[s.TypeName] = s.MinRequired
+		}
+
+		json.NewEncoder(w).Encode(result)
+
+	case http.MethodPost:
+		// Update or insert type setting
+		var req struct {
+			TypeName    string `json:"type_name"`
+			MinRequired int    `json:"min_required"`
+		}
+
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, "invalid request", http.StatusBadRequest)
+			return
+		}
+
+		if req.TypeName == "" {
+			http.Error(w, "type_name is required", http.StatusBadRequest)
+			return
+		}
+
+		// Upsert the type setting
+		filter := bson.M{
+			"season":    season,
+			"type_name": req.TypeName,
+		}
+
+		update := bson.M{
+			"$set": bson.M{
+				"season":       season,
+				"type_name":    req.TypeName,
+				"min_required": req.MinRequired,
+				"updated_at":   time.Now(),
+			},
+		}
+
+		opts := options.Update().SetUpsert(true)
+		_, err := collection.UpdateOne(ctx, filter, update, opts)
+
+		if err != nil {
+			log.Printf("Error updating type setting: %v", err)
+			http.Error(w, "Failed to update type setting", http.StatusInternalServerError)
+			return
+		}
+
+		json.NewEncoder(w).Encode(map[string]string{"status": "success"})
+
 	default:
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 	}

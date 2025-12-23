@@ -3,17 +3,10 @@
  * Allows admin, mod, and author roles to edit checklist data
  */
 
-// Global state - avoid re-declaring if already exists
-if (typeof window.checklistEditData === 'undefined') {
-    window.checklistEditData = null;
-    window.typeEditModes = {};
-    window.fuseInstances = {};
-}
-
-// Alias for convenience
-const checklistEditData = window.checklistEditData;
-const typeEditModes = window.typeEditModes;
-const fuseInstances = window.fuseInstances;
+// Global state - initialize only if not already set
+window.checklistEditData = window.checklistEditData || null;
+window.typeEditModes = window.typeEditModes || {};
+window.fuseInstances = window.fuseInstances || {};
 
 // Initialize checklist editor on page load
 document.addEventListener('DOMContentLoaded', async () => {
@@ -153,12 +146,33 @@ window.enterTypeEditMode = function (typeId) {
         makeRowEditable(row, typeId, rowIdx);
     });
 
+    // Get current min_required value
+    const typeName = typeId.replace('type-', '');
+    const typeData = checklistData.types.find(t => t.type_name === typeName);
+    const currentMinRequired = typeData ? typeData.min_required : 0;
+
     // Create button container for save and cancel
     const header = typeSection.querySelector('.type-header');
     const typeInfo = header.querySelector('.type-info');
     const buttonContainer = document.createElement('div');
     buttonContainer.className = 'edit-button-container';
     buttonContainer.id = `btn-container-${typeId}`;
+
+    // Add min_required input field
+    const minReqLabel = document.createElement('label');
+    minReqLabel.style.cssText = 'display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: #8eb3d1;';
+    minReqLabel.innerHTML = `
+        <span>Min Required:</span>
+        <input 
+            type="number" 
+            id="min-required-${typeId}" 
+            class="min-required-input" 
+            value="${currentMinRequired}" 
+            min="0" 
+            style="width: 4rem; padding: 0.25rem 0.5rem; background: #12263a; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: #fff; font-size: 0.875rem;"
+        />
+    `;
+    buttonContainer.appendChild(minReqLabel);
 
     // Get the old edit button and remove it
     const oldEditBtn = document.getElementById(`edit-btn-${typeId}`);
@@ -359,9 +373,13 @@ window.exitTypeEditMode = function (typeId) {
     const typeSection = document.getElementById(typeId);
     if (!typeSection) return;
 
-    // Find the type data
-    const typeData = checklistData.types.find(t => `type-${t.id}` === typeId);
-    if (!typeData) return;
+    // Find the type data by matching type_name with typeId (format: "type-{TypeName}")
+    const typeName = typeId.replace('type-', '');
+    const typeData = checklistData.types.find(t => t.type_name === typeName);
+    if (!typeData) {
+        console.error('Type data not found for:', typeName);
+        return;
+    }
 
     // Rebuild the table
     const content = typeSection.querySelector('.type-content');
@@ -370,7 +388,7 @@ window.exitTypeEditMode = function (typeId) {
     tbody.innerHTML = '';
 
     typeData.pokemons.forEach((pokemon) => {
-        const row = createPokemonRow(pokemon);
+        const row = createPokemonRow(pokemon, typeName);
         tbody.appendChild(row);
     });
 
@@ -399,6 +417,14 @@ window.exitTypeEditMode = function (typeId) {
         enterTypeEditMode(typeId);
     });
     typeInfo.appendChild(editBtn);
+
+    // Collapse the type section
+    content.style.display = 'none';
+    header.classList.remove('expanded');
+    const chevron = header.querySelector('.chevron');
+    if (chevron) {
+        chevron.textContent = '▼';
+    }
 }
 
 /**
@@ -410,9 +436,9 @@ async function saveTypeChanges(typeId) {
     const typeSection = document.getElementById(typeId);
     if (!typeSection) return;
 
-    // Extract numeric type ID from typeId (format: "type-{id}")
-    const numericTypeId = parseInt(typeId.replace('type-', ''));
-    if (isNaN(numericTypeId)) {
+    // Extract type name from typeId (format: "type-{TypeName}")
+    const typeName = typeId.replace('type-', '');
+    if (!typeName) {
         console.error('Invalid typeId format:', typeId);
         alert('Error: Invalid type ID');
         return;
@@ -430,10 +456,10 @@ async function saveTypeChanges(typeId) {
         const cells = row.querySelectorAll('td');
         // console.log(`Row ${index}: Found ${cells.length} cells`);
 
-        // Extract pokemon ID from row (format: "pokemon-{id}")
-        const pokemonId = parseInt(row.id.replace('pokemon-', ''));
-        if (isNaN(pokemonId)) {
-            // console.log(`Row ${index}: Invalid pokemon ID in row.id='${row.id}', skipping`);
+        // Extract pokemon key from checkbox dataset (format: "{name}-{usage}")
+        const checkbox = cells[0]?.querySelector('.pokemon-checkbox');
+        if (!checkbox || !checkbox.dataset.pokemonName || !checkbox.dataset.pokemonUsage) {
+            // console.log(`Row ${index}: No checkbox data found, skipping`);
             return;
         }
 
@@ -474,8 +500,8 @@ async function saveTypeChanges(typeId) {
         }
 
         const rowData = {
-            id: pokemonId,
-            pokemon_name: pokemonNameInput.value.trim(),
+            name: checkbox.dataset.pokemonName,
+            usage: checkbox.dataset.pokemonUsage,
             held_item: heldItemInput.value.trim(),
             moves: moves.join(', '),
             notes: notesInput.value.trim()
@@ -498,6 +524,7 @@ async function saveTypeChanges(typeId) {
         const payload = { pokemon: updateData };
         // console.log('Full payload to send:', JSON.stringify(payload, null, 2));
 
+        // Save pokemon data
         const response = await fetch('/api/checklist/save', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -515,6 +542,22 @@ async function saveTypeChanges(typeId) {
 
         const result = await response.json();
         // console.log('Save successful:', result);
+
+        // Save min_required setting if changed
+        const minRequiredInput = document.getElementById(`min-required-${typeId}`);
+        if (minRequiredInput) {
+            const minRequired = parseInt(minRequiredInput.value) || 0;
+
+            await fetch('/api/admin/type-settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
+                body: JSON.stringify({
+                    type_name: typeName,
+                    min_required: minRequired
+                })
+            });
+        }
 
         // Exit edit mode FIRST (before reloading)
         typeEditModes[typeId] = false;
@@ -554,7 +597,7 @@ async function saveTypeChanges(typeId) {
 
         // Show success message to user
         const tempMsg = document.createElement('div');
-        tempMsg.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #10b981; color: white; padding: 12px 16px; border-radius: 4px; z-index: 10000; font-weight: bold;';
+        tempMsg.className = 'toast-success';
         tempMsg.textContent = '✓ Changes saved successfully';
         document.body.appendChild(tempMsg);
         setTimeout(() => tempMsg.remove(), 3000);
