@@ -161,16 +161,17 @@ body {
     background: #a560fa;
     border-color: #0f1724;
     /* Emerald green */
-    border-radius: 0px 2px 2px 0px;
+    border-radius: 2px 0px 0px 2px;
     transition: width 0.25s ease;
-    border-right: 2px solid rgba(255, 255, 255, 0.4);
+    border-right: 2px solid rgb(0, 0, 0);
 }
 
 .progress-post {
     height: 100%;
     background: linear-gradient(90deg, var(--accent-2), var(--accent));
-    border-radius: 2px 0 0 2px;
+    border-radius: 0px 2px 2px 0px;
     transition: width 0.25s ease;
+    border-left: 2px solid rgb(0, 0, 0);
 }
 
 .boss-card:hover {
