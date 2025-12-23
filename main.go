@@ -202,7 +202,7 @@ func (a *App) openMongoDB() error {
 // openAdminDatabase opens or creates the admin user database and ensures an admin user exists
 func (a *App) openAdminDatabase() error {
 	var err error
-	a.adminDB, err = sql.Open("sqlite3", adminDBPath)
+	a.adminDB, err = sql.Open("sqlite", adminDBPath)
 	if err != nil {
 		return fmt.Errorf("failed to open admin database: %w", err)
 	}
