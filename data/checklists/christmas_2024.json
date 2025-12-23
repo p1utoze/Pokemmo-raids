@@ -1,0 +1,375 @@
+{
+  "season": "christmas_2024",
+  "user_id": "default",
+  "pokemon": [
+    {
+      "name": "Ninetales",
+      "usage": "Special",
+      "types": [
+        "Fire"
+      ],
+      "completed": false,
+      "ability": "Drought",
+      "moves": "Safeguard, Incinerate, Flamethrower, Overheat",
+      "notes": "Utility"
+    },
+    {
+      "name": "Darmanitan",
+      "usage": "Physical",
+      "types": [
+        "Fire",
+        "Fighting"
+      ],
+      "completed": false,
+      "ability": "Sheer Force",
+      "moves": "Superpower, Flare Blitz, Overheat"
+    },
+    {
+      "name": "Charizard",
+      "usage": "Special",
+      "types": [
+        "Fire"
+      ],
+      "completed": false,
+      "ability": "Solar Power",
+      "moves": "Flamethrower, Blast Burn",
+      "notes": "strong but expenny"
+    },
+    {
+      "name": "Emboar",
+      "usage": "Physical",
+      "types": [
+        "Fire",
+        "Fighting",
+        "Rock"
+      ],
+      "completed": false,
+      "moves": "Flare Blitz, Close Combat, Head Smash"
+    },
+    {
+      "name": "Entei",
+      "usage": "Special",
+      "types": [
+        "Fire"
+      ],
+      "completed": false,
+      "moves": "Flamethrower, Overheat"
+    },
+    {
+      "name": "Typhlosion",
+      "usage": "Special",
+      "types": [
+        "Fire"
+      ],
+      "completed": false,
+      "moves": "Flamethrower, Eruption"
+    },
+    {
+      "name": "Chandelure",
+      "usage": "Special",
+      "types": [
+        "Fire",
+        "Ghost"
+      ],
+      "completed": false,
+      "moves": "Flamethrower, Overheat, Shadow Ball"
+    },
+    {
+      "name": "Heatran",
+      "usage": "Special",
+      "types": [
+        "Fire"
+      ],
+      "completed": false,
+      "moves": "Eruption, Magma Storm, Stone Edge"
+    },
+    {
+      "name": "Moltres",
+      "usage": "Special",
+      "types": [
+        "Fire"
+      ],
+      "completed": false,
+      "moves": "Flamethrower, Overheat"
+    },
+    {
+      "name": "Volcarona",
+      "usage": "Special",
+      "types": [
+        "Fire",
+        "Bug"
+      ],
+      "completed": false,
+      "moves": "Flamethrower, Bug Buzz"
+    },
+    {
+      "name": "Magmortar",
+      "usage": "Special",
+      "types": [
+        "Fire"
+      ],
+      "completed": false,
+      "moves": "Flamethrower, Fire Blast",
+      "notes": "not as strong but cheaper"
+    },
+    {
+      "name": "Camerupt",
+      "usage": "Special",
+      "types": [
+        "Fire"
+      ],
+      "completed": false,
+      "moves": "Eruption, Earth Power"
+    },
+    {
+      "name": "Cloyster",
+      "usage": "Physical",
+      "types": [
+        "Ice",
+        "Dragon"
+      ],
+      "completed": false,
+      "moves": "Icicle Spear, Drill Run, Rock Blast"
+    },
+    {
+      "name": "Vanilluxe",
+      "usage": "Special",
+      "types": [
+        "Ice",
+        "Dragon"
+      ],
+      "completed": false,
+      "notes": "Pick 2"
+    },
+    {
+      "name": "Jynx",
+      "usage": "Special",
+      "types": [
+        "Ice",
+        "Dragon"
+      ],
+      "completed": false,
+      "moves": "Ice Beam"
+    },
+    {
+      "name": "Volcarona",
+      "usage": "Special",
+      "types": [
+        "Ice",
+        "Bug"
+      ],
+      "completed": false,
+      "moves": "Bug Buzz, Flamethrower",
+      "notes": "Recommended"
+    },
+    {
+      "name": "Articuno",
+      "usage": "Special",
+      "types": [
+        "Ice",
+        "Dragon"
+      ],
+      "completed": false
+    },
+    {
+      "name": "Cloyster",
+      "usage": "Physical",
+      "types": [
+        "Ice"
+      ],
+      "completed": false,
+      "ability": "Icicle Spear",
+      "moves": "Drill Run, Rock Blast"
+    },
+    {
+      "name": "Glaceon",
+      "usage": "Special",
+      "types": [
+        "Ice",
+        "Dragon"
+      ],
+      "completed": false,
+      "moves": "Ice Beam"
+    },
+    {
+      "name": "Hydreigon",
+      "usage": "Special",
+      "types": [
+        "Dragon",
+        "Ice"
+      ],
+      "completed": false,
+      "moves": "Draco Meteor, Dragon Pulse"
+    },
+    {
+      "name": "Garchomp",
+      "usage": "Physical",
+      "types": [
+        "Dragon",
+        "Ice"
+      ],
+      "completed": false,
+      "moves": "Dragon Claw, Dragon Rush"
+    },
+    {
+      "name": "Dragonite",
+      "usage": "Physical",
+      "types": [
+        "Dragon"
+      ],
+      "completed": false,
+      "moves": "Dragon Claw / Draco Meteor",
+      "notes": "Specs/Band"
+    },
+    {
+      "name": "Ampharos",
+      "usage": "Special",
+      "types": [
+        "Electric"
+      ],
+      "completed": false,
+      "ability": "Must be HA (Plus)",
+      "moves": "Thunder, Light Screen",
+      "notes": "Plus/Minus Pick 4"
+    },
+    {
+      "name": "Manectric",
+      "usage": "Special",
+      "types": [
+        "Electric"
+      ],
+      "completed": false,
+      "moves": "Thunder"
+    },
+    {
+      "name": "Magnezone",
+      "usage": "Special",
+      "types": [
+        "Electric"
+      ],
+      "completed": false,
+      "moves": "Thunder",
+      "notes": "Requires Tailwind Support"
+    },
+    {
+      "name": "Pikachu",
+      "usage": "Special",
+      "types": [
+        "Electric"
+      ],
+      "completed": false,
+      "moves": "Thunder",
+      "notes": "Light Ball"
+    },
+    {
+      "name": "Raikou",
+      "usage": "Special",
+      "types": [
+        "Electric"
+      ],
+      "completed": false,
+      "moves": "Thunder, Light Screen, Reflect",
+      "notes": "Dual Screens"
+    },
+    {
+      "name": "Zapdos",
+      "usage": "Special",
+      "types": [
+        "Electric"
+      ],
+      "completed": false,
+      "moves": "Thunder"
+    },
+    {
+      "name": "Galvantula",
+      "usage": "Special",
+      "types": [
+        "Electric"
+      ],
+      "completed": false,
+      "moves": "Thunder, Bug Buzz",
+      "notes": "Cheap but less strong"
+    },
+    {
+      "name": "Rotom-Wash",
+      "usage": "Special",
+      "types": [
+        "Electric"
+      ],
+      "completed": false,
+      "moves": "Thunder, Hydro Pump"
+    },
+    {
+      "name": "Darmanitan",
+      "usage": "Physical",
+      "types": [
+        "Fighting"
+      ],
+      "completed": false,
+      "ability": "Sheer Force",
+      "moves": "Superpower, Flare Blitz, Overheat",
+      "notes": "Fire"
+    },
+    {
+      "name": "Emboar",
+      "usage": "Physical",
+      "types": [
+        "Fighting",
+        "Rock"
+      ],
+      "completed": false,
+      "moves": "Flare Blitz, Close Combat, Head Smash"
+    },
+    {
+      "name": "Infernape",
+      "usage": "Physical",
+      "types": [
+        "Fighting"
+      ],
+      "completed": false,
+      "moves": "Focus Blast, Flamethrower, Close Combat, Flare Blitz",
+      "notes": "Fire"
+    },
+    {
+      "name": "Primeape",
+      "usage": "Physical",
+      "types": [
+        "Fighting"
+      ],
+      "completed": false,
+      "ability": "Vital Spirit",
+      "moves": "Close Combat, Brick Break",
+      "notes": "No Sleep"
+    },
+    {
+      "name": "Gallade",
+      "usage": "Physical",
+      "types": [
+        "Fighting"
+      ],
+      "completed": false,
+      "ability": "Sharpness",
+      "moves": "Sacred Sword, Leaf Blade"
+    },
+    {
+      "name": "Mienshao",
+      "usage": "Physical",
+      "types": [
+        "Fighting"
+      ],
+      "completed": false,
+      "moves": "Hi Jump Kick, Close Combat"
+    },
+    {
+      "name": "Medicham",
+      "usage": "Physical",
+      "types": [
+        "Fighting"
+      ],
+      "completed": false,
+      "moves": "Psychic, Close Combat, Zen Headbutt, Focus Blast",
+      "notes": "Inversion Flexible"
+    }
+  ],
+  "updated_at": "2025-12-23T05:41:54.172987Z"
+}
