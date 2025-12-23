@@ -1,0 +1,6 @@
+services:
+  raidbook:
+    image: pokemmoraids:local
+    build:
+      context: .
+      dockerfile: Dockerfile
