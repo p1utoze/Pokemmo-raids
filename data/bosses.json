@@ -2550,7 +2550,7 @@
       ]
     },
     {
-      "name": "Jirachi",
+      "name": "Jirachi Easy",
       "description": "4★ Jirachi seasonal raid boss.",
       "ability": "Serene Grace",
       "held_item": "Room Service",
@@ -2749,7 +2749,7 @@
       ]
     },
     {
-      "name": "Jirachi",
+      "name": "Jirachi Hard",
       "description": "5★ Jirachi seasonal raid boss.",
       "ability": "Serene Grace",
       "held_item": "Room Service",
