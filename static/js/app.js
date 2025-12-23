@@ -68,6 +68,28 @@ document.addEventListener('DOMContentLoaded', function () {
         closeBtn.addEventListener('click', function () { rightSidebar.classList.remove('open'); rightSidebar.setAttribute('aria-hidden', 'true'); });
     }
 
+    // Checklist legend sidebar toggle
+    const viewLegendBtn = document.getElementById('viewLegendBtn');
+    const legendSidebar = document.getElementById('checklistLegendSidebar');
+    const closeLegendBtn = document.getElementById('closeLegendSidebar');
+    
+    console.log('Legend button:', viewLegendBtn);
+    console.log('Legend sidebar:', legendSidebar);
+    
+    if (viewLegendBtn && legendSidebar) {
+        viewLegendBtn.addEventListener('click', function () { 
+            console.log('Legend button clicked');
+            legendSidebar.classList.add('open'); 
+            legendSidebar.setAttribute('aria-hidden', 'false'); 
+        });
+    }
+    if (closeLegendBtn && legendSidebar) {
+        closeLegendBtn.addEventListener('click', function () { 
+            legendSidebar.classList.remove('open'); 
+            legendSidebar.setAttribute('aria-hidden', 'true'); 
+        });
+    }
+
     // Team builder page initialization
     const pokemonDataEl = document.getElementById('pokemon-data');
     const teamDataEl = document.getElementById('team-data');

@@ -349,6 +349,27 @@ input.player-check:checked::after {
     color: var(--muted)
 }
 
+.legend-item {
+    margin-bottom: 24px;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 8px;
+    border-left: 3px solid var(--accent);
+}
+
+.legend-item h4 {
+    margin: 0 0 12px 0;
+    color: var(--accent);
+    font-size: 16px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.legend-item .info-list {
+    margin: 0;
+}
+
 .view-more {
     margin-left: 12px;
     padding: 6px 10px;

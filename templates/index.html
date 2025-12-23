@@ -34,11 +34,45 @@
 </section>
 
 <section class="checklist-section">
-    <h2>Pokemon Checklist</h2>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <h2 style="margin: 0;">Pokemon Checklist</h2>
+        <button class="view-more" id="viewLegendBtn">View Legend</button>
+    </div>
     <div id="checklist-container" class="checklist-container">
         <!-- Populated by JavaScript -->
     </div>
 </section>
+
+<aside class="right-sidebar" id="checklistLegendSidebar" aria-hidden="true">
+    <button class="close-sidebar" id="closeLegendSidebar">✕</button>
+    <div class="sidebar-inner">
+        <h3>Usage Legends</h3>
+        <div class="legend-item">
+            <h4>PHYSICAL</h4>
+            <ul class="info-list">
+                <li><strong>IVs:</strong> 31 ATK, SPE, HP</li>
+                <li><strong>EVs:</strong> 252 ATK, 252 SPE</li>
+                <li><strong>Nature:</strong> Adamant</li>
+            </ul>
+        </div>
+        <div class="legend-item">
+            <h4>SPECIAL</h4>
+            <ul class="info-list">
+                <li><strong>IVs:</strong> 31 SPATK, SPE, HP</li>
+                <li><strong>EVs:</strong> 252 SPATK, 252 SPE</li>
+                <li><strong>Nature:</strong> Modest</li>
+            </ul>
+        </div>
+        <div class="legend-item">
+            <h4>UTILITY</h4>
+            <ul class="info-list">
+                <li><strong>IVs:</strong> 31 HP, SPE</li>
+                <li><strong>EVs:</strong> 252 HP, 252 SPE</li>
+                <li><strong>Nature:</strong> Modest</li>
+            </ul>
+        </div>
+    </div>
+</aside>
 
 <script>
     // Pass user role to JavaScript for checklist editor
