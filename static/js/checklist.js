@@ -44,12 +44,12 @@ function restoreChecklistState() {
     if (!state) return;
 
     try {
-        const checkedIds = JSON.parse(state);
-        checkedIds.forEach(pokemonId => {
-            const checkbox = document.querySelector(`input[data-pokemon-id="${pokemonId}"]`);
+        const checkedPokemon = JSON.parse(state);
+        checkedPokemon.forEach(key => {
+            const checkbox = document.querySelector(`input[data-pokemon-key="${key}"]`);
             if (checkbox) {
                 checkbox.checked = true;
-                const row = document.getElementById(`pokemon-${pokemonId}`);
+                const row = checkbox.closest('tr');
                 if (row) row.classList.add('completed');
             }
         });
@@ -63,9 +63,9 @@ function restoreChecklistState() {
  * Save checkbox states to localStorage
  */
 function saveChecklistState() {
-    const checkedIds = Array.from(document.querySelectorAll('.pokemon-checkbox:checked'))
-        .map(cb => parseInt(cb.dataset.pokemonId));
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(checkedIds));
+    const checkedKeys = Array.from(document.querySelectorAll('.pokemon-checkbox:checked'))
+        .map(cb => cb.dataset.pokemonKey);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(checkedKeys));
 }
 
 /**
@@ -91,7 +91,7 @@ function renderChecklist() {
 function createTypeSection(typeData, typeIndex) {
     const section = document.createElement('div');
     section.className = 'type-section';
-    section.id = `type-${typeData.id}`;
+    section.id = `type-${typeData.type_name}`;
 
     // Calculate completion percentage
     const completionPercent = typeData.count > 0
@@ -99,9 +99,6 @@ function createTypeSection(typeData, typeIndex) {
         : 0;
 
     const isMinMet = typeData.completed >= typeData.min_required;
-    const minStatus = typeData.min_required > 0
-        ? `(${typeData.completed}/${typeData.min_required})`
-        : '';
 
     // Calculate threshold percentage and segment widths
     const minThresholdPercent = typeData.count > 0 && typeData.min_required > 0
@@ -117,7 +114,7 @@ function createTypeSection(typeData, typeIndex) {
     const header = document.createElement('div');
     header.className = `type-header ${isMinMet ? 'min-met' : 'min-pending'}`;
     header.innerHTML = `
-        <button class="collapse-btn" data-type-id="${typeData.id}">
+        <button class="collapse-btn" data-type-name="${typeData.type_name}">
             <span class="chevron">▼</span>
         </button>
         <div class="type-info">
@@ -139,7 +136,7 @@ function createTypeSection(typeData, typeIndex) {
     // Content (collapsible)
     const content = document.createElement('div');
     content.className = 'type-content';
-    content.id = `content-${typeData.id}`;
+    content.id = `content-${typeData.type_name}`;
     content.style.display = 'none';
 
     // Create table
@@ -150,8 +147,8 @@ function createTypeSection(typeData, typeIndex) {
             <tr>
                 <th class="check-col">✓</th>
                 <th class="name-col">Pokemon</th>
-                <th class="type-col">Type</th>
-                <th class="secondary-col">Secondary</th>
+                <th class="usage-col">Usage</th>
+                <th class="types-col">Types</th>
                 <th class="ability-col">Ability</th>
                 <th class="item-col">Held Item</th>
                 <th class="moves-col">Moves</th>
@@ -164,7 +161,7 @@ function createTypeSection(typeData, typeIndex) {
 
     const tbody = table.querySelector('tbody');
     typeData.pokemons.forEach((pokemon) => {
-        const row = createPokemonRow(pokemon);
+        const row = createPokemonRow(pokemon, typeData.type_name);
         tbody.appendChild(row);
     });
 
@@ -175,7 +172,7 @@ function createTypeSection(typeData, typeIndex) {
     const collapseBtn = header.querySelector('.collapse-btn');
     collapseBtn.addEventListener('click', function (e) {
         e.preventDefault();
-        toggleTypeContent(typeData.id);
+        toggleTypeContent(typeData.type_name);
     });
 
     return section;
@@ -184,10 +181,11 @@ function createTypeSection(typeData, typeIndex) {
 /**
  * Create a table row for a pokemon
  */
-function createPokemonRow(pokemon) {
+function createPokemonRow(pokemon, currentType) {
     const row = document.createElement('tr');
+    const pokemonKey = `${pokemon.name}-${pokemon.usage}`;
     row.className = `pokemon-row ${pokemon.completed ? 'completed' : ''}`;
-    row.id = `pokemon-${pokemon.id}`;
+    row.id = `pokemon-${pokemonKey.replace(/\s+/g, '-')}`;
 
     // Checkbox
     const checkCell = document.createElement('td');
@@ -195,10 +193,12 @@ function createPokemonRow(pokemon) {
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
     checkbox.className = 'pokemon-checkbox';
-    checkbox.checked = pokemon.completed === 1;
-    checkbox.dataset.pokemonId = pokemon.id;
+    checkbox.checked = pokemon.completed === true;
+    checkbox.dataset.pokemonKey = pokemonKey;
+    checkbox.dataset.pokemonName = pokemon.name;
+    checkbox.dataset.pokemonUsage = pokemon.usage;
     checkbox.addEventListener('change', function () {
-        handlePokemonToggle(pokemon.id, this.checked);
+        handlePokemonToggle(pokemon.name, pokemon.usage, this.checked);
     });
     checkCell.appendChild(checkbox);
     row.appendChild(checkCell);
@@ -206,20 +206,24 @@ function createPokemonRow(pokemon) {
     // Pokemon Name
     const nameCell = document.createElement('td');
     nameCell.className = 'name-cell';
-    nameCell.textContent = pokemon.pokemon_name;
+    nameCell.textContent = pokemon.name || '—';
     row.appendChild(nameCell);
 
-    // Type (Physical/Special)
-    const typeCell = document.createElement('td');
-    typeCell.className = 'type-cell';
-    typeCell.textContent = pokemon.phys_special || '—';
-    row.appendChild(typeCell);
+    // Usage (Physical/Special/Support)
+    const usageCell = document.createElement('td');
+    usageCell.className = 'usage-cell';
+    usageCell.textContent = pokemon.usage || '—';
+    row.appendChild(usageCell);
 
-    // Secondary Type
-    const secondaryCell = document.createElement('td');
-    secondaryCell.className = 'secondary-cell';
-    secondaryCell.textContent = pokemon.secondary_type || '—';
-    row.appendChild(secondaryCell);
+    // Types (all types this Pokemon can fill)
+    const typesCell = document.createElement('td');
+    typesCell.className = 'types-cell';
+    if (pokemon.types && pokemon.types.length > 0) {
+        typesCell.textContent = pokemon.types.join(', ');
+    } else {
+        typesCell.textContent = '—';
+    }
+    row.appendChild(typesCell);
 
     // Ability
     const abilityCell = document.createElement('td');
@@ -237,7 +241,7 @@ function createPokemonRow(pokemon) {
     const movesCell = document.createElement('td');
     movesCell.className = 'moves-cell';
     if (pokemon.moves) {
-        const movesList = pokemon.moves.split(', ').map(m => m.trim()).filter(m => m);
+        const movesList = pokemon.moves.split(',').map(m => m.trim()).filter(m => m);
         if (movesList.length > 0) {
             const ul = document.createElement('ul');
             movesList.forEach(move => {
@@ -264,11 +268,11 @@ function createPokemonRow(pokemon) {
 }
 
 /**
- * Toggle the visibility of a type's content
+ * Toggle visibility of type content section
  */
-function toggleTypeContent(typeId) {
-    const content = document.getElementById(`content-${typeId}`);
-    const button = document.querySelector(`button[data-type-id="${typeId}"]`);
+function toggleTypeContent(typeName) {
+    const content = document.getElementById(`content-${typeName}`);
+    const button = document.querySelector(`button[data-type-name="${typeName}"]`);
     const chevron = button.querySelector('.chevron');
 
     if (content.style.display === 'none') {
@@ -286,21 +290,27 @@ function toggleTypeContent(typeId) {
  * Handle pokemon checkbox toggle
  * Client-side only (localStorage) for ALL users
  */
-function handlePokemonToggle(pokemonId, isChecked) {
-    // Update UI immediately
-    const row = document.getElementById(`pokemon-${pokemonId}`);
-    if (row) {
-        if (isChecked) {
-            row.classList.add('completed');
-        } else {
-            row.classList.remove('completed');
-        }
-    }
+function handlePokemonToggle(pokemonName, pokemonUsage, isChecked) {
+    const pokemonKey = `${pokemonName}-${pokemonUsage}`;
 
-    // Update completion counts
+    // Update UI immediately for ALL occurrences of this Pokemon
+    const checkboxes = document.querySelectorAll(`input[data-pokemon-name="${pokemonName}"][data-pokemon-usage="${pokemonUsage}"]`);
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = isChecked;
+        const row = checkbox.closest('tr');
+        if (row) {
+            if (isChecked) {
+                row.classList.add('completed');
+            } else {
+                row.classList.remove('completed');
+            }
+        }
+    });
+
+    // Update completion counts for all affected type sections
     updateCompletionCounts();
 
-    // Save to localStorage for all users (client-side only)
+    // Save state to localStorage
     saveChecklistState();
 }
 
@@ -311,10 +321,10 @@ function updateCompletionCounts() {
     if (!checklistData.types) return;
 
     checklistData.types.forEach(typeData => {
-        const checkboxes = document.querySelectorAll(`#type-${typeData.id} .pokemon-checkbox`);
+        const checkboxes = document.querySelectorAll(`#type-${typeData.type_name} .pokemon-checkbox`);
         const completedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
 
-        const typeSection = document.getElementById(`type-${typeData.id}`);
+        const typeSection = document.getElementById(`type-${typeData.type_name}`);
         if (!typeSection) return;
 
         const header = typeSection.querySelector('.type-header');
@@ -326,6 +336,7 @@ function updateCompletionCounts() {
         if (singleBadge) {
             singleBadge.textContent = `${completedCount}/${typeData.count}`;
         }
+
         // Update min-sub text and tooltip when min_required is present
         const minSub = header.querySelector('.min-sub');
         if (minSub) {

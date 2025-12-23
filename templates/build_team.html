@@ -7,30 +7,11 @@
     <h3 class="builder-title">{{ boss_name }} {{ boss.Stars }}★</h3>
     <div class="builder-info">
         <p class="variation-info">Variation {{ variation_index }}</p>
-        {% if user_role %}
-        <button class="save-btn" id="saveTeamBtn">Save</button>
-        <button class="cancel-btn" id="cancelTeamBtn">Cancel</button>
-        {% endif %}
     </div>
     {% else %}
     <h3 class="builder-title">Team Builder</h3>
-    <form class="builder-select-form" method="get" action="/build-team"
-        style="display:flex;flex-direction:column;gap:8px;">
-        <label>Season
-            <select name="season" disabled>
-                <option value="{{ season_name }}">{{ season_name }}</option>
-            </select>
-        </label>
-        <label>Raid Boss
-            <select name="boss" required>
-                <option value="">Select a boss</option>
-                {% for name in bosses %}
-                <option value="{{ name }}">{{ name }}</option>
-                {% endfor %}
-            </select>
-        </label>
-        <button type="submit" class="save-btn">Open Builder</button>
-    </form>
+    <p style="color: var(--muted); font-size: 14px; margin-top: 8px;">Select a season and boss in the main area to start
+        building.</p>
     {% endif %}
 </div>
 {% endblock %}
@@ -39,7 +20,32 @@
 <div class="team-builder">
     {% if not boss_name %}
     <div class="builder-header">
-        <p class="builder-subtitle">Select a season and boss to start building.</p>
+        <h2>Team Builder</h2>
+        <p class="builder-subtitle">Select a season and raid boss to start building your team variation.</p>
+    </div>
+
+    <!-- Boss Selection Section -->
+    <div class="builder-select-section">
+        <form class="builder-select-form" method="get" action="/build-team">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="season-select">Season</label>
+                    <select id="season-select" name="season" class="form-control" disabled>
+                        <option value="{{ season_name }}">{{ season_name }}</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="boss-select">Raid Boss</label>
+                    <select id="boss-select" name="boss" class="form-control" required>
+                        <option value="">Select a boss</option>
+                        {% for name in bosses %}
+                        <option value="{{ name }}">{{ name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <button type="submit" class="btn-primary">Open Builder</button>
+        </form>
     </div>
     {% else %}
     <div class="builder-header">
@@ -48,57 +54,24 @@
             X to delete a row.</p>
     </div>
     {% endif %}
-
-    <!-- -- Redundant form as below table is used as a form input method replacing this -->
-    <!-- <form id="teamBuilderForm" class="team-form">
-        <div class="players-grid">
-            {% for player_index in range %}
-            <div class="player-card">
-                <div class="player-card-header">
-                    <h3>Player {{ player_index }}</h3>
-                </div>
-
-                <div class="form-group">
-                    <label for="pokemon_p{{ player_index }}">Pokémon</label>
-                    <select id="pokemon_p{{ player_index }}" class="form-control pokemon-select"
-                        data-player="{{ player_index }}">
-                        <option value="">Select Pokémon</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="move_p{{ player_index }}">Move</label>
-                    <select id="move_p{{ player_index }}" class="form-control move-select"
-                        data-player="{{ player_index }}">
-                        <option value="">Select Move</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="item_p{{ player_index }}">Item</label>
-                    <select id="item_p{{ player_index }}" class="form-control item-select"
-                        data-player="{{ player_index }}">
-                        <option value="">Select Item</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>Ability</label>
-                    <div class="ability-display" id="ability_p{{ player_index }}">—</div>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-
-        <div class="form-actions">
-            <button type="submit" class="btn-primary">Save Changes</button>
-            <button type="reset" class="btn-secondary">Reset Form</button>
-        </div>
-    </form> -->
-
     {% if boss_name %}
+    <!-- Save Variation Section -->
+    {% if user_role %}
+    <div class="builder-actions-section">
+        <div class="actions-header">
+            <h3>Variation Actions</h3>
+            <p class="actions-subtitle">Save your completed variation or cancel to go back.</p>
+        </div>
+        <div class="actions-buttons">
+            <button class="save-btn" id="saveTeamBtn">💾 Save Variation</button>
+            <button class="cancel-btn" id="cancelTeamBtn">✖ Cancel</button>
+        </div>
+    </div>
+    {% endif %}
+
     <div class="plan-area">
         <div class="variation-header">
+            <h3 class="variation-title">Variation {{ variation_index }}</h3>
             <div style="display:flex;gap:8px;align-items:center">
                 {% if user_role %}
                 <button class="edit-variation-btn" data-variation-index="0">✏️ Edit</button>

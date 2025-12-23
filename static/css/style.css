@@ -425,6 +425,147 @@ input.player-check:checked::after {
     font-size: 14px;
 }
 
+/* Builder Select Section */
+.builder-select-section {
+    background: var(--card);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 28px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.builder-select-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.builder-select-form .form-row {
+    display: flex;
+    gap: 16px;
+    align-items: flex-end;
+}
+
+.builder-select-form .form-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.builder-select-form label {
+    font-weight: 600;
+    font-size: 14px;
+    color: #e6eef6;
+}
+
+.builder-select-form .form-control {
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.03);
+    color: #e6eef6;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.builder-select-form .form-control:focus {
+    outline: none;
+    border-color: var(--accent-2);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.builder-select-form .form-control:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.builder-select-form .btn-primary {
+    align-self: flex-start;
+    padding: 12px 24px;
+    border-radius: 8px;
+    border: none;
+    background: linear-gradient(135deg, var(--accent-2), var(--accent));
+    color: #0a1a2b;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(96, 165, 250, 0.3);
+}
+
+.builder-select-form .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(96, 165, 250, 0.4);
+}
+
+.builder-select-form .btn-primary:active {
+    transform: translateY(0);
+}
+
+/* Builder Actions Section */
+.builder-actions-section {
+    background: var(--card);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.actions-header h3 {
+    margin: 0 0 8px 0;
+    font-size: 18px;
+    color: #e6eef6;
+    font-weight: 600;
+}
+
+.actions-subtitle {
+    margin: 0 0 16px 0;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.actions-buttons {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.actions-buttons .save-btn,
+.actions-buttons .cancel-btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+}
+
+.actions-buttons .save-btn {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: #0a1a2b;
+    box-shadow: 0 4px 12px rgba(110, 231, 183, 0.3);
+}
+
+.actions-buttons .save-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(110, 231, 183, 0.4);
+}
+
+.actions-buttons .cancel-btn {
+    background: rgba(239, 68, 68, 0.15);
+    color: #fca5a5;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.actions-buttons .cancel-btn:hover {
+    background: rgba(239, 68, 68, 0.25);
+    border-color: rgba(239, 68, 68, 0.5);
+}
+
 .team-builder {
     padding: 0
 }
@@ -783,10 +924,119 @@ input.player-check:checked::after {
     border-color: rgba(255, 255, 255, 0.4)
 }
 
+/* Mobile menu toggle button */
+/* Mobile menu toggle button - hidden by default on desktop */
+.mobile-menu-toggle {
+    display: none;
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    z-index: 100;
+    background: var(--card);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 10px 12px;
+    cursor: pointer;
+    color: #e6eef6;
+    font-size: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    transition: all 0.2s ease;
+    line-height: 1;
+    width: 44px;
+    height: 44px;
+    align-items: center;
+    justify-content: center;
+}
+
+.mobile-menu-toggle:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--accent-2);
+}
+
+.mobile-menu-toggle:active {
+    transform: scale(0.95);
+}
+
+/* When sidebar is open, highlight the close button */
+.mobile-menu-toggle.active {
+    background: rgba(96, 165, 250, 0.15);
+    border-color: var(--accent-2);
+}
+
+/* Overlay for mobile sidebar */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 80;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.sidebar-overlay.active {
+    display: block;
+    opacity: 1;
+}
+
+/* Table container for horizontal scrolling */
+.variation-table {
+    overflow-x: auto;
+    margin-bottom: 24px;
+    border-radius: 10px;
+    -webkit-overflow-scrolling: touch;
+    /* Smooth scrolling on iOS */
+    scrollbar-width: thin;
+    /* Firefox */
+    scrollbar-color: rgba(96, 165, 250, 0.3) rgba(255, 255, 255, 0.05);
+}
+
+/* Custom scrollbar styling for WebKit browsers */
+.variation-table::-webkit-scrollbar {
+    height: 8px;
+}
+
+.variation-table::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+}
+
+.variation-table::-webkit-scrollbar-thumb {
+    background: rgba(96, 165, 250, 0.3);
+    border-radius: 4px;
+}
+
+.variation-table::-webkit-scrollbar-thumb:hover {
+    background: rgba(96, 165, 250, 0.5);
+}
+
+.tables-area {
+    width: 100%;
+}
+
 /* responsive */
 @media (max-width: 900px) {
+    .mobile-menu-toggle {
+        display: flex;
+    }
+
     .sidebar {
-        display: none
+        position: fixed;
+        top: 0;
+        left: -100%;
+        width: 280px;
+        height: 100vh;
+        z-index: 90;
+        transition: left 0.3s ease;
+        overflow-y: auto;
+        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.5);
+    }
+
+    .sidebar.open {
+        left: 0;
     }
 
     .app-shell {
@@ -794,7 +1044,8 @@ input.player-check:checked::after {
     }
 
     .main-content {
-        padding: 14px
+        padding: 70px 14px 14px 14px;
+        width: 100%;
     }
 
     .players-grid {
@@ -803,15 +1054,240 @@ input.player-check:checked::after {
 
     .variation-header {
         flex-direction: column;
-        align-items: flex-start
+        align-items: flex-start;
+        gap: 10px;
     }
 
-    .edit-variation-btn {
-        width: 100%
+    .edit-variation-btn,
+    .save-variation-btn,
+    .cancel-variation-btn {
+        width: 100%;
+        font-size: 14px;
     }
 
     .form-actions {
         flex-direction: column
+    }
+
+    /* Fix right sidebar on mobile */
+    .right-sidebar {
+        width: 100%;
+        right: -100%;
+        left: auto;
+    }
+
+    .right-sidebar.open {
+        right: 0;
+        left: auto;
+    }
+
+    /* Make tables scrollable within container */
+    .plan-table {
+        min-width: 800px;
+    }
+
+    /* Adjust hero section */
+    .hero {
+        padding: 16px;
+    }
+
+    /* Make auth bar stack on mobile */
+    .auth-top-bar {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .auth-chip {
+        flex-basis: 100%;
+    }
+
+    /* Fix boss cards on mobile */
+    .boss-cards {
+        gap: 12px;
+    }
+
+    .boss-card {
+        padding: 14px;
+    }
+
+    /* Footer adjustments */
+    .site-footer {
+        padding: 24px 16px;
+    }
+
+    .footer-text {
+        font-size: 13px;
+    }
+
+    .discord-link {
+        padding: 10px 16px;
+        font-size: 14px;
+    }
+
+    /* Checklist section mobile improvements */
+    .checklist-section h2 {
+        font-size: 22px;
+        margin-bottom: 16px;
+    }
+
+    .type-header {
+        flex-wrap: wrap;
+        padding: 12px;
+        gap: 8px;
+    }
+
+    .type-title {
+        font-size: 16px;
+    }
+
+    .type-meta {
+        flex-wrap: wrap;
+        font-size: 12px;
+    }
+
+    .progress-bar {
+        max-width: 100%;
+        min-width: 120px;
+    }
+
+    /* Make checklist table scroll horizontally within type-content */
+    .type-content {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .checklist-table {
+        min-width: 600px;
+        font-size: 12px;
+    }
+
+    .checklist-table th,
+    .checklist-table td {
+        padding: 8px 6px;
+    }
+
+    /* Boss page improvements */
+    .boss-page h2 {
+        font-size: 22px;
+    }
+
+    .boss-desc {
+        font-size: 14px;
+    }
+
+    .variation-title {
+        font-size: 18px;
+    }
+
+    /* View more button */
+    .view-more {
+        padding: 5px 8px;
+        font-size: 13px;
+        margin-left: 0;
+        display: block;
+        margin-top: 8px;
+        width: fit-content;
+    }
+
+    /* Builder select section mobile */
+    .builder-select-section {
+        padding: 16px;
+    }
+
+    .builder-select-form .form-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .builder-select-form .btn-primary {
+        width: 100%;
+        align-self: stretch;
+    }
+
+    /* Builder actions section mobile */
+    .builder-actions-section {
+        padding: 16px;
+    }
+
+    .actions-buttons {
+        flex-direction: column;
+    }
+
+    .actions-buttons .save-btn,
+    .actions-buttons .cancel-btn {
+        width: 100%;
+    }
+}
+
+/* Small mobile devices (phones in portrait) */
+@media (max-width: 480px) {
+    .mobile-menu-toggle {
+        top: 10px;
+        left: 10px;
+        padding: 8px 10px;
+        font-size: 18px;
+    }
+
+    .main-content {
+        padding: 60px 10px 10px 10px;
+    }
+
+    .hero {
+        padding: 12px;
+    }
+
+    .hero h1 {
+        font-size: 22px;
+    }
+
+    .lead {
+        font-size: 14px;
+    }
+
+    .sidebar {
+        width: 260px;
+    }
+
+    .boss-card {
+        padding: 12px;
+    }
+
+    .boss-card-title {
+        font-size: 14px;
+    }
+
+    .boss-card-desc {
+        font-size: 12px;
+    }
+
+    .auth-btn {
+        padding: 7px 12px;
+        font-size: 12px;
+    }
+
+    .checklist-section h2 {
+        font-size: 20px;
+    }
+
+    .type-title {
+        font-size: 15px;
+    }
+
+    .variation-header {
+        padding: 10px;
+    }
+
+    .variation-title {
+        font-size: 16px;
+    }
+
+    .plan-table {
+        font-size: 12px;
+    }
+
+    .plan-table thead th,
+    .plan-table tbody td {
+        padding: 8px 6px;
     }
 }
 
@@ -939,6 +1415,27 @@ input.player-check:checked::after {
 
 .type-content {
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    /* Smooth scrolling on iOS */
+}
+
+/* Add scrollbar styling for checklist tables */
+.type-content::-webkit-scrollbar {
+    height: 8px;
+}
+
+.type-content::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+}
+
+.type-content::-webkit-scrollbar-thumb {
+    background: rgba(110, 231, 183, 0.3);
+    border-radius: 4px;
+}
+
+.type-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(110, 231, 183, 0.5);
 }
 
 .checklist-table {

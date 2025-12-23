@@ -1,4 +1,35 @@
 document.addEventListener('DOMContentLoaded', function () {
+    // Mobile menu toggle functionality
+    const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+    const sidebar = document.querySelector('.sidebar');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+    if (mobileMenuToggle && sidebar) {
+        mobileMenuToggle.addEventListener('click', function () {
+            const isOpen = sidebar.classList.toggle('open');
+            if (sidebarOverlay) {
+                sidebarOverlay.classList.toggle('active');
+            }
+            // Toggle button icon between hamburger and close
+            mobileMenuToggle.textContent = isOpen ? '×' : '☰';
+            mobileMenuToggle.classList.toggle('active', isOpen);
+            mobileMenuToggle.setAttribute('aria-label', isOpen ? 'Close Menu' : 'Toggle Menu');
+        });
+    }
+
+    if (sidebarOverlay) {
+        sidebarOverlay.addEventListener('click', function () {
+            sidebar.classList.remove('open');
+            sidebarOverlay.classList.remove('active');
+            // Reset button to hamburger icon
+            if (mobileMenuToggle) {
+                mobileMenuToggle.textContent = '☰';
+                mobileMenuToggle.classList.remove('active');
+                mobileMenuToggle.setAttribute('aria-label', 'Toggle Menu');
+            }
+        });
+    }
+
     // Card click enhancement (navigate on click)
     document.querySelectorAll('.boss-card').forEach(c => {
         c.addEventListener('click', function (e) {
@@ -28,13 +59,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // View more / sidebar toggle
     const viewBtn = document.getElementById('viewMoreBtn');
-    const sidebar = document.getElementById('rightSidebar');
+    const rightSidebar = document.getElementById('rightSidebar');
     const closeBtn = document.getElementById('closeSidebar');
-    if (viewBtn && sidebar) {
-        viewBtn.addEventListener('click', function () { sidebar.classList.add('open'); sidebar.setAttribute('aria-hidden', 'false'); });
+    if (viewBtn && rightSidebar) {
+        viewBtn.addEventListener('click', function () { rightSidebar.classList.add('open'); rightSidebar.setAttribute('aria-hidden', 'false'); });
     }
-    if (closeBtn && sidebar) {
-        closeBtn.addEventListener('click', function () { sidebar.classList.remove('open'); sidebar.setAttribute('aria-hidden', 'true'); });
+    if (closeBtn && rightSidebar) {
+        closeBtn.addEventListener('click', function () { rightSidebar.classList.remove('open'); rightSidebar.setAttribute('aria-hidden', 'true'); });
     }
 
     // Team builder page initialization

@@ -63,10 +63,11 @@ function setSeason(season) {
     document.querySelectorAll('.season-select-btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.season === season);
     });
-    // Update chip label
+    // Update chip label with formatted season name
     const chip = document.getElementById('selected-season-label');
     if (chip) {
-        chip.textContent = `Season: ${season}`;
+        const displayName = season.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        chip.textContent = `Season: ${displayName}`;
     }
     // Reload current tab data
     switchTab(currentTab);
@@ -91,543 +92,435 @@ function switchTab(tab) {
 
 // ============= CHECKLIST TAB =============
 
-let types = [];
+let pokemons = [];
+let selectedPokemonData = null;
 
 async function loadTypes() {
-    const res = await fetch('/api/admin/types?season=' + encodeURIComponent(currentSeason));
-    types = await res.json();
-    renderTypes();
+    await loadAllPokemons();
 }
 
-function renderTypes() {
+async function loadAllPokemons() {
+    try {
+        const res = await fetch(`/api/admin/pokemon?season=${encodeURIComponent(currentSeason)}`);
+        if (!res.ok) {
+            console.error(`Failed to load pokemon: ${res.status} ${res.statusText}`);
+            const errorText = await res.text();
+            console.error(`Error response: ${errorText}`);
+            pokemons = [];
+            renderPokemons();
+            return;
+        }
+        pokemons = await res.json();
+        renderPokemons();
+    } catch (error) {
+        console.error('Error loading pokemon:', error);
+        pokemons = [];
+        renderPokemons();
+    }
+}
+
+function renderPokemons() {
     const container = document.getElementById('admin-app');
     container.innerHTML = '';
+
+    const header = document.createElement('div');
+    header.style.cssText = 'display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;';
+
+    const title = document.createElement('h2');
+    title.textContent = `Checklist Pokemon (${pokemons.length})`;
+    title.style.cssText = 'margin: 0; color: #fff;';
+    header.appendChild(title);
+
     const addBtn = document.createElement('button');
-    addBtn.textContent = '+ Add Type';
-    addBtn.addEventListener('click', showAddTypeForm);
-    container.appendChild(addBtn);
+    addBtn.textContent = '+ Add Pokemon';
+    addBtn.style.cssText = 'background: #4a90e2; padding: 10px 20px; border-radius: 6px; color: white; border: none; cursor: pointer;';
+    addBtn.addEventListener('click', () => showAddPokemonForm());
+    header.appendChild(addBtn);
+
+    container.appendChild(header);
 
     const list = document.createElement('div');
-    list.className = 'admin-type-list';
-    types.forEach(t => {
-        const card = document.createElement('div');
-        card.className = 'admin-type-card';
+    list.style.cssText = 'display: grid; gap: 15px; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));';
 
-        const title = document.createElement('h3');
-        title.textContent = t.type_name;
-        card.appendChild(title);
+    if (pokemons.length === 0) {
+        list.innerHTML = '<p style="color: #a8c5e3; padding: 20px;">No Pokemon in checklist.</p>';
+    } else {
+        pokemons.forEach(p => {
+            const card = document.createElement('div');
+            card.style.cssText = 'background: #1e3a5f; padding: 15px; border-radius: 8px; display: flex; flex-direction: column; gap: 10px; align-items: stretch;';
 
-        const meta = document.createElement('div');
-        meta.textContent = `Min required: ${t.min_required || 0}`;
-        card.appendChild(meta);
+            const info = document.createElement('div');
 
-        const buttonGroup = document.createElement('div');
-        buttonGroup.className = 'admin-button-group';
+            const nameDiv = document.createElement('div');
+            nameDiv.style.cssText = 'display: flex; gap: 10px; align-items: center; margin-bottom: 8px;';
+            const nameEl = document.createElement('strong');
+            nameEl.textContent = p.name;
+            nameEl.style.cssText = 'color: #fff; font-size: 18px;';
+            nameDiv.appendChild(nameEl);
 
-        const edit = document.createElement('button');
-        edit.textContent = 'Edit';
-        edit.className = 'edit';
-        edit.addEventListener('click', () => showEditTypeForm(t));
-        buttonGroup.appendChild(edit);
+            const usageBadge = document.createElement('span');
+            usageBadge.textContent = p.usage || 'N/A';
+            usageBadge.style.cssText = 'background: #2d5a8a; padding: 4px 10px; border-radius: 4px; font-size: 12px; color: #a8c5e3;';
+            nameDiv.appendChild(usageBadge);
+            info.appendChild(nameDiv);
 
-        // Only admins can delete
-        if (userRole === 'admin') {
-            const del = document.createElement('button');
-            del.textContent = 'Delete';
-            del.className = 'del';
-            del.addEventListener('click', () => deleteType(t.id));
-            buttonGroup.appendChild(del);
-        }
+            const typesDiv = document.createElement('div');
+            typesDiv.style.cssText = 'color: #7a9bb8; margin-bottom: 5px; font-size: 14px;';
+            typesDiv.innerHTML = `<strong>Types:</strong> ${p.types ? p.types.join(', ') : 'N/A'}`;
+            info.appendChild(typesDiv);
 
-        card.appendChild(buttonGroup);
+            if (p.ability) {
+                const abilityDiv = document.createElement('div');
+                abilityDiv.style.cssText = 'color: #8eb3d1; margin-bottom: 5px; font-size: 13px;';
+                abilityDiv.innerHTML = `<strong>Ability:</strong> ${p.ability}`;
+                info.appendChild(abilityDiv);
+            }
 
-        const manage = document.createElement('button');
-        manage.textContent = 'Manage Pokemons';
-        manage.addEventListener('click', () => managePokemons(t.id, t.type_name));
-        card.appendChild(manage);
+            if (p.held_item) {
+                const itemDiv = document.createElement('div');
+                itemDiv.style.cssText = 'color: #8eb3d1; margin-bottom: 5px; font-size: 13px;';
+                itemDiv.innerHTML = `<strong>Item:</strong> ${p.held_item}`;
+                info.appendChild(itemDiv);
+            }
 
-        list.appendChild(card);
-    });
+            if (p.moves) {
+                const movesDiv = document.createElement('div');
+                movesDiv.style.cssText = 'color: #7a9bb8; margin-bottom: 5px; font-size: 13px;';
+                movesDiv.innerHTML = `<strong>Moves:</strong> ${p.moves}`;
+                info.appendChild(movesDiv);
+            }
+
+            if (p.notes) {
+                const notesDiv = document.createElement('div');
+                notesDiv.style.cssText = 'color: #6a8aa8; font-style: italic; font-size: 13px;';
+                notesDiv.innerHTML = `<strong>Notes:</strong> ${p.notes}`;
+                info.appendChild(notesDiv);
+            }
+
+            card.appendChild(info);
+
+            const buttonGroup = document.createElement('div');
+            buttonGroup.style.cssText = 'display: flex; flex-direction: row; gap: 8px; justify-content: flex-start;';
+
+            const editBtn = document.createElement('button');
+            editBtn.textContent = 'Edit';
+            editBtn.style.cssText = 'padding: 8px 16px; border-radius: 4px; background: #2d5a8a; color: white; border: none; cursor: pointer; flex: 1;';
+            editBtn.addEventListener('click', () => showEditPokemonForm(p));
+            buttonGroup.appendChild(editBtn);
+
+            if (userRole === 'admin') {
+                const delBtn = document.createElement('button');
+                delBtn.textContent = 'Delete';
+                delBtn.style.cssText = 'padding: 8px 16px; border-radius: 4px; background: #8a2d2d; color: white; border: none; cursor: pointer; flex: 1;';
+                delBtn.addEventListener('click', async () => {
+                    if (confirmDelete('pokemon', p.name)) {
+                        await fetch(`/api/admin/pokemon?season=${encodeURIComponent(currentSeason)}&name=${encodeURIComponent(p.name)}&usage=${encodeURIComponent(p.usage)}`, { method: 'DELETE' });
+                        await loadAllPokemons();
+                    }
+                });
+                buttonGroup.appendChild(delBtn);
+            }
+
+            card.appendChild(buttonGroup);
+            list.appendChild(card);
+        });
+    }
+
     container.appendChild(list);
 }
 
-function showAddTypeForm() {
-    const container = document.getElementById('admin-app');
-    container.innerHTML = `
-        <h2>Add Type</h2>
-        <form id="add-type-form">
-            <label>Name
-                <input name="type_name" />
-            </label>
-            <label>Min Required
-                <input name="min_required" type="number" min="0" />
-            </label>
-            <button type="submit">Create</button>
-            <button type="button" id="cancel">Cancel</button>
-        </form>
-    `;
-    document.getElementById('cancel').addEventListener('click', () => renderTypes());
-    document.getElementById('add-type-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const form = e.target;
-        const payload = { type_name: form.type_name.value, min_required: parseInt(form.min_required.value || '0') };
-        await fetch('/api/admin/types', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-        await loadTypes();
-    });
-}
-
-function showEditTypeForm(t) {
-    const container = document.getElementById('admin-app');
-    container.innerHTML = `
-        <h2>Edit Type</h2>
-        <form id="edit-type-form">
-            <input type="hidden" name="id" value="${t.id}" />
-            <label>Name
-                <input name="type_name" value="${t.type_name}" />
-            </label>
-            <label>Min Required
-                <input name="min_required" type="number" min="0" value="${t.min_required || 0}" />
-            </label>
-            <button type="submit">Save</button>
-            <button type="button" id="cancel">Cancel</button>
-        </form>
-    `;
-    document.getElementById('cancel').addEventListener('click', () => renderTypes());
-    document.getElementById('edit-type-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const form = e.target;
-        const payload = { id: parseInt(form.id.value), type_name: form.type_name.value, min_required: parseInt(form.min_required.value || '0') };
-        await fetch('/api/admin/types', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-        await loadTypes();
-    });
-}
-
-async function deleteType(id) {
-    const type = types.find(t => t.id === id);
-    if (!confirmDelete('type', type?.type_name)) return;
-    await fetch('/api/admin/types?id=' + id, { method: 'DELETE' });
-    await loadTypes();
+function renderTypes() {
+    renderPokemons();
 }
 
 let extras = { monsters: [], items: [] };
+
 async function loadExtras() {
     const res = await fetch('/api/admin/extras');
     extras = await res.json();
 }
 
-async function managePokemons(typeId, typeName) {
-    const container = document.getElementById('admin-app');
-    const heading = document.createElement('h2');
-    heading.textContent = `Manage Pokemons — ${typeName}`;
-
-    const buttonGroup = document.createElement('div');
-    buttonGroup.className = 'admin-button-group';
-    buttonGroup.style.marginBottom = '20px';
-
-    const addBtn = document.createElement('button');
-    addBtn.id = 'add-pokemon';
-    addBtn.textContent = '+ Add Pokemon';
-    addBtn.addEventListener('click', () => showAddPokemonForm(typeId));
-
-    const backBtn = document.createElement('button');
-    backBtn.id = 'back';
-    backBtn.textContent = '← Back';
-    backBtn.addEventListener('click', () => renderTypes());
-
-    buttonGroup.appendChild(addBtn);
-    buttonGroup.appendChild(backBtn);
-
-    const pokemonList = document.createElement('div');
-    pokemonList.id = 'pokemon-list';
-
-    container.innerHTML = '';
-    container.appendChild(heading);
-    container.appendChild(buttonGroup);
-    container.appendChild(pokemonList);
-
-    await loadPokemons(typeId);
-}
-
-async function loadPokemons(typeId) {
-    const res = await fetch('/api/admin/pokemon?type_id=' + typeId);
-    const pokes = await res.json();
-    const list = document.getElementById('pokemon-list');
-    list.innerHTML = '';
-    pokes.forEach(p => {
-        const el = document.createElement('div');
-        el.className = 'admin-pokemon-row';
-
-        const nameEl = document.createElement('strong');
-        nameEl.textContent = p.pokemon_name;
-        el.appendChild(nameEl);
-
-        const typeEl = document.createElement('span');
-        typeEl.textContent = ` — ${p.phys_special}`;
-        el.appendChild(typeEl);
-
-        const editBtn = document.createElement('button');
-        editBtn.className = 'edit';
-        editBtn.textContent = 'Edit';
-        editBtn.addEventListener('click', () => showEditPokemonForm(p));
-        el.appendChild(editBtn);
-
-        // Only admins can delete
-        if (userRole === 'admin') {
-            const delBtn = document.createElement('button');
-            delBtn.className = 'del';
-            delBtn.textContent = 'Delete';
-            delBtn.addEventListener('click', async () => {
-                if (confirmDelete('pokemon', p.pokemon_name)) {
-                    await fetch('/api/admin/pokemon?id=' + p.id, { method: 'DELETE' });
-                    await loadPokemons(typeId);
-                }
-            });
-            el.appendChild(delBtn);
-        }
-
-        list.appendChild(el);
-    });
-}
-
-function showAddPokemonForm(typeId) {
+function showAddPokemonForm() {
     const container = document.getElementById('admin-app');
     container.innerHTML = `
         <h2>Add Pokemon</h2>
-        <form id="add-poke-form">
-            <input type="hidden" name="type_id" value="${typeId}" />
-            <label>Name
-                <input name="pokemon_name" />
+        <form id="add-pokemon-form" style="max-width: 600px;">
+            <label style="display: block; margin-bottom: 15px;">
+                <span style="display: block; margin-bottom: 5px; color: #a8c5e3;">Pokemon Name *</span>
+                <input type="text" id="pokemon-name-search" autocomplete="off" 
+                    style="width: 100%; padding: 8px; background: #0d1f2d; border: 1px solid #2d5a8a; border-radius: 4px; color: white;" 
+                    placeholder="Start typing Pokemon name..." />
+                <div id="pokemon-suggestions" style="position: relative; background: #1e3a5f; border-radius: 4px; margin-top: 5px; max-height: 200px; overflow-y: auto; display: none;"></div>
             </label>
-            <label>Phys/Special
-                <input name="phys_special" />
+            
+            <div id="selected-pokemon-info" style="display: none; background: #1e3a5f; padding: 10px; border-radius: 4px; margin-bottom: 15px;">
+                <div><strong style="color: #fff;">Selected:</strong> <span id="selected-name" style="color: #4a90e2;"></span></div>
+                <div><strong style="color: #a8c5e3;">Types:</strong> <span id="selected-types" style="color: #7a9bb8;"></span></div>
+            </div>
+            
+            <label style="display: block; margin-bottom: 15px;">
+                <span style="display: block; margin-bottom: 5px; color: #a8c5e3;">Usage *</span>
+                <select id="usage-field" required style="width: 100%; padding: 8px; background: #0d1f2d; border: 1px solid #2d5a8a; border-radius: 4px; color: white;">
+                    <option value="">Select usage...</option>
+                    <option value="Physical">Physical</option>
+                    <option value="Special">Special</option>
+                    <option value="Support">Support</option>
+                    <option value="Mixed">Mixed</option>
+                </select>
             </label>
-            <label>Secondary Type
-                <input name="secondary_type" />
+            
+            <label style="display: block; margin-bottom: 15px;">
+                <span style="display: block; margin-bottom: 5px; color: #a8c5e3;">Ability</span>
+                <input type="text" id="ability-search" autocomplete="off" 
+                    style="width: 100%; padding: 8px; background: #0d1f2d; border: 1px solid #2d5a8a; border-radius: 4px; color: white;" 
+                    placeholder="Start typing ability..." disabled />
+                <div id="ability-suggestions" style="position: relative; background: #1e3a5f; border-radius: 4px; margin-top: 5px; max-height: 150px; overflow-y: auto; display: none;"></div>
             </label>
-            <label>Ability
-                <input name="ability" />
-            </label>
-            <label>Held Item
-                <select name="held_item">
+            
+            <label style="display: block; margin-bottom: 15px;">
+                <span style="display: block; margin-bottom: 5px; color: #a8c5e3;">Held Item</span>
+                <select id="held-item-field" style="width: 100%; padding: 8px; background: #0d1f2d; border: 1px solid #2d5a8a; border-radius: 4px; color: white;">
                     <option value="">(none)</option>
-                    ${extras.items.map(i => `<option value="${i}">${i}</option>`).join('')}
                 </select>
             </label>
-            <label>Moves (comma separated)
-                <input name="moves" />
+            
+            <label style="display: block; margin-bottom: 15px;">
+                <span style="display: block; margin-bottom: 5px; color: #a8c5e3;">Moves (comma separated)</span>
+                <input type="text" id="moves-field" 
+                    style="width: 100%; padding: 8px; background: #0d1f2d; border: 1px solid #2d5a8a; border-radius: 4px; color: white;" 
+                    placeholder="e.g., Flamethrower, Fire Blast, Overheat" />
             </label>
-            <label>Notes
-                <input name="notes" />
+            
+            <label style="display: block; margin-bottom: 20px;">
+                <span style="display: block; margin-bottom: 5px; color: #a8c5e3;">Notes</span>
+                <textarea id="notes-field" rows="3" 
+                    style="width: 100%; padding: 8px; background: #0d1f2d; border: 1px solid #2d5a8a; border-radius: 4px; color: white; resize: vertical;" 
+                    placeholder="Any additional notes..."></textarea>
             </label>
-            <button>Create</button>
-            <button type="button" id="cancel">Cancel</button>
-        </form>
-    `;
-    document.getElementById('cancel').addEventListener('click', () => managePokemons(typeId, ''));
-    document.getElementById('add-poke-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const f = e.target;
-        const payload = {
-            type_id: parseInt(f.type_id.value),
-            pokemon_name: f.pokemon_name.value,
-            phys_special: f.phys_special.value,
-            secondary_type: f.secondary_type.value,
-            held_item: f.held_item.value,
-            ability: f.ability.value,
-            moves: f.moves.value,
-            notes: f.notes.value
-        };
-        await fetch('/api/admin/pokemon', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-        await managePokemons(payload.type_id, '');
-    });
-}
-
-function showEditPokemonForm(p) {
-    const container = document.getElementById('admin-app');
-    container.innerHTML = `
-        <h2>Edit Pokemon</h2>
-        <form id="edit-poke-form">
-            <input type="hidden" name="id" value="${p.id}" />
-            <input type="hidden" name="type_id" value="${p.type_id}" />
-            <label>Pokemon Name
-                <input name="pokemon_name" value="${p.pokemon_name || ''}" required />
-            </label>
-            <label>Physical/Special
-                <select name="phys_special">
-                    <option value="Physical" ${p.phys_special === 'Physical' ? 'selected' : ''}>Physical</option>
-                    <option value="Special" ${p.phys_special === 'Special' ? 'selected' : ''}>Special</option>
-                    <option value="Mixed" ${p.phys_special === 'Mixed' ? 'selected' : ''}>Mixed</option>
-                </select>
-            </label>
-            <label>Secondary Type
-                <select name="secondary_type">
-                    <option value="">(none)</option>
-                    ${types.map(t => `<option value="${t.type_name}" ${p.secondary_type === t.type_name ? 'selected' : ''}>${t.type_name}</option>`).join('')}
-                </select>
-            </label>
-            <label>Ability
-                <input name="ability" value="${p.ability || ''}" />
-            </label>
-            <label>Held Item
-                <select name="held_item">
-                    <option value="">(none)</option>
-                    ${extras.items.map(i => `<option value="${i}" ${p.held_item === i ? 'selected' : ''}>${i}</option>`).join('')}
-                </select>
-            </label>
-            <label>Moves (comma separated)
-                <input name="moves" value="${p.moves || ''}" />
-            </label>
-            <label>Notes
-                <input name="notes" value="${p.notes || ''}" />
-            </label>
-            <div class="admin-button-group">
-                <button type="submit">Save</button>
-                <button type="button" id="cancel">Cancel</button>
+            
+            <div style="display: flex; gap: 10px;">
+                <button type="submit" style="padding: 10px 20px; background: #4a90e2; color: white; border: none; border-radius: 4px; cursor: pointer;">Add Pokemon</button>
+                <button type="button" id="cancel-btn" style="padding: 10px 20px; background: #6a6a6a; color: white; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
             </div>
         </form>
     `;
-    document.getElementById('cancel').addEventListener('click', () => managePokemons(p.type_id, ''));
-    document.getElementById('edit-poke-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const f = e.target;
-        const payload = {
-            id: parseInt(f.id.value),
-            type_id: parseInt(f.type_id.value),
-            pokemon_name: f.pokemon_name.value,
-            phys_special: f.phys_special.value,
-            secondary_type: f.secondary_type.value,
-            held_item: f.held_item.value,
-            ability: f.ability.value,
-            moves: f.moves.value,
-            notes: f.notes.value
-        };
-        await fetch('/api/admin/pokemon', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-        await managePokemons(payload.type_id, '');
-    });
+
+    setupPokemonFormHandlers(null);
 }
 
-// ============= RAID BOSSES TAB =============
-
-let raidBosses = [];
-
-async function loadRaidBosses() {
-    const res = await fetch('/api/admin/raid-bosses?season=' + encodeURIComponent(currentSeason));
-    raidBosses = await res.json();
-    renderRaidBosses();
-}
-
-function renderRaidBosses() {
+function showEditPokemonForm(pokemon) {
     const container = document.getElementById('admin-app');
-    container.innerHTML = '';
-    const addBtn = document.createElement('button');
-    addBtn.textContent = '+ Add Raid Boss';
-    addBtn.addEventListener('click', () => {
-        window.location.href = '/admin/raid-boss-builder?action=create&season=' + encodeURIComponent(currentSeason);
-    });
-    container.appendChild(addBtn);
+    container.innerHTML = `
+        <h2>Edit Pokemon: ${pokemon.name}</h2>
+        <form id="edit-pokemon-form" style="max-width: 600px;">
+            <input type="hidden" id="old-name" value="${pokemon.name}" />
+            <input type="hidden" id="old-usage" value="${pokemon.usage}" />
+            
+            <label style="display: block; margin-bottom: 15px;">
+                <span style="display: block; margin-bottom: 5px; color: #a8c5e3;">Pokemon Name (read-only)</span>
+                <input type="text" value="${pokemon.name}" readonly 
+                    style="width: 100%; padding: 8px; background: #0d1f2d; border: 1px solid #2d5a8a; border-radius: 4px; color: #7a9bb8;" />
+            </label>
+            
+            <label style="display: block; margin-bottom: 15px;">
+                <span style="display: block; margin-bottom: 5px; color: #a8c5e3;">Types (auto-filled)</span>
+                <input type="text" value="${pokemon.types ? pokemon.types.join(', ') : ''}" readonly 
+                    style="width: 100%; padding: 8px; background: #0d1f2d; border: 1px solid #2d5a8a; border-radius: 4px; color: #7a9bb8;" />
+            </label>
+            
+            <label style="display: block; margin-bottom: 15px;">
+                <span style="display: block; margin-bottom: 5px; color: #a8c5e3;">Usage *</span>
+                <select id="usage-field" required style="width: 100%; padding: 8px; background: #0d1f2d; border: 1px solid #2d5a8a; border-radius: 4px; color: white;">
+                    <option value="Physical" ${pokemon.usage === 'Physical' ? 'selected' : ''}>Physical</option>
+                    <option value="Special" ${pokemon.usage === 'Special' ? 'selected' : ''}>Special</option>
+                    <option value="Support" ${pokemon.usage === 'Support' ? 'selected' : ''}>Support</option>
+                    <option value="Mixed" ${pokemon.usage === 'Mixed' ? 'selected' : ''}>Mixed</option>
+                </select>
+            </label>
+            
+            <label style="display: block; margin-bottom: 15px;">
+                <span style="display: block; margin-bottom: 5px; color: #a8c5e3;">Ability</span>
+                <input type="text" id="ability-field" value="${pokemon.ability || ''}" 
+                    style="width: 100%; padding: 8px; background: #0d1f2d; border: 1px solid #2d5a8a; border-radius: 4px; color: white;" />
+            </label>
+            
+            <label style="display: block; margin-bottom: 15px;">
+                <span style="display: block; margin-bottom: 5px; color: #a8c5e3;">Held Item</span>
+                <select id="held-item-field" style="width: 100%; padding: 8px; background: #0d1f2d; border: 1px solid #2d5a8a; border-radius: 4px; color: white;">
+                    <option value="">(none)</option>
+                </select>
+            </label>
+            
+            <label style="display: block; margin-bottom: 15px;">
+                <span style="display: block; margin-bottom: 5px; color: #a8c5e3;">Moves (comma separated)</span>
+                <input type="text" id="moves-field" value="${pokemon.moves || ''}" 
+                    style="width: 100%; padding: 8px; background: #0d1f2d; border: 1px solid #2d5a8a; border-radius: 4px; color: white;" />
+            </label>
+            
+            <label style="display: block; margin-bottom: 20px;">
+                <span style="display: block; margin-bottom: 5px; color: #a8c5e3;">Notes</span>
+                <textarea id="notes-field" rows="3" 
+                    style="width: 100%; padding: 8px; background: #0d1f2d; border: 1px solid #2d5a8a; border-radius: 4px; color: white; resize: vertical;">${pokemon.notes || ''}</textarea>
+            </label>
+            
+            <div style="display: flex; gap: 10px;">
+                <button type="submit" style="padding: 10px 20px; background: #4a90e2; color: white; border: none; border-radius: 4px; cursor: pointer;">Save Changes</button>
+                <button type="button" id="cancel-btn" style="padding: 10px 20px; background: #6a6a6a; color: white; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
+            </div>
+        </form>
+    `;
 
-    const list = document.createElement('div');
-    list.className = 'admin-raid-list';
-    raidBosses.forEach(b => {
-        const card = document.createElement('div');
-        card.className = 'admin-raid-card';
+    setupPokemonFormHandlers(pokemon);
+}
 
-        const title = document.createElement('h3');
-        title.textContent = b.boss_name;
-        card.appendChild(title);
+function setupPokemonFormHandlers(editingPokemon) {
+    const isEditing = editingPokemon !== null;
+    const form = document.getElementById(isEditing ? 'edit-pokemon-form' : 'add-pokemon-form');
 
-        const stars = document.createElement('div');
-        stars.textContent = `⭐ ${b.stars}`;
-        card.appendChild(stars);
-
-        const buttonGroup = document.createElement('div');
-        buttonGroup.className = 'admin-button-group';
-
-        const edit = document.createElement('button');
-        edit.textContent = 'Edit';
-        edit.className = 'edit';
-        edit.addEventListener('click', () => {
-            window.location.href = '/admin/raid-boss-builder?action=edit&id=' + b.id + '&season=' + encodeURIComponent(currentSeason);
+    // Populate held items dropdown
+    const itemSelect = document.getElementById('held-item-field');
+    if (extras.items) {
+        extras.items.forEach(item => {
+            const option = document.createElement('option');
+            option.value = item;
+            option.textContent = item;
+            if (isEditing && editingPokemon.held_item === item) {
+                option.selected = true;
+            }
+            itemSelect.appendChild(option);
         });
-        buttonGroup.appendChild(edit);
-
-        // Only admins can delete
-        if (userRole === 'admin') {
-            const del = document.createElement('button');
-            del.textContent = 'Delete';
-            del.className = 'del';
-            del.addEventListener('click', () => deleteRaidBoss(b.id));
-            buttonGroup.appendChild(del);
-        }
-
-        card.appendChild(buttonGroup);
-        list.appendChild(card);
-    });
-    container.appendChild(list);
-}
-
-async function deleteRaidBoss(id) {
-    const boss = raidBosses.find(b => b.id === id);
-    if (!confirmDelete('raid boss', boss?.name)) return;
-    await fetch('/api/admin/raid-bosses?season=' + encodeURIComponent(currentSeason) + '&id=' + id, { method: 'DELETE' });
-    await loadRaidBosses();
-}
-
-// ============= USERS TAB =============
-
-let users = [];
-
-async function loadUsers() {
-    // Only admins can access user management
-    if (userRole !== 'admin') {
-        const container = document.getElementById('admin-app');
-        const deniedDiv = document.createElement('div');
-        deniedDiv.className = 'access-denied';
-        deniedDiv.innerHTML = '<h2>Access Denied</h2><p>Only administrators can manage users.</p>';
-        container.innerHTML = '';
-        container.appendChild(deniedDiv);
-        return;
     }
-    const res = await fetch('/api/admin/users');
-    if (!res.ok) return;
-    users = await res.json();
-    renderUsers();
-}
 
-function renderUsers() {
-    const container = document.getElementById('admin-app');
-    container.innerHTML = '';
-    const addBtn = document.createElement('button');
-    addBtn.textContent = '+ Add User';
-    addBtn.addEventListener('click', showAddUserForm);
-    container.appendChild(addBtn);
+    // Cancel button
+    document.getElementById('cancel-btn').addEventListener('click', () => renderPokemons());
 
-    const list = document.createElement('div');
-    list.className = 'admin-user-list';
-    users.forEach(u => {
-        const row = document.createElement('div');
-        row.className = 'admin-user-row';
+    if (!isEditing) {
+        // Pokemon name autocomplete (only for add)
+        const nameInput = document.getElementById('pokemon-name-search');
+        const suggestions = document.getElementById('pokemon-suggestions');
+        const abilityInput = document.getElementById('ability-search');
 
-        const nameEl = document.createElement('strong');
-        nameEl.textContent = u.username;
-        row.appendChild(nameEl);
+        nameInput.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            if (query.length < 2) {
+                suggestions.style.display = 'none';
+                return;
+            }
 
-        const roleEl = document.createElement('span');
-        roleEl.className = 'role';
-        roleEl.textContent = u.role;
-        row.appendChild(roleEl);
+            const matches = extras.monsters.filter(m =>
+                m.name.toLowerCase().includes(query)
+            ).slice(0, 10);
 
-        const editBtn = document.createElement('button');
-        editBtn.className = 'edit';
-        editBtn.textContent = 'Edit';
-        editBtn.addEventListener('click', () => showEditUser(u));
-        row.appendChild(editBtn);
+            if (matches.length > 0) {
+                suggestions.innerHTML = matches.map(m =>
+                    `<div class="pokemon-suggestion" data-name="${m.name}" style="padding: 8px; cursor: pointer; border-bottom: 1px solid #2d5a8a; color: #fff;">${m.name}</div>`
+                ).join('');
+                suggestions.style.display = 'block';
 
-        const delBtn = document.createElement('button');
-        delBtn.className = 'del';
-        delBtn.textContent = 'Delete';
-        delBtn.addEventListener('click', async () => {
-            if (confirmDelete('user', u.username)) {
-                await fetch('/api/admin/users?id=' + u.id, { method: 'DELETE' });
-                await loadUsers();
+                // Add click handlers
+                suggestions.querySelectorAll('.pokemon-suggestion').forEach(div => {
+                    div.addEventListener('click', () => {
+                        const pokemonName = div.dataset.name;
+                        const pokemonData = extras.monsters.find(m => m.name === pokemonName);
+                        selectPokemon(pokemonData);
+                        suggestions.style.display = 'none';
+                    });
+                });
+            } else {
+                suggestions.style.display = 'none';
             }
         });
-        row.appendChild(delBtn);
+    }
 
-        list.appendChild(row);
+    // Form submit
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const usage = document.getElementById('usage-field').value;
+        const ability = isEditing ? document.getElementById('ability-field').value : document.getElementById('ability-search').value;
+        const heldItem = document.getElementById('held-item-field').value;
+        const moves = document.getElementById('moves-field').value;
+        const notes = document.getElementById('notes-field').value;
+
+        if (!isEditing && !selectedPokemonData) {
+            alert('Please select a Pokemon');
+            return;
+        }
+
+        const payload = {
+            name: isEditing ? editingPokemon.name : selectedPokemonData.name,
+            usage: usage,
+            types: isEditing ? editingPokemon.types : selectedPokemonData.types,
+            ability: ability,
+            held_item: heldItem,
+            moves: moves,
+            notes: notes,
+            completed: isEditing ? editingPokemon.completed : false
+        };
+
+        if (isEditing) {
+            await fetch(`/api/admin/pokemon?season=${encodeURIComponent(currentSeason)}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    old_name: document.getElementById('old-name').value,
+                    old_usage: document.getElementById('old-usage').value,
+                    pokemon: payload
+                })
+            });
+        } else {
+            await fetch(`/api/admin/pokemon?season=${encodeURIComponent(currentSeason)}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+        }
+
+        await loadAllPokemons();
     });
-    container.appendChild(list);
 }
 
-function showAddUserForm() {
-    const container = document.getElementById('admin-app');
-    container.innerHTML = `
-        <h2>Create User</h2>
-        <form id="create-user">
-            <label>Username
-                <input name="username" required />
-            </label>
-            <label>Password <span class="admin-message info">Leave blank for random</span>
-                <input name="password" type="password" />
-            </label>
-            <label>Role
-                <select name="role"><option value="author">author</option><option value="mod">mod</option><option value="admin">admin</option></select>
-            </label>
-            <div class="admin-button-group">
-                <button type="submit">Create</button>
-                <button type="button" id="cancel">Cancel</button>
-            </div>
-        </form>
-        <div id="generated-password" class="generated-password-display" style="display:none;"></div>
-    `;
-    document.getElementById('cancel').addEventListener('click', loadUsers);
-    document.getElementById('create-user').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const f = e.target;
-        const payload = { username: f.username.value, password: f.password.value, role: f.role.value };
-        const res = await fetch('/api/admin/users', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-        if (res.ok) {
-            const data = await res.json();
-            if (data.generated_password) {
-                const pwdDiv = document.getElementById('generated-password');
-                pwdDiv.textContent = 'Generated password: ' + data.generated_password;
-                pwdDiv.style.display = 'block';
-            } else {
-                await loadUsers();
-            }
-        } else {
-            alert('Failed to create user');
-        }
-    });
-}
+function selectPokemon(pokemonData) {
+    selectedPokemonData = pokemonData;
 
-function showEditUser(u) {
-    const container = document.getElementById('admin-app');
-    container.innerHTML = `
-        <h2>Edit User: ${u.username}</h2>
-        <form id="edit-user">
-            <input type="hidden" name="id" value="${u.id}" />
-            <label>Role
-                <select name="role">
-                    <option value="author" ${u.role === 'author' ? 'selected' : ''}>author</option>
-                    <option value="mod" ${u.role === 'mod' ? 'selected' : ''}>mod</option>
-                    <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>admin</option>
-                </select>
-            </label>
-            <label>New Password <span class="admin-message info">Leave blank to keep current</span>
-                <input name="password" type="password" />
-            </label>
-            <div class="admin-button-group">
-                <button type="submit">Save</button>
-                <button type="button" id="reset-pass">Reset Password</button>
-                <button type="button" id="cancel">Cancel</button>
-            </div>
-        </form>
-        <div id="generated-password" class="generated-password-display" style="display:none;"></div>
-    `;
-    document.getElementById('cancel').addEventListener('click', loadUsers);
-    document.getElementById('edit-user').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const f = e.target;
-        const payload = { id: parseInt(f.id.value), role: f.role.value };
-        if (f.password.value) payload.password = f.password.value;
-        const res = await fetch('/api/admin/users', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-        if (res.ok) {
-            await loadUsers();
-        } else {
-            alert('Failed to save user');
+    // Update UI
+    document.getElementById('pokemon-name-search').value = pokemonData.name;
+    document.getElementById('selected-name').textContent = pokemonData.name;
+    document.getElementById('selected-types').textContent = pokemonData.types.join(', ');
+    document.getElementById('selected-pokemon-info').style.display = 'block';
+
+    // Enable ability search
+    const abilityInput = document.getElementById('ability-search');
+    abilityInput.disabled = false;
+    abilityInput.placeholder = 'Start typing ability...';
+
+    // Setup ability autocomplete
+    const abilitySuggestions = document.getElementById('ability-suggestions');
+    abilityInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase();
+        if (query.length < 1) {
+            abilitySuggestions.style.display = 'none';
+            return;
         }
-    });
-    document.getElementById('reset-pass').addEventListener('click', async () => {
-        const id = u.id, role = u.role;
-        const res = await fetch('/api/admin/users', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, role, reset: true }) });
-        if (res.ok) {
-            const data = await res.json();
-            const pwdDiv = document.getElementById('generated-password');
-            pwdDiv.textContent = 'Reset password: ' + data.generated_password;
-            pwdDiv.style.display = 'block';
+
+        const matches = pokemonData.abilities.filter(a =>
+            a.name.toLowerCase().includes(query) && a.name !== '--'
+        );
+
+        if (matches.length > 0) {
+            abilitySuggestions.innerHTML = matches.map(a =>
+                `<div class="ability-suggestion" data-name="${a.name}" style="padding: 6px 8px; cursor: pointer; border-bottom: 1px solid #2d5a8a; color: #fff;">${a.name}</div>`
+            ).join('');
+            abilitySuggestions.style.display = 'block';
+
+            abilitySuggestions.querySelectorAll('.ability-suggestion').forEach(div => {
+                div.addEventListener('click', () => {
+                    abilityInput.value = div.dataset.name;
+                    abilitySuggestions.style.display = 'none';
+                });
+            });
         } else {
-            alert('Failed to reset password');
+            abilitySuggestions.style.display = 'none';
         }
     });
 }
