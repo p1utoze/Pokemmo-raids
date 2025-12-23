@@ -29,7 +29,7 @@ services:
     environment:
       MONGO_URI: "mongodb://${MONGO_INITDB_USERNAME:-pokemmo}:${MONGO_INITDB_PASSWORD:-pokemmo_local_dev}@mongodb:27017/?authSource=admin"
       MONGO_DB: ${MONGO_DB:-pokemmo_raids}
-      ADMIN_DB: "${ADMIN_DB:-/app/data/users.db}"
+      ADMIN_DB: "${ADMIN_DB:-/app/db/users.db}"
       DATA_PATH: "${DATA_PATH:-/app/data/bosses.json}"
       ADMIN_PASSWORD: "${ADMIN_PASSWORD:-adminpass}"
       ADMIN_SECRET: "${ADMIN_SECRET:-devsecret}"
@@ -40,6 +40,7 @@ services:
       SMTP_FROM: "${SMTP_FROM:-}"
     volumes:
       - ./data:/app/data
+      - admindb_data:/app/db
     networks:
       - pokemmo-network
     depends_on:
@@ -49,6 +50,7 @@ services:
 volumes:
   mongodb_data:
   mongodb_config:
+  admindb_data:
 
 networks:
   pokemmo-network:

@@ -512,10 +512,13 @@ function showAddPokemonForm() {
             </label>
             
             <label style="display: block; margin-bottom: 15px;">
-                <span style="display: block; margin-bottom: 5px; color: #a8c5e3;">Moves (comma separated)</span>
-                <input type="text" id="moves-field" 
-                    style="width: 100%; padding: 8px; background: #0d1f2d; border: 1px solid #2d5a8a; border-radius: 4px; color: white;" 
-                    placeholder="e.g., Flamethrower, Fire Blast, Overheat" />
+                <span style="display: block; margin-bottom: 5px; color: #a8c5e3;">Moves</span>
+                <div id="moves-container" style="display: flex; flex-wrap: wrap; gap: 8px; padding: 8px; background: #0d1f2d; border: 1px solid #2d5a8a; border-radius: 4px; min-height: 42px;">
+                    <input type="text" id="moves-field" autocomplete="off" disabled
+                        style="flex: 1; min-width: 120px; padding: 4px; background: transparent; border: none; color: white; outline: none;" 
+                        placeholder="Select valid Pokemon first" />
+                </div>
+                <div id="move-suggestions" style="position: relative; background: #1e3a5f; border-radius: 4px; margin-top: 5px; max-height: 200px; overflow-y: auto; display: none;"></div>
             </label>
             
             <label style="display: block; margin-bottom: 20px;">
@@ -840,9 +843,13 @@ function showEditPokemonForm(pokemon) {
             </label>
             
             <label style="display: block; margin-bottom: 15px;">
-                <span style="display: block; margin-bottom: 5px; color: #a8c5e3;">Moves (comma separated)</span>
-                <input type="text" id="moves-field" value="${pokemon.moves || ''}" 
-                    style="width: 100%; padding: 8px; background: #0d1f2d; border: 1px solid #2d5a8a; border-radius: 4px; color: white;" />
+                <span style="display: block; margin-bottom: 5px; color: #a8c5e3;">Moves</span>
+                <div id="moves-container" style="display: flex; flex-wrap: wrap; gap: 8px; padding: 8px; background: #0d1f2d; border: 1px solid #2d5a8a; border-radius: 4px; min-height: 42px;">
+                    <input type="text" id="moves-field" autocomplete="off"
+                        style="flex: 1; min-width: 120px; padding: 4px; background: transparent; border: none; color: white; outline: none;" 
+                        placeholder="Add move" />
+                </div>
+                <div id="move-suggestions" style="position: relative; background: #1e3a5f; border-radius: 4px; margin-top: 5px; max-height: 200px; overflow-y: auto; display: none;"></div>
             </label>
             
             <label style="display: block; margin-bottom: 20px;">
@@ -861,9 +868,125 @@ function showEditPokemonForm(pokemon) {
     setupPokemonFormHandlers(pokemon);
 }
 
+// Helper function to create move tag element
+function createMoveTag(moveName, container) {
+    const tag = document.createElement('span');
+    tag.className = 'move-tag';
+    tag.style.cssText = 'display: inline-flex; align-items: center; gap: 6px; background: #2d5a8a; color: white; padding: 4px 8px; border-radius: 4px; font-size: 13px;';
+
+    const span = document.createElement('span');
+    span.textContent = moveName;
+    tag.appendChild(span);
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.textContent = '×';
+    deleteBtn.style.cssText = 'background: none; border: none; color: white; cursor: pointer; padding: 0; font-size: 18px; line-height: 1; font-weight: bold;';
+    deleteBtn.title = 'Remove move';
+    deleteBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        tag.remove();
+
+        // Re-enable move input if less than 4 moves
+        const moveInput = container.querySelector('#moves-field');
+        const tags = container.querySelectorAll('.move-tag');
+        if (tags.length < 4 && moveInput) {
+            moveInput.style.display = 'block';
+            moveInput.disabled = false;
+        }
+    });
+    tag.appendChild(deleteBtn);
+
+    return tag;
+}
+
+// Helper function to setup move autocomplete
+function setupMoveAutocomplete(moveInput, container, pokemonName) {
+    const suggestions = document.getElementById('move-suggestions');
+
+    moveInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        if (query.length < 1) {
+            suggestions.style.display = 'none';
+            return;
+        }
+
+        // Find pokemon moves
+        let pokemonMoves = [];
+        if (pokemonName) {
+            const pokemon = extras.monsters.find(m => m.name === pokemonName);
+            if (pokemon && pokemon.moves) {
+                pokemonMoves = pokemon.moves.map(m => typeof m === 'string' ? m : (m.name || m)).filter(Boolean);
+            }
+        }
+
+        // Filter moves based on query
+        const matches = pokemonMoves.filter(m => m.toLowerCase().includes(query)).slice(0, 10);
+
+        if (matches.length > 0) {
+            suggestions.innerHTML = matches.map(m =>
+                `<div class="move-suggestion" data-move="${m}" style="padding: 8px; cursor: pointer; border-bottom: 1px solid #2d5a8a; color: #fff;">${m}</div>`
+            ).join('');
+            suggestions.style.display = 'block';
+
+            // Add click handlers
+            suggestions.querySelectorAll('.move-suggestion').forEach(div => {
+                div.addEventListener('click', () => {
+                    const moveName = div.dataset.move;
+                    addMoveTag(moveName, moveInput, container);
+                    suggestions.style.display = 'none';
+                });
+            });
+        } else {
+            suggestions.style.display = 'none';
+        }
+    });
+
+    moveInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const moveName = moveInput.value.trim();
+            if (moveName) {
+                addMoveTag(moveName, moveInput, container);
+            }
+        }
+    });
+
+    moveInput.addEventListener('blur', () => {
+        setTimeout(() => {
+            suggestions.style.display = 'none';
+        }, 200);
+    });
+}
+
+// Helper function to add a move tag
+function addMoveTag(moveName, moveInput, container) {
+    const tags = container.querySelectorAll('.move-tag');
+    if (tags.length >= 4) {
+        return;
+    }
+
+    // Check if move already exists
+    const existingMoves = Array.from(tags).map(tag => tag.querySelector('span').textContent);
+    if (existingMoves.includes(moveName)) {
+        moveInput.value = '';
+        return;
+    }
+
+    const tag = createMoveTag(moveName, container);
+    container.insertBefore(tag, moveInput);
+    moveInput.value = '';
+
+    // Hide input if 4 moves reached
+    if (tags.length + 1 >= 4) {
+        moveInput.style.display = 'none';
+    }
+}
+
 function setupPokemonFormHandlers(editingPokemon) {
     const isEditing = editingPokemon !== null;
     const form = document.getElementById(isEditing ? 'edit-pokemon-form' : 'add-pokemon-form');
+    const movesContainer = document.getElementById('moves-container');
+    const moveInput = document.getElementById('moves-field');
 
     // Populate held items dropdown
     const itemSelect = document.getElementById('held-item-field');
@@ -877,6 +1000,24 @@ function setupPokemonFormHandlers(editingPokemon) {
             }
             itemSelect.appendChild(option);
         });
+    }
+
+    // Initialize move tags for editing
+    if (isEditing && editingPokemon.moves) {
+        const movesArray = editingPokemon.moves.split(',').map(m => m.trim()).filter(m => m);
+        movesArray.forEach((move, index) => {
+            if (index < 4) {
+                const tag = createMoveTag(move, movesContainer);
+                movesContainer.insertBefore(tag, moveInput);
+            }
+        });
+
+        if (movesArray.length >= 4) {
+            moveInput.style.display = 'none';
+        }
+
+        // Setup move autocomplete for edit
+        setupMoveAutocomplete(moveInput, movesContainer, editingPokemon.name);
     }
 
     // Cancel button
@@ -927,8 +1068,12 @@ function setupPokemonFormHandlers(editingPokemon) {
         const usage = document.getElementById('usage-field').value;
         const ability = isEditing ? document.getElementById('ability-field').value : document.getElementById('ability-search').value;
         const heldItem = document.getElementById('held-item-field').value;
-        const moves = document.getElementById('moves-field').value;
         const notes = document.getElementById('notes-field').value;
+
+        // Collect moves from tags
+        const moveTags = movesContainer.querySelectorAll('.move-tag span:first-child');
+        const movesArray = Array.from(moveTags).map(tag => tag.textContent.trim());
+        const moves = movesArray.join(', ');
 
         if (!isEditing && !selectedPokemonData) {
             alert('Please select a Pokemon');
@@ -981,6 +1126,15 @@ function selectPokemon(pokemonData) {
     const abilityInput = document.getElementById('ability-search');
     abilityInput.disabled = false;
     abilityInput.placeholder = 'Start typing ability...';
+
+    // Enable move input
+    const moveInput = document.getElementById('moves-field');
+    const movesContainer = document.getElementById('moves-container');
+    moveInput.disabled = false;
+    moveInput.placeholder = 'Add move';
+
+    // Setup move autocomplete
+    setupMoveAutocomplete(moveInput, movesContainer, pokemonData.name);
 
     // Setup ability autocomplete
     const abilitySuggestions = document.getElementById('ability-suggestions');
