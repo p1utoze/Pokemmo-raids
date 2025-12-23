@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Load edit data (pokemon, moves, items) for autocomplete
     await loadChecklistEditData();
-    
+
     // Add edit buttons to checklist
     if (checklistEditData) {
         addChecklistEditButtons();
@@ -39,7 +39,7 @@ async function loadChecklistEditData() {
             console.error('[ChecklistEdit] Failed to fetch edit data:', response.status);
             return;
         }
-        
+
         checklistEditData = await response.json();
         console.log('[ChecklistEdit] Loaded edit data:', {
             monsters: checklistEditData.monsters?.length,
@@ -72,7 +72,7 @@ async function loadChecklistEditData() {
             threshold: 0.3,
             includeScore: true
         });
-        
+
         console.log('[ChecklistEdit] Autocomplete ready');
     } catch (error) {
         console.error('[ChecklistEdit] Error loading edit data:', error);
