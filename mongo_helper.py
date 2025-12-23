@@ -161,7 +161,7 @@ def add_pokemon(season):
         return
     
     types_input = input("Types (comma-separated, e.g., Fire, Flying): ").strip()
-    types = [t.strip() for t in types_input.split(",") if t.strip()]
+    types = [t.strip().upper() for t in types_input.split(",") if t.strip()]
     
     held_item = input("Held item (optional): ").strip()
     ability = input("Ability (optional): ").strip()
@@ -212,6 +212,11 @@ def import_json(json_file):
     if not season:
         print("❌ JSON file must contain 'season' field")
         return
+    
+    # Normalize types to uppercase
+    for pokemon in doc.get('pokemon', []):
+        if 'types' in pokemon:
+            pokemon['types'] = [t.upper() for t in pokemon['types']]
     
     # Check if checklist already exists
     existing = db.checklists.find_one({"season": season, "user_id": user_id})
