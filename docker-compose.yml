@@ -6,8 +6,8 @@ services:
     ports:
       - "27017:27017"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:-pokemmo}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:-pokemmo_local_dev}
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_USERNAME:-pokemmo}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_PASSWORD:-pokemmo_local_dev}
       MONGO_INITDB_DATABASE: pokemmo_raids
     volumes:
       - mongodb_data:/data/db
@@ -21,16 +21,16 @@ services:
       retries: 5
 
   raidbook:
-    image: ghcr.io/p1utoze/pokemmoraids:${LATEST_TAG:-latest}
+    image: ghcr.io/p1utoze/${IMAGE_NAME:-pokemmoraids}:${LATEST_TAG:-latest}
     container_name: pokemmo-raidbook
     restart: unless-stopped
     ports:
       - "8080:8080"
     environment:
-      MONGO_URI: "mongodb://${MONGO_INITDB_ROOT_USERNAME:-pokemmo}:${MONGO_INITDB_ROOT_PASSWORD:-pokemmo_local_dev}@mongodb:27017/?authSource=admin"
-      MONGO_DB: "pokemmo_raids"
-      ADMIN_DB: "/app/data/users.db"
-      DATA_PATH: "/app/data/bosses.json"
+      MONGO_URI: "mongodb://${MONGO_INITDB_USERNAME:-pokemmo}:${MONGO_INITDB_PASSWORD:-pokemmo_local_dev}@mongodb:27017/?authSource=admin"
+      MONGO_DB: ${MONGO_DB:-pokemmo_raids}
+      ADMIN_DB: "${ADMIN_DB:-/app/data/users.db}"
+      DATA_PATH: "${DATA_PATH:-/app/data/bosses.json}"
       ADMIN_PASSWORD: "${ADMIN_PASSWORD:-adminpass}"
       SMTP_HOST: "${SMTP_HOST:-smtp.example.com}"
       SMTP_USER: "${SMTP_USER:-}"

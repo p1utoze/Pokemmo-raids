@@ -43,6 +43,8 @@ jobs:
       SMTP_PORT: ${{ vars.SMTP_PORT }}
       SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
       SMTP_FROM: ${{ vars.SMTP_FROM }}
+      MONGO_INITDB_USERNAME: ${{ vars.MONGO_INITDB_USERNAME }}
+      MONGO_INITDB_PASSWORD: ${{ secrets.MONGO_INITDB_PASSWORD }}
     permissions:
       contents: read
       packages: read
@@ -66,33 +68,8 @@ jobs:
       - name: Pull image
         run: |
           docker pull ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:$LATEST_TAG
-          
-      - name: Stop existing container
-        run: |
-          if docker ps -a --format '{{.Names}}' | grep -wq raids; then
-            echo "Existing container found: raids"
-            if docker ps --format '{{.Names}}' | grep -wq raids; then
-              echo "Container is running. Stopping..."
-              docker stop raids
-            fi
-            echo "Removing container..."
-            docker rm raids
-          else
-            echo "No existing container found. Continuing..."
-          fi
-      - name: Initialize databases
-        run: python3 init_checklist_db.py
         
-      - name: Run container
+      - name: Run containers
         run: |
-          docker run -d \
-            --name raids \
-            -p 80:8080 \
-            -v "${{ github.workspace }}/data:/app/data" \
-            -e "ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}" \
-            -e "SMTP_HOST=${{ vars.SMTP_HOST }}" \
-            -e "SMTP_USER=${{ vars.SMTP_USER }}" \
-            -e "SMTP_PORT=${{ vars.SMTP_PORT }}" \
-            -e "SMTP_PASSWORD=${{ secrets.SMTP_PASSWORD }}" \
-            -e "SMTP_FROM=${{ vars.SMTP_FROM }}" \
-            ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:$LATEST_TAG
+          docker compose -f docker-compose.yml down || true
+          docker compose -f docker-compose.yml up -d
