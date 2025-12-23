@@ -30,7 +30,9 @@ jobs:
       - name: Build and push the image
         run : |
           echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-          docker build . --tag ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:$LATEST_TAG
+          docker build . --platform linux/amd64,linux/arm64 \
+            --tag ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:$LATEST_TAG
+            
           docker push ghcr.io/${{ github.repository_owner}}/$IMAGE_NAME:$LATEST_TAG
           
 
@@ -42,6 +44,7 @@ jobs:
       SMTP_USER: ${{ vars.SMTP_USER }}
       SMTP_PORT: ${{ vars.SMTP_PORT }}
       SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+      ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
       SMTP_FROM: ${{ vars.SMTP_FROM }}
       MONGO_INITDB_USERNAME: ${{ vars.MONGO_INITDB_USERNAME }}
       MONGO_INITDB_PASSWORD: ${{ secrets.MONGO_INITDB_PASSWORD }}

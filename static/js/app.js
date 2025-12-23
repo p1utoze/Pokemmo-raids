@@ -72,21 +72,21 @@ document.addEventListener('DOMContentLoaded', function () {
     const viewLegendBtn = document.getElementById('viewLegendBtn');
     const legendSidebar = document.getElementById('checklistLegendSidebar');
     const closeLegendBtn = document.getElementById('closeLegendSidebar');
-    
+
     console.log('Legend button:', viewLegendBtn);
     console.log('Legend sidebar:', legendSidebar);
-    
+
     if (viewLegendBtn && legendSidebar) {
-        viewLegendBtn.addEventListener('click', function () { 
+        viewLegendBtn.addEventListener('click', function () {
             console.log('Legend button clicked');
-            legendSidebar.classList.add('open'); 
-            legendSidebar.setAttribute('aria-hidden', 'false'); 
+            legendSidebar.classList.add('open');
+            legendSidebar.setAttribute('aria-hidden', 'false');
         });
     }
     if (closeLegendBtn && legendSidebar) {
-        closeLegendBtn.addEventListener('click', function () { 
-            legendSidebar.classList.remove('open'); 
-            legendSidebar.setAttribute('aria-hidden', 'true'); 
+        closeLegendBtn.addEventListener('click', function () {
+            legendSidebar.classList.remove('open');
+            legendSidebar.setAttribute('aria-hidden', 'true');
         });
     }
 
