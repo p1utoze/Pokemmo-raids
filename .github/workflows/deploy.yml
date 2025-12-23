@@ -40,7 +40,7 @@ jobs:
         with:
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: ${{ github.repository_owner}}/$IMAGE_NAME:$LATEST_TAG
+          tags: ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ env.LATEST_TAG }}
 
       # - name: Build and push the image
       #   run : |
@@ -88,7 +88,7 @@ jobs:
         with:
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: ${{ github.repository_owner}}/$IMAGE_NAME:$LATEST_TAG
+          tags: ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ env.LATEST_TAG }}
       # - name: Pull image
       #   run: |
       #     docker pull ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:$LATEST_TAG
