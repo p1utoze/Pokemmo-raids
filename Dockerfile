@@ -1,18 +1,18 @@
 # ---------- Builder ----------
-FROM golang:1.25.5-alpine AS builder
-
+FROM --platform=$BUILDPLATFORM golang:1.25.5-alpine AS builder
+ARG TARGETOS
+ARG TARGETARCH
 WORKDIR /build
 
 RUN apk add --no-cache build-base
 
 COPY go.mod go.sum ./
-RUN go mod download
 
 COPY *.go ./
 COPY static ./static
 COPY templates ./templates
 
-RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 \
+RUN CGO_ENABLED=1 GOOS=$TARGETOS GOARCH=$TARGETARCH \
     go build -ldflags="-s -w" -o pokemmoraids
 
 # ---------- Runtime ----------
