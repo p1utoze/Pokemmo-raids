@@ -3,64 +3,82 @@
  * Allows admin, mod, and author roles to edit checklist data
  */
 
-let checklistEditData = null;
-let typeEditModes = {}; // Track edit mode per type
-let fuseInstances = {}; // Autocomplete search instances
+// Global state - avoid re-declaring if already exists
+if (typeof window.checklistEditData === 'undefined') {
+    window.checklistEditData = null;
+    window.typeEditModes = {};
+    window.fuseInstances = {};
+}
+
+// Alias for convenience
+const checklistEditData = window.checklistEditData;
+const typeEditModes = window.typeEditModes;
+const fuseInstances = window.fuseInstances;
 
 // Initialize checklist editor on page load
 document.addEventListener('DOMContentLoaded', async () => {
     // Check if user has edit permissions (admin, mod, or author)
     const userRole = document.body.dataset.userRole;
     const canEdit = ['admin', 'mod', 'author'].includes(userRole);
-    if (!canEdit) return;
+    console.log('[ChecklistEdit] User role:', userRole, 'Can edit:', canEdit);
+
+    if (!canEdit) {
+        console.log('[ChecklistEdit] User does not have edit permissions');
+        return;
+    }
 
     // Load edit data (pokemon, moves, items) for autocomplete
-    await loadChecklistEditData();
+    console.log('[ChecklistEdit] Loading edit data...');
+    const loaded = await window.loadChecklistEditData();
 
     // Add edit buttons to checklist
-    if (checklistEditData) {
-        addChecklistEditButtons();
+    if (loaded && window.checklistEditData) {
+        console.log('[ChecklistEdit] Adding edit buttons...');
+        window.addChecklistEditButtons();
+        console.log('[ChecklistEdit] Edit buttons added');
+    } else {
+        console.error('[ChecklistEdit] Failed to load edit data or add buttons');
     }
 });
 
 /**
  * Load pokemon, moves, and items data for autocomplete
  */
-async function loadChecklistEditData() {
+window.loadChecklistEditData = async function () {
     try {
         // Check if Fuse.js is loaded
         if (typeof Fuse === 'undefined') {
             console.error('[ChecklistEdit] Fuse.js is not loaded');
-            return;
+            return false;
         }
 
         const response = await fetch('/api/boss-edit-data');
         if (!response.ok) {
             console.error('[ChecklistEdit] Failed to fetch edit data:', response.status);
-            return;
+            return false;
         }
 
-        checklistEditData = await response.json();
+        window.checklistEditData = await response.json();
         console.log('[ChecklistEdit] Loaded edit data:', {
-            monsters: checklistEditData.monsters?.length,
-            items: checklistEditData.items?.length
+            monsters: window.checklistEditData.monsters?.length,
+            items: window.checklistEditData.items?.length
         });
 
         // Create Fuse instances for autocomplete
-        const pokemonNames = checklistEditData.monsters.map(m => m.name);
-        fuseInstances.pokemon = new Fuse(pokemonNames, {
+        const pokemonNames = window.checklistEditData.monsters.map(m => m.name);
+        window.fuseInstances.pokemon = new Fuse(pokemonNames, {
             threshold: 0.3,
             includeScore: true
         });
 
-        fuseInstances.items = new Fuse(checklistEditData.items, {
+        window.fuseInstances.items = new Fuse(window.checklistEditData.items, {
             threshold: 0.3,
             includeScore: true
         });
 
         // Collect all moves from all pokemon
         const allMoves = new Set();
-        checklistEditData.monsters.forEach(m => {
+        window.checklistEditData.monsters.forEach(m => {
             if (m.moves && Array.isArray(m.moves)) {
                 m.moves.forEach(move => {
                     const moveName = typeof move === 'string' ? move : (move.name || move);
@@ -68,22 +86,25 @@ async function loadChecklistEditData() {
                 });
             }
         });
-        fuseInstances.moves = new Fuse(Array.from(allMoves), {
+        window.fuseInstances.moves = new Fuse(Array.from(allMoves), {
             threshold: 0.3,
             includeScore: true
         });
 
         console.log('[ChecklistEdit] Autocomplete ready');
+        return true;
     } catch (error) {
         console.error('[ChecklistEdit] Error loading edit data:', error);
+        return false;
     }
-}
+};
 
 /**
  * Add edit buttons to each type header
  */
-function addChecklistEditButtons() {
+window.addChecklistEditButtons = function () {
     const typeSections = document.querySelectorAll('.type-section');
+    console.log('[ChecklistEdit] Found', typeSections.length, 'type sections');
 
     typeSections.forEach(section => {
         const typeId = section.id;
@@ -102,10 +123,10 @@ function addChecklistEditButtons() {
         editBtn.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            if (typeEditModes[typeId]) {
-                exitTypeEditMode(typeId);
+            if (window.typeEditModes[typeId]) {
+                window.exitTypeEditMode(typeId);
             } else {
-                enterTypeEditMode(typeId);
+                window.enterTypeEditMode(typeId);
             }
         });
 
@@ -116,8 +137,8 @@ function addChecklistEditButtons() {
 /**
  * Enter edit mode for a specific type
  */
-function enterTypeEditMode(typeId) {
-    typeEditModes[typeId] = true;
+window.enterTypeEditMode = function (typeId) {
+    window.typeEditModes[typeId] = true;
 
     const typeSection = document.getElementById(typeId);
     if (!typeSection) return;
@@ -181,7 +202,7 @@ function enterTypeEditMode(typeId) {
 /**
  * Make a single row editable
  */
-function makeRowEditable(row, typeId, rowIdx) {
+window.makeRowEditable = function (row, typeId, rowIdx) {
     const cells = row.querySelectorAll('td');
     if (cells.length < 8) return;
 
@@ -332,8 +353,8 @@ function createMoveTag(move, container, nameInput) {
 /**
  * Exit edit mode and restore original view for a specific type
  */
-function exitTypeEditMode(typeId) {
-    typeEditModes[typeId] = false;
+window.exitTypeEditMode = function (typeId) {
+    window.typeEditModes[typeId] = false;
 
     const typeSection = document.getElementById(typeId);
     if (!typeSection) return;
