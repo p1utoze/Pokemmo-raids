@@ -1,34 +1,83 @@
 /**
- * Checklist in-place editor with reused autocomplete from boss-edit.js
- * Admin-only functionality for editing pokemon, moves, items, and minimum required
+ * Checklist in-place editor with autocomplete for pokemon, moves, and items
+ * Allows admin, mod, and author roles to edit checklist data
  */
-
-// Reuse checklistData and STORAGE_KEY from checklist.js  
-// These are already declared in checklist.js which loads first
 
 let checklistEditData = null;
 let typeEditModes = {}; // Track edit mode per type
+let fuseInstances = {}; // Autocomplete search instances
 
 // Initialize checklist editor on page load
 document.addEventListener('DOMContentLoaded', async () => {
-    // Check if user is admin
-    const isAdmin = document.body.dataset.userRole === 'admin';
-    if (!isAdmin) return;
+    // Check if user has edit permissions (admin, mod, or author)
+    const userRole = document.body.dataset.userRole;
+    const canEdit = ['admin', 'mod', 'author'].includes(userRole);
+    if (!canEdit) return;
 
-    // Wait for boss-edit.js to load edit data first
-    if (typeof editData !== 'undefined' && editData) {
-        checklistEditData = editData;
+    // Load edit data (pokemon, moves, items) for autocomplete
+    await loadChecklistEditData();
+    
+    // Add edit buttons to checklist
+    if (checklistEditData) {
         addChecklistEditButtons();
-    } else {
-        // If editData not ready, wait a bit and retry
-        setTimeout(async () => {
-            if (typeof editData !== 'undefined' && editData) {
-                checklistEditData = editData;
-                addChecklistEditButtons();
-            }
-        }, 1000);
     }
 });
+
+/**
+ * Load pokemon, moves, and items data for autocomplete
+ */
+async function loadChecklistEditData() {
+    try {
+        // Check if Fuse.js is loaded
+        if (typeof Fuse === 'undefined') {
+            console.error('[ChecklistEdit] Fuse.js is not loaded');
+            return;
+        }
+
+        const response = await fetch('/api/boss-edit-data');
+        if (!response.ok) {
+            console.error('[ChecklistEdit] Failed to fetch edit data:', response.status);
+            return;
+        }
+        
+        checklistEditData = await response.json();
+        console.log('[ChecklistEdit] Loaded edit data:', {
+            monsters: checklistEditData.monsters?.length,
+            items: checklistEditData.items?.length
+        });
+
+        // Create Fuse instances for autocomplete
+        const pokemonNames = checklistEditData.monsters.map(m => m.name);
+        fuseInstances.pokemon = new Fuse(pokemonNames, {
+            threshold: 0.3,
+            includeScore: true
+        });
+
+        fuseInstances.items = new Fuse(checklistEditData.items, {
+            threshold: 0.3,
+            includeScore: true
+        });
+
+        // Collect all moves from all pokemon
+        const allMoves = new Set();
+        checklistEditData.monsters.forEach(m => {
+            if (m.moves && Array.isArray(m.moves)) {
+                m.moves.forEach(move => {
+                    const moveName = typeof move === 'string' ? move : (move.name || move);
+                    if (moveName) allMoves.add(moveName);
+                });
+            }
+        });
+        fuseInstances.moves = new Fuse(Array.from(allMoves), {
+            threshold: 0.3,
+            includeScore: true
+        });
+        
+        console.log('[ChecklistEdit] Autocomplete ready');
+    } catch (error) {
+        console.error('[ChecklistEdit] Error loading edit data:', error);
+    }
+}
 
 /**
  * Add edit buttons to each type header

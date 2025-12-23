@@ -1115,16 +1115,16 @@ func (a *App) toggleChecklistHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// saveChecklistHandler saves checklist pokemon edits (admin only)
+// saveChecklistHandler saves checklist pokemon edits (admin, mod, or author)
 func (a *App) saveChecklistHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	// Check admin role
+	// Check if user has edit permissions
 	role := getRoleFromRequest(r)
-	if role != "admin" {
+	if role != "admin" && role != "mod" && role != "author" {
 		http.Error(w, "forbidden", http.StatusForbidden)
 		return
 	}
