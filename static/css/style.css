@@ -248,6 +248,40 @@ body {
     flex-direction: column;
 }
 
+/* Skyfall Team credits block */
+.team-credits {
+    margin: 28px 0 0 0;
+    padding: 20px;
+    border-radius: var(--card-radius);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: linear-gradient(90deg, rgba(11, 18, 32, 0.6), rgba(11, 18, 32, 0.4));
+    box-shadow: 0 6px 18px rgba(2, 6, 23, 0.35);
+}
+
+.team-credits__title {
+    margin: 0 0 10px 0;
+    font-weight: 700;
+    color: var(--accent);
+    font-size: 20px;
+}
+
+.team-credits__desc {
+    margin: 8px 0 16px 0;
+    line-height: 1.6;
+    text-align: center;
+    color: var(--muted);
+    font-size: 14px;
+}
+
+.team-credits__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
 .player-name {
     font-weight: 600;
 }
