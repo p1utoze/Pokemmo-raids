@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Check if user has edit permissions (admin, mod, or author)
     const userRole = document.body.dataset.userRole;
     const canEdit = ['admin', 'mod', 'author'].includes(userRole);
-    console.log('[ChecklistEdit] User role:', userRole, 'Can edit:', canEdit);
+    // console.log('[ChecklistEdit] User role:', userRole, 'Can edit:', canEdit);
 
     if (!canEdit) {
         console.log('[ChecklistEdit] User does not have edit permissions');
@@ -21,14 +21,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Load edit data (pokemon, moves, items) for autocomplete
-    console.log('[ChecklistEdit] Loading edit data...');
+    // console.log('[ChecklistEdit] Loading edit data...');
     const loaded = await window.loadChecklistEditData();
 
     // Add edit buttons to checklist
     if (loaded && window.checklistEditData) {
-        console.log('[ChecklistEdit] Adding edit buttons...');
+        // console.log('[ChecklistEdit] Adding edit buttons...');
         window.addChecklistEditButtons();
-        console.log('[ChecklistEdit] Edit buttons added');
+        // console.log('[ChecklistEdit] Edit buttons added');
     } else {
         console.error('[ChecklistEdit] Failed to load edit data or add buttons');
     }
@@ -52,10 +52,10 @@ window.loadChecklistEditData = async function () {
         }
 
         window.checklistEditData = await response.json();
-        console.log('[ChecklistEdit] Loaded edit data:', {
-            monsters: window.checklistEditData.monsters?.length,
-            items: window.checklistEditData.items?.length
-        });
+        // console.log('[ChecklistEdit] Loaded edit data:', {
+        //     monsters: window.checklistEditData.monsters?.length,
+        //     items: window.checklistEditData.items?.length
+        // });
 
         // Create Fuse instances for autocomplete
         const pokemonNames = window.checklistEditData.monsters.map(m => m.name);
@@ -97,7 +97,7 @@ window.loadChecklistEditData = async function () {
  */
 window.addChecklistEditButtons = function () {
     const typeSections = document.querySelectorAll('.type-section');
-    console.log('[ChecklistEdit] Found', typeSections.length, 'type sections');
+    // console.log('[ChecklistEdit] Found', typeSections.length, 'type sections');
 
     typeSections.forEach(section => {
         const typeId = section.id;

@@ -73,12 +73,12 @@ document.addEventListener('DOMContentLoaded', function () {
     const legendSidebar = document.getElementById('checklistLegendSidebar');
     const closeLegendBtn = document.getElementById('closeLegendSidebar');
 
-    console.log('Legend button:', viewLegendBtn);
-    console.log('Legend sidebar:', legendSidebar);
+    // console.log('Legend button:', viewLegendBtn);
+    // console.log('Legend sidebar:', legendSidebar);
 
     if (viewLegendBtn && legendSidebar) {
         viewLegendBtn.addEventListener('click', function () {
-            console.log('Legend button clicked');
+            // console.log('Legend button clicked');
             legendSidebar.classList.add('open');
             legendSidebar.setAttribute('aria-hidden', 'false');
         });
