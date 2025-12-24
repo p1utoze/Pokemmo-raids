@@ -47,9 +47,6 @@ async function loadEditData() {
             }
         });
         window.allMovesArray = Array.from(allMoves);
-        console.log('[BossEdit] Total moves loaded:', window.allMovesArray.length);
-        console.log('[BossEdit] Sample moves:', window.allMovesArray.slice(0, 10));
-        console.log('[BossEdit] Morning Sun included:', window.allMovesArray.includes('Morning Sun'));
         fuseInstances.moves = new Fuse(window.allMovesArray, {
             threshold: 0.3,
             includeScore: true
@@ -365,7 +362,6 @@ function attachMoveAutocompleteLegacy(moveInput, pokemonInput) {
 
     moveInput.addEventListener('input', () => {
         const query = moveInput.value.trim();
-        console.log('[MoveAutocomplete] Query:', query);
         if (query.length < 1) {
             removeAutocomplete();
             return;
@@ -374,10 +370,8 @@ function attachMoveAutocompleteLegacy(moveInput, pokemonInput) {
         // Always use ALL moves - don't filter by pokemon
         // This allows adding any move for custom strategies
         const movesToSearch = window.allMovesArray || [];
-        console.log('[MoveAutocomplete] Searching all moves:', movesToSearch.length);
 
         if (movesToSearch.length === 0) {
-            console.log('[MoveAutocomplete] No moves to search!');
             removeAutocomplete();
             return;
         }
@@ -389,7 +383,6 @@ function attachMoveAutocompleteLegacy(moveInput, pokemonInput) {
         });
 
         const results = tempFuse.search(query).slice(0, 8);
-        console.log('[MoveAutocomplete] Search results:', results.length, results.map(r => r.item));
         if (results.length === 0) {
             removeAutocomplete();
             return;

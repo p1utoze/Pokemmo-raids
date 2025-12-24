@@ -33,7 +33,6 @@ window.MovesAutocomplete = (function () {
             });
 
             isReady = true;
-            console.log('[MovesAutocomplete] Initialized with', allMoves.length, 'moves');
             return true;
         } catch (error) {
             console.error('[MovesAutocomplete] Failed to load moves.json:', error);

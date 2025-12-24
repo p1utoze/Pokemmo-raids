@@ -1215,7 +1215,6 @@ func (a *App) saveChecklistHandler(w http.ResponseWriter, r *http.Request) {
 			// Match using OLD name and OLD usage
 			if doc.Pokemon[i].Name == reqPokemon.OldName && doc.Pokemon[i].Usage == reqPokemon.OldUsage {
 				// Update to NEW values
-				log.Printf("Updating %s (%s): moves='%s'", reqPokemon.OldName, reqPokemon.OldUsage, reqPokemon.Moves)
 				doc.Pokemon[i].Name = reqPokemon.Name
 				doc.Pokemon[i].Usage = reqPokemon.Usage
 				doc.Pokemon[i].HeldItem = reqPokemon.HeldItem
@@ -1242,7 +1241,6 @@ func (a *App) saveChecklistHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("Checklist save completed successfully")
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"status": "success"})
 }

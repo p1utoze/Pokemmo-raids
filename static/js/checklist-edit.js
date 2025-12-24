@@ -13,22 +13,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Check if user has edit permissions (admin, mod, or author)
     const userRole = document.body.dataset.userRole;
     const canEdit = ['admin', 'mod', 'author'].includes(userRole);
-    // console.log('[ChecklistEdit] User role:', userRole, 'Can edit:', canEdit);
 
     if (!canEdit) {
-        console.log('[ChecklistEdit] User does not have edit permissions');
         return;
     }
 
     // Load edit data (pokemon, moves, items) for autocomplete
-    // console.log('[ChecklistEdit] Loading edit data...');
     const loaded = await window.loadChecklistEditData();
 
     // Add edit buttons to checklist
     if (loaded && window.checklistEditData) {
-        // console.log('[ChecklistEdit] Adding edit buttons...');
         window.addChecklistEditButtons();
-        // console.log('[ChecklistEdit] Edit buttons added');
     } else {
         console.error('[ChecklistEdit] Failed to load edit data or add buttons');
     }
@@ -52,10 +47,6 @@ window.loadChecklistEditData = async function () {
         }
 
         window.checklistEditData = await response.json();
-        // console.log('[ChecklistEdit] Loaded edit data:', {
-        //     monsters: window.checklistEditData.monsters?.length,
-        //     items: window.checklistEditData.items?.length
-        // });
 
         // Create Fuse instances for autocomplete
         const pokemonNames = window.checklistEditData.monsters.map(m => m.name);
@@ -85,7 +76,6 @@ window.loadChecklistEditData = async function () {
             includeScore: true
         });
 
-        console.log('[ChecklistEdit] Autocomplete ready');
         return true;
     } catch (error) {
         console.error('[ChecklistEdit] Error loading edit data:', error);
@@ -98,7 +88,6 @@ window.loadChecklistEditData = async function () {
  */
 window.addChecklistEditButtons = function () {
     const typeSections = document.querySelectorAll('.type-section');
-    // console.log('[ChecklistEdit] Found', typeSections.length, 'type sections');
 
     typeSections.forEach(section => {
         const typeId = section.id;
@@ -516,7 +505,6 @@ async function saveTypeChanges(typeId) {
             notes: notesInput.value.trim()
         };
 
-        console.log(`Row ${index}: Extracted ${moves.length} moves:`, moves, '-> joined:', rowData.moves);
         updateData.push(rowData);
     });
 
@@ -528,7 +516,6 @@ async function saveTypeChanges(typeId) {
 
     try {
         const payload = { pokemon: updateData };
-        console.log('Saving', updateData.length, 'pokemon records with full data:', JSON.stringify(updateData, null, 2));
 
         // Save pokemon data
         const response = await fetch('/api/checklist/save', {
@@ -545,7 +532,6 @@ async function saveTypeChanges(typeId) {
         }
 
         const result = await response.json();
-        console.log('Checklist saved successfully');
 
         // Save min_required setting if changed
         const minRequiredInput = document.getElementById(`min-required-${typeId}`);
