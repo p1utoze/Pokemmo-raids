@@ -33,13 +33,15 @@ Example usage:
 """
 
 import sys
+import os
 from pymongo import MongoClient
 from bson import json_util
 import json
 from datetime import datetime
 
-MONGO_URI = "mongodb://pokemmo:pokemmo_local_dev@localhost:27017/"
-MONGO_DB = "pokemmo_raids"
+# Allow override via environment. Default to root auth on admin.
+MONGO_URI = os.getenv("MONGO_URI", "mongodb://pokemmo:pokemmo_local_dev@localhost:27017/?authSource=admin")
+MONGO_DB = os.getenv("MONGO_DB", "pokemmo_raids")
 
 def get_db():
     """Get MongoDB database connection"""
