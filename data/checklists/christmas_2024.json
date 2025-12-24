@@ -6,370 +6,369 @@
       "name": "Ninetales",
       "usage": "Special",
       "types": [
-        "Fire"
+        "FIRE"
       ],
-      "completed": false,
+      "held_item": "Heat Rock",
       "ability": "Drought",
       "moves": "Safeguard, Incinerate, Flamethrower, Overheat",
-      "notes": "Utility"
-    },
-    {
-      "name": "Darmanitan",
-      "usage": "Physical",
-      "types": [
-        "Fire",
-        "Fighting"
-      ],
-      "completed": false,
-      "ability": "Sheer Force",
-      "moves": "Superpower, Flare Blitz, Overheat"
+      "completed": false
     },
     {
       "name": "Charizard",
       "usage": "Special",
       "types": [
-        "Fire"
+        "FIRE"
       ],
-      "completed": false,
       "ability": "Solar Power",
       "moves": "Flamethrower, Blast Burn",
-      "notes": "strong but expenny"
-    },
-    {
-      "name": "Emboar",
-      "usage": "Physical",
-      "types": [
-        "Fire",
-        "Fighting",
-        "Rock"
-      ],
-      "completed": false,
-      "moves": "Flare Blitz, Close Combat, Head Smash"
-    },
-    {
-      "name": "Entei",
-      "usage": "Special",
-      "types": [
-        "Fire"
-      ],
-      "completed": false,
-      "moves": "Flamethrower, Overheat"
-    },
-    {
-      "name": "Typhlosion",
-      "usage": "Special",
-      "types": [
-        "Fire"
-      ],
-      "completed": false,
-      "moves": "Flamethrower, Eruption"
-    },
-    {
-      "name": "Chandelure",
-      "usage": "Special",
-      "types": [
-        "Fire",
-        "Ghost"
-      ],
-      "completed": false,
-      "moves": "Flamethrower, Overheat, Shadow Ball"
-    },
-    {
-      "name": "Heatran",
-      "usage": "Special",
-      "types": [
-        "Fire"
-      ],
-      "completed": false,
-      "moves": "Eruption, Magma Storm, Stone Edge"
-    },
-    {
-      "name": "Moltres",
-      "usage": "Special",
-      "types": [
-        "Fire"
-      ],
-      "completed": false,
-      "moves": "Flamethrower, Overheat"
-    },
-    {
-      "name": "Volcarona",
-      "usage": "Special",
-      "types": [
-        "Fire",
-        "Bug"
-      ],
-      "completed": false,
-      "moves": "Flamethrower, Bug Buzz"
-    },
-    {
-      "name": "Magmortar",
-      "usage": "Special",
-      "types": [
-        "Fire"
-      ],
-      "completed": false,
-      "moves": "Flamethrower, Fire Blast",
-      "notes": "not as strong but cheaper"
-    },
-    {
-      "name": "Camerupt",
-      "usage": "Special",
-      "types": [
-        "Fire"
-      ],
-      "completed": false,
-      "moves": "Eruption, Earth Power"
-    },
-    {
-      "name": "Cloyster",
-      "usage": "Physical",
-      "types": [
-        "Ice",
-        "Dragon"
-      ],
-      "completed": false,
-      "moves": "Icicle Spear, Drill Run, Rock Blast"
-    },
-    {
-      "name": "Vanilluxe",
-      "usage": "Special",
-      "types": [
-        "Ice",
-        "Dragon"
-      ],
-      "completed": false,
-      "notes": "Pick 2"
-    },
-    {
-      "name": "Jynx",
-      "usage": "Special",
-      "types": [
-        "Ice",
-        "Dragon"
-      ],
-      "completed": false,
-      "moves": "Ice Beam"
-    },
-    {
-      "name": "Volcarona",
-      "usage": "Special",
-      "types": [
-        "Ice",
-        "Bug"
-      ],
-      "completed": false,
-      "moves": "Bug Buzz, Flamethrower",
-      "notes": "Recommended"
-    },
-    {
-      "name": "Articuno",
-      "usage": "Special",
-      "types": [
-        "Ice",
-        "Dragon"
-      ],
       "completed": false
-    },
-    {
-      "name": "Cloyster",
-      "usage": "Physical",
-      "types": [
-        "Ice"
-      ],
-      "completed": false,
-      "ability": "Icicle Spear",
-      "moves": "Drill Run, Rock Blast"
-    },
-    {
-      "name": "Glaceon",
-      "usage": "Special",
-      "types": [
-        "Ice",
-        "Dragon"
-      ],
-      "completed": false,
-      "moves": "Ice Beam"
-    },
-    {
-      "name": "Hydreigon",
-      "usage": "Special",
-      "types": [
-        "Dragon",
-        "Ice"
-      ],
-      "completed": false,
-      "moves": "Draco Meteor, Dragon Pulse"
     },
     {
       "name": "Garchomp",
       "usage": "Physical",
       "types": [
-        "Dragon",
-        "Ice"
+        "DRAGON",
+        "ICE"
       ],
-      "completed": false,
-      "moves": "Dragon Claw, Dragon Rush"
+      "held_item": "Choice Band",
+      "moves": "Dragon Claw, Dragon Rush, Earthquake",
+      "completed": false
     },
     {
-      "name": "Dragonite",
+      "name": "Entei",
+      "usage": "Special",
+      "types": [
+        "FIRE"
+      ],
+      "moves": "Flamethrower, Overheat",
+      "completed": false
+    },
+    {
+      "name": "Typhlosion",
+      "usage": "Special",
+      "types": [
+        "FIRE"
+      ],
+      "moves": "Flamethrower, Eruption",
+      "completed": false
+    },
+    {
+      "name": "Chandelure",
+      "usage": "Special",
+      "types": [
+        "FIRE",
+        "GHOST"
+      ],
+      "moves": "Flamethrower, Overheat, Shadow Ball",
+      "completed": false
+    },
+    {
+      "name": "Heatran",
+      "usage": "Special",
+      "types": [
+        "FIRE"
+      ],
+      "moves": "Eruption, Magma Storm, Stone Edge",
+      "completed": false
+    },
+    {
+      "name": "Moltres",
+      "usage": "Special",
+      "types": [
+        "FIRE"
+      ],
+      "moves": "Flamethrower, Overheat",
+      "completed": false
+    },
+    {
+      "name": "Magmortar",
+      "usage": "Special",
+      "types": [
+        "FIRE"
+      ],
+      "moves": "Flamethrower, Fire Blast",
+      "completed": false
+    },
+    {
+      "name": "Camerupt",
+      "usage": "Special",
+      "types": [
+        "FIRE"
+      ],
+      "moves": "Eruption, Earth Power",
+      "completed": false
+    },
+    {
+      "name": "Vanilluxe",
+      "usage": "Special",
+      "types": [
+        "ICE",
+        "DRAGON"
+      ],
+      "notes": "Pick 2",
+      "completed": false
+    },
+    {
+      "name": "Jynx",
+      "usage": "Special",
+      "types": [
+        "ICE",
+        "DRAGON"
+      ],
+      "moves": "Ice Beam",
+      "completed": false
+    },
+    {
+      "name": "Garchomp",
       "usage": "Physical",
       "types": [
-        "Dragon"
+        "DRAGON",
+        "ICE"
       ],
-      "completed": false,
-      "moves": "Dragon Claw / Draco Meteor",
-      "notes": "Specs/Band"
+      "moves": "Dragon Claw, Dragon Rush",
+      "completed": false
     },
     {
       "name": "Ampharos",
       "usage": "Special",
       "types": [
-        "Electric"
+        "ELECTRIC"
       ],
-      "completed": false,
       "ability": "Must be HA (Plus)",
       "moves": "Thunder, Light Screen",
-      "notes": "Plus/Minus Pick 4"
+      "notes": "Plus/Minus Pick 4",
+      "completed": false
     },
     {
       "name": "Manectric",
       "usage": "Special",
       "types": [
-        "Electric"
+        "ELECTRIC"
       ],
-      "completed": false,
-      "moves": "Thunder"
+      "moves": "Thunder",
+      "completed": false
     },
     {
       "name": "Magnezone",
       "usage": "Special",
       "types": [
-        "Electric"
+        "ELECTRIC"
       ],
-      "completed": false,
       "moves": "Thunder",
-      "notes": "Requires Tailwind Support"
+      "notes": "Requires Tailwind Support",
+      "completed": false
     },
     {
       "name": "Pikachu",
       "usage": "Special",
       "types": [
-        "Electric"
+        "ELECTRIC"
       ],
-      "completed": false,
       "moves": "Thunder",
-      "notes": "Light Ball"
+      "notes": "Light Ball",
+      "completed": false
     },
     {
       "name": "Raikou",
       "usage": "Special",
       "types": [
-        "Electric"
+        "ELECTRIC"
       ],
-      "completed": false,
       "moves": "Thunder, Light Screen, Reflect",
-      "notes": "Dual Screens"
+      "notes": "Dual Screens",
+      "completed": false
     },
     {
       "name": "Zapdos",
       "usage": "Special",
       "types": [
-        "Electric"
+        "ELECTRIC"
       ],
-      "completed": false,
-      "moves": "Thunder"
+      "moves": "Thunder",
+      "completed": false
     },
     {
       "name": "Galvantula",
       "usage": "Special",
       "types": [
-        "Electric"
+        "ELECTRIC"
       ],
-      "completed": false,
       "moves": "Thunder, Bug Buzz",
-      "notes": "Cheap but less strong"
+      "notes": "Cheap but less strong",
+      "completed": false
     },
     {
       "name": "Rotom-Wash",
       "usage": "Special",
       "types": [
-        "Electric"
+        "ELECTRIC"
       ],
-      "completed": false,
-      "moves": "Thunder, Hydro Pump"
+      "moves": "Thunder, Hydro Pump",
+      "completed": false
     },
     {
       "name": "Darmanitan",
       "usage": "Physical",
       "types": [
-        "Fighting"
+        "FIGHTING"
       ],
-      "completed": false,
       "ability": "Sheer Force",
       "moves": "Superpower, Flare Blitz, Overheat",
-      "notes": "Fire"
+      "notes": "Fire",
+      "completed": false
     },
     {
       "name": "Emboar",
       "usage": "Physical",
       "types": [
-        "Fighting",
-        "Rock"
+        "FIGHTING",
+        "ROCK"
       ],
-      "completed": false,
-      "moves": "Flare Blitz, Close Combat, Head Smash"
+      "moves": "Flare Blitz, Close Combat, Head Smash",
+      "completed": false
     },
     {
       "name": "Infernape",
       "usage": "Physical",
       "types": [
-        "Fighting"
+        "FIGHTING"
       ],
-      "completed": false,
       "moves": "Focus Blast, Flamethrower, Close Combat, Flare Blitz",
-      "notes": "Fire"
+      "notes": "Fire",
+      "completed": false
     },
     {
       "name": "Primeape",
       "usage": "Physical",
       "types": [
-        "Fighting"
+        "FIGHTING"
       ],
-      "completed": false,
       "ability": "Vital Spirit",
       "moves": "Close Combat, Brick Break",
-      "notes": "No Sleep"
+      "notes": "No Sleep",
+      "completed": false
     },
     {
       "name": "Gallade",
       "usage": "Physical",
       "types": [
-        "Fighting"
+        "FIGHTING"
       ],
-      "completed": false,
       "ability": "Sharpness",
-      "moves": "Sacred Sword, Leaf Blade"
+      "moves": "Sacred Sword, Leaf Blade",
+      "completed": false
     },
     {
       "name": "Mienshao",
       "usage": "Physical",
       "types": [
-        "Fighting"
+        "FIGHTING"
       ],
-      "completed": false,
-      "moves": "Hi Jump Kick, Close Combat"
+      "moves": "Hi Jump Kick, Close Combat",
+      "completed": false
     },
     {
       "name": "Medicham",
       "usage": "Physical",
       "types": [
-        "Fighting"
+        "FIGHTING"
       ],
-      "completed": false,
       "moves": "Psychic, Close Combat, Zen Headbutt, Focus Blast",
-      "notes": "Inversion Flexible"
+      "notes": "Inversion Flexible",
+      "completed": false
+    },
+    {
+      "name": "Blaziken",
+      "usage": "Physical",
+      "types": [
+        "FIRE",
+        "FIGHTING"
+      ],
+      "ability": "Blaze",
+      "moves": "Close Combat, Flare Blitz, Focus Blast",
+      "completed": false
+    },
+    {
+      "name": "Blaziken",
+      "usage": "Special",
+      "types": [
+        "FIRE",
+        "FIGHTING"
+      ],
+      "ability": "Blaze",
+      "moves": "Flamethrower, Focus Blast, Flare Blitz, Close Combat",
+      "completed": false
+    },
+    {
+      "name": "Volcarona",
+      "usage": "Special",
+      "types": [
+        "BUG",
+        "FIRE"
+      ],
+      "moves": "Flamethrower, Bug Buzz",
+      "completed": false
+    },
+    {
+      "name": "Articuno",
+      "usage": "Special",
+      "types": [
+        "ICE",
+        "FLYING"
+      ],
+      "ability": "Snow Cloak",
+      "moves": "Ice Beam",
+      "completed": false
+    },
+    {
+      "name": "Glaceon",
+      "usage": "Special",
+      "types": [
+        "ICE",
+        "ICE"
+      ],
+      "ability": "Ice Body",
+      "moves": "Blizzard, Ice Beam",
+      "completed": false
+    },
+    {
+      "name": "Hydreigon",
+      "usage": "Special",
+      "types": [
+        "DARK",
+        "DRAGON"
+      ],
+      "held_item": "Choice Specs",
+      "ability": "Levitate",
+      "moves": "Dragon Pulse",
+      "completed": false
+    },
+    {
+      "name": "Dragonite",
+      "usage": "Physical",
+      "types": [
+        "DRAGON",
+        "FLYING"
+      ],
+      "held_item": "Choice Band",
+      "ability": "Multiscale",
+      "moves": "Dragon Claw",
+      "completed": false
+    },
+    {
+      "name": "Dragonite",
+      "usage": "Special",
+      "types": [
+        "DRAGON",
+        "FLYING"
+      ],
+      "held_item": "Choice Specs",
+      "ability": "Multiscale",
+      "moves": "Draco Meteor",
+      "completed": false
     }
   ],
-  "updated_at": "2025-12-23T05:41:54.172987Z"
+  "updated_at": {
+    "$date": "2025-12-24T00:32:55.778Z"
+  }
 }
