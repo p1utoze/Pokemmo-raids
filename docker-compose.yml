@@ -34,6 +34,12 @@ services:
       ADMIN_PASSWORD: "${ADMIN_PASSWORD:-adminpass}"
       ADMIN_SECRET: "${ADMIN_SECRET:-devsecret}"
       GIT_COMMIT_HASH: "${GIT_COMMIT_HASH:-dev}"
+      # SMTP Configuration for password reset emails
+      SMTP_HOST: "${SMTP_HOST}"           # e.g., smtp.gmail.com
+      SMTP_PORT: "${SMTP_PORT:-587}"      # Usually 587 for TLS
+      SMTP_USER: "${SMTP_USER}"           # Your email address
+      SMTP_PASSWORD: "${SMTP_PASSWORD}"   # App password (not regular password)
+      SMTP_FROM: "${SMTP_FROM}"           # From email address (can be same as SMTP_USER)
     volumes:
       - ./data:/app/data
       - admindb_data:/app/db
