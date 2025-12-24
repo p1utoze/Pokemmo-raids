@@ -28,6 +28,8 @@ Example usage:
   python mongo_helper.py complete "Charizard" "Physical" christmas_2024
   python mongo_helper.py add christmas_2024            # Add a new Pokemon interactively
   python mongo_helper.py import data/checklist_christmas_2024.json  # Import from JSON
+  python mongo_helper.py export christmas_2024 output.json  # Export one season to JSON
+  python mongo_helper.py export-all [base_dir]             # Export all to checklists/*.json
 """
 
 import sys
@@ -257,6 +259,36 @@ def export_json(season, output_file):
     
     print(f"✓ Exported {season} to {output_file}")
 
+def export_all_json(base_dir="."):
+    """Export entire checklists collection to checklists/*.json directory structure"""
+    import os
+    
+    db = get_db()
+    checklists = list(db.checklists.find())
+    
+    if not checklists:
+        print("❌ No checklists found in database")
+        return
+    
+    # Create checklists directory
+    checklists_dir = os.path.join(base_dir, "checklists")
+    os.makedirs(checklists_dir, exist_ok=True)
+    
+    print(f"✓ Exporting {len(checklists)} checklist(s) to {checklists_dir}/")
+    
+    for doc in checklists:
+        # Remove MongoDB _id field
+        doc.pop('_id', None)
+        
+        season = doc.get('season', 'unknown')
+        output_file = os.path.join(checklists_dir, f"{season}.json")
+        
+        with open(output_file, 'w') as f:
+            json.dump(doc, f, indent=2, default=json_util.default)
+        
+        pokemon_count = len(doc.get('pokemon', []))
+        print(f"  - {season}.json: {pokemon_count} Pokemon")
+
 def main():
     if len(sys.argv) < 2:
         print(__doc__)
@@ -297,6 +329,9 @@ def main():
             season = sys.argv[2]
             output = sys.argv[3] if len(sys.argv) > 3 else f"{season}_export.json"
             export_json(season, output)
+        elif command == "export-all":
+            base_dir = sys.argv[2] if len(sys.argv) > 2 else "."
+            export_all_json(base_dir)
         else:
             print(f"Unknown command: {command}")
             print(__doc__)
