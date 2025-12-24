@@ -367,8 +367,5 @@
       "moves": "Draco Meteor",
       "completed": false
     }
-  ],
-  "updated_at": {
-    "$date": "2025-12-24T00:32:55.778Z"
-  }
+    ]
 }
