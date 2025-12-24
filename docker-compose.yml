@@ -10,6 +10,8 @@ services:
     volumes:
       - mongodb_data:/data/db
       - mongodb_config:/data/configdb
+    ports:
+      - "27017:27017"
     networks:
       - pokemmo-network
     healthcheck:
