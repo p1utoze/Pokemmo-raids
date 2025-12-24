@@ -100,6 +100,7 @@ type TypeSettings struct {
 	Season      string             `json:"season" bson:"season"`
 	TypeName    string             `json:"type_name" bson:"type_name"`
 	MinRequired int                `json:"min_required" bson:"min_required"`
+	IsPinned    bool               `json:"is_pinned" bson:"is_pinned"`
 	UpdatedAt   time.Time          `json:"updated_at" bson:"updated_at"`
 }
 
@@ -107,13 +108,15 @@ type TypeSettings struct {
 type PokemonType struct {
 	TypeName    string                  `json:"type_name"`
 	MinRequired int                     `json:"min_required"`
+	IsPinned    bool                    `json:"is_pinned"`
 	Count       int                     `json:"count"`
 	Completed   int                     `json:"completed"`
 	Pokemons    []PokemonChecklistEntry `json:"pokemons"`
 }
 
 type ChecklistResponse struct {
-	Types []PokemonType `json:"types"`
+	Types  []PokemonType `json:"types"`
+	Season string        `json:"season"`
 }
 
 type App struct {
@@ -610,6 +613,7 @@ func main() {
 // setupRoutes configures HTTP handlers
 func setupRoutes() {
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+	http.Handle("/data/", http.StripPrefix("/data/", http.FileServer(http.Dir("data"))))
 	http.HandleFunc("/", app.indexHandler)
 	http.HandleFunc("/boss", app.bossHandler)
 	http.HandleFunc("/build-team", app.buildTeamHandler)
@@ -1027,7 +1031,7 @@ func (a *App) checklistHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Load min_required values from type_settings collection
+	// Load min_required and is_pinned values from type_settings collection
 	typeSettingsCollection := a.mongoDB.Collection("type_settings")
 	cursor, err := typeSettingsCollection.Find(ctx, bson.M{"season": season})
 	if err == nil {
@@ -1037,23 +1041,29 @@ func (a *App) checklistHandler(w http.ResponseWriter, r *http.Request) {
 			for _, s := range settings {
 				if pt, exists := typeMap[s.TypeName]; exists {
 					pt.MinRequired = s.MinRequired
+					pt.IsPinned = s.IsPinned
 				}
 			}
 		}
 	}
 
-	// Convert map to sorted array (sorted by type name)
+	// Convert map to sorted array (pinned types first, then alphabetically)
 	var types []PokemonType
 	for _, pt := range typeMap {
 		types = append(types, *pt)
 	}
 
-	// Sort types alphabetically by name
+	// Sort types: pinned first, then alphabetically by name
 	sort.Slice(types, func(i, j int) bool {
+		// If one is pinned and the other isn't, pinned comes first
+		if types[i].IsPinned != types[j].IsPinned {
+			return types[i].IsPinned
+		}
+		// Otherwise, sort alphabetically
 		return types[i].TypeName < types[j].TypeName
 	})
 
-	response := ChecklistResponse{Types: types}
+	response := ChecklistResponse{Types: types, Season: season}
 	json.NewEncoder(w).Encode(response)
 }
 
@@ -1158,8 +1168,10 @@ func (a *App) saveChecklistHandler(w http.ResponseWriter, r *http.Request) {
 
 	var req struct {
 		Pokemon []struct {
-			Name     string `json:"name"`
-			Usage    string `json:"usage"`
+			OldName  string `json:"old_name"`  // For matching existing pokemon
+			OldUsage string `json:"old_usage"` // For matching existing pokemon
+			Name     string `json:"name"`      // New name
+			Usage    string `json:"usage"`     // New usage
 			HeldItem string `json:"held_item"`
 			Moves    string `json:"moves"`
 			Notes    string `json:"notes"`
@@ -1200,7 +1212,12 @@ func (a *App) saveChecklistHandler(w http.ResponseWriter, r *http.Request) {
 	// Update each pokemon in the request
 	for _, reqPokemon := range req.Pokemon {
 		for i := range doc.Pokemon {
-			if doc.Pokemon[i].Name == reqPokemon.Name && doc.Pokemon[i].Usage == reqPokemon.Usage {
+			// Match using OLD name and OLD usage
+			if doc.Pokemon[i].Name == reqPokemon.OldName && doc.Pokemon[i].Usage == reqPokemon.OldUsage {
+				// Update to NEW values
+				log.Printf("Updating %s (%s): moves='%s'", reqPokemon.OldName, reqPokemon.OldUsage, reqPokemon.Moves)
+				doc.Pokemon[i].Name = reqPokemon.Name
+				doc.Pokemon[i].Usage = reqPokemon.Usage
 				doc.Pokemon[i].HeldItem = reqPokemon.HeldItem
 				doc.Pokemon[i].Moves = reqPokemon.Moves
 				doc.Pokemon[i].Notes = reqPokemon.Notes
@@ -1660,25 +1677,25 @@ func (a *App) authChangePasswordHandler(w http.ResponseWriter, r *http.Request) 
 
 		if current == "" || newPass == "" || confirm == "" {
 			renderTemplate(w, a.templates["auth_change_password.html"], pongo2.Context{
-				"user_role": role,
+				"user_role":   role,
 				"commit_hash": a.commitHash,
-				"error":     "All fields are required.",
+				"error":       "All fields are required.",
 			})
 			return
 		}
 		if newPass != confirm {
 			renderTemplate(w, a.templates["auth_change_password.html"], pongo2.Context{
-				"user_role": role,
+				"user_role":   role,
 				"commit_hash": a.commitHash,
-				"error":     "New passwords do not match.",
+				"error":       "New passwords do not match.",
 			})
 			return
 		}
 		if len(newPass) < 8 {
 			renderTemplate(w, a.templates["auth_change_password.html"], pongo2.Context{
-				"user_role": role,
+				"user_role":   role,
 				"commit_hash": a.commitHash,
-				"error":     "New password must be at least 8 characters.",
+				"error":       "New password must be at least 8 characters.",
 			})
 			return
 		}
@@ -1691,9 +1708,9 @@ func (a *App) authChangePasswordHandler(w http.ResponseWriter, r *http.Request) 
 		}
 		if err := bcryptCompareHash(hash, current); err != nil {
 			renderTemplate(w, a.templates["auth_change_password.html"], pongo2.Context{
-				"user_role": role,
+				"user_role":   role,
 				"commit_hash": a.commitHash,
-				"error":     "Current password is incorrect.",
+				"error":       "Current password is incorrect.",
 			})
 			return
 		}
@@ -1714,9 +1731,9 @@ func (a *App) authChangePasswordHandler(w http.ResponseWriter, r *http.Request) 
 		}
 
 		renderTemplate(w, a.templates["auth_change_password.html"], pongo2.Context{
-			"user_role": role,
+			"user_role":   role,
 			"commit_hash": a.commitHash,
-			"success":   "Password updated successfully.",
+			"success":     "Password updated successfully.",
 		})
 	default:
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -2597,9 +2614,12 @@ func (a *App) adminTypeSettingsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Return as map for easy lookup by frontend
-		result := make(map[string]int)
+		result := make(map[string]map[string]interface{})
 		for _, s := range settings {
-			result[s.TypeName] = s.MinRequired
+			result[s.TypeName] = map[string]interface{}{
+				"min_required": s.MinRequired,
+				"is_pinned":    s.IsPinned,
+			}
 		}
 
 		json.NewEncoder(w).Encode(result)
@@ -2609,6 +2629,7 @@ func (a *App) adminTypeSettingsHandler(w http.ResponseWriter, r *http.Request) {
 		var req struct {
 			TypeName    string `json:"type_name"`
 			MinRequired int    `json:"min_required"`
+			IsPinned    bool   `json:"is_pinned"`
 		}
 
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -2632,6 +2653,7 @@ func (a *App) adminTypeSettingsHandler(w http.ResponseWriter, r *http.Request) {
 				"season":       season,
 				"type_name":    req.TypeName,
 				"min_required": req.MinRequired,
+				"is_pinned":    req.IsPinned,
 				"updated_at":   time.Now(),
 			},
 		}
