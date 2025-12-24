@@ -891,7 +891,66 @@ function createMoveTag(moveName, container) {
 function setupMoveAutocomplete(moveInput, container, pokemonName) {
     // Use the global MovesAutocomplete module if available
     if (window.MovesAutocomplete) {
-        window.MovesAutocomplete.attachToInput(moveInput);
+        // Create a custom wrapper around the global module
+        let autocompleteDiv = null;
+
+        moveInput.addEventListener('input', () => {
+            const query = moveInput.value.trim();
+
+            if (query.length < 1) {
+                if (autocompleteDiv) autocompleteDiv.remove();
+                return;
+            }
+
+            const results = window.MovesAutocomplete.searchMoves(query);
+            if (results.length === 0) {
+                if (autocompleteDiv) autocompleteDiv.remove();
+                return;
+            }
+
+            // Remove old dropdown
+            if (autocompleteDiv) autocompleteDiv.remove();
+
+            // Create dropdown
+            autocompleteDiv = document.createElement('div');
+            autocompleteDiv.className = 'autocomplete-dropdown';
+            autocompleteDiv.style.position = 'absolute';
+            autocompleteDiv.style.zIndex = '9999';
+
+            results.forEach(result => {
+                const item = document.createElement('div');
+                item.className = 'autocomplete-item';
+                item.textContent = result.name;
+
+                item.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    moveInput.value = result.name;
+                    if (autocompleteDiv) autocompleteDiv.remove();
+
+                    // Add the move tag
+                    const tags = container.querySelectorAll('.move-tag');
+                    if (tags.length < 4) {
+                        addMoveTag(result.name, moveInput, container);
+                        moveInput.value = '';
+                        moveInput.focus();
+                    }
+                });
+
+                autocompleteDiv.appendChild(item);
+            });
+
+            const rect = moveInput.getBoundingClientRect();
+            autocompleteDiv.style.top = (rect.bottom + window.scrollY) + 'px';
+            autocompleteDiv.style.left = (rect.left + window.scrollX) + 'px';
+            autocompleteDiv.style.minWidth = rect.width + 'px';
+            document.body.appendChild(autocompleteDiv);
+        });
+
+        moveInput.addEventListener('blur', () => {
+            setTimeout(() => {
+                if (autocompleteDiv) autocompleteDiv.remove();
+            }, 200);
+        });
 
         // Handle Enter key to add move
         moveInput.addEventListener('keydown', (e) => {

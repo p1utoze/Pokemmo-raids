@@ -295,9 +295,71 @@ window.makeRowEditable = function (row, typeId, rowIdx) {
         moveInput.placeholder = isValid ? 'Add move' : 'Select valid Pokemon first';
         movesContainer.appendChild(moveInput);
 
-        // Attach move autocomplete
-        if (typeof attachMoveAutocomplete === 'function') {
-            attachMoveAutocomplete(moveInput, nameInput);
+        // Attach move autocomplete with custom handling
+        if (window.MovesAutocomplete && window.MovesAutocomplete.searchMoves) {
+            let autocompleteDiv = null;
+
+            moveInput.addEventListener('input', () => {
+                const query = moveInput.value.trim();
+
+                if (query.length < 1) {
+                    if (autocompleteDiv) autocompleteDiv.remove();
+                    return;
+                }
+
+                const results = window.MovesAutocomplete.searchMoves(query);
+                if (results.length === 0) {
+                    if (autocompleteDiv) autocompleteDiv.remove();
+                    return;
+                }
+
+                // Remove old dropdown
+                if (autocompleteDiv) autocompleteDiv.remove();
+
+                // Create dropdown
+                autocompleteDiv = document.createElement('div');
+                autocompleteDiv.className = 'autocomplete-dropdown';
+                autocompleteDiv.style.position = 'absolute';
+                autocompleteDiv.style.zIndex = '9999';
+
+                results.forEach(result => {
+                    const item = document.createElement('div');
+                    item.className = 'autocomplete-item';
+                    item.textContent = result.name;
+
+                    item.addEventListener('mousedown', (e) => {
+                        e.preventDefault();
+
+                        // Add move directly as tag
+                        if (originalMoves.length < 4) {
+                            originalMoves.push(result.name);
+                            const newTag = createMoveTag(result.name, movesContainer, nameInput);
+                            movesContainer.insertBefore(newTag, moveInput);
+                            moveInput.value = '';
+                            if (originalMoves.length >= 4) {
+                                moveInput.style.display = 'none';
+                            }
+                        }
+
+                        if (autocompleteDiv) autocompleteDiv.remove();
+                        moveInput.focus();
+                    });
+
+                    autocompleteDiv.appendChild(item);
+                });
+
+                const rect = moveInput.getBoundingClientRect();
+                autocompleteDiv.style.top = (rect.bottom + window.scrollY) + 'px';
+                autocompleteDiv.style.left = (rect.left + window.scrollX) + 'px';
+                autocompleteDiv.style.minWidth = rect.width + 'px';
+                document.body.appendChild(autocompleteDiv);
+            });
+
+            moveInput.addEventListener('blur', () => {
+                setTimeout(() => {
+                    if (autocompleteDiv) autocompleteDiv.remove();
+                }, 200);
+            });
         }
 
         // Handle move selection

@@ -346,9 +346,67 @@ function attachItemAutocomplete(input) {
 
 // Attach move autocomplete (works with or without pokemon selected)
 function attachMoveAutocomplete(moveInput, pokemonInput) {
-    // Use the global MovesAutocomplete module
-    if (window.MovesAutocomplete) {
-        window.MovesAutocomplete.attachToInput(moveInput, pokemonInput);
+    // Use the global MovesAutocomplete module with custom handling
+    if (window.MovesAutocomplete && window.MovesAutocomplete.searchMoves) {
+        let autocompleteDiv = null;
+
+        moveInput.addEventListener('input', () => {
+            const query = moveInput.value.trim();
+
+            if (query.length < 1) {
+                if (autocompleteDiv) autocompleteDiv.remove();
+                return;
+            }
+
+            const results = window.MovesAutocomplete.searchMoves(query);
+            if (results.length === 0) {
+                if (autocompleteDiv) autocompleteDiv.remove();
+                return;
+            }
+
+            // Remove old dropdown
+            if (autocompleteDiv) autocompleteDiv.remove();
+
+            // Create dropdown
+            autocompleteDiv = document.createElement('div');
+            autocompleteDiv.className = 'autocomplete-dropdown';
+            autocompleteDiv.style.position = 'absolute';
+            autocompleteDiv.style.zIndex = '9999';
+
+            results.forEach(result => {
+                const item = document.createElement('div');
+                item.className = 'autocomplete-item';
+                item.textContent = result.name;
+
+                item.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    moveInput.value = result.name;
+                    if (autocompleteDiv) autocompleteDiv.remove();
+                    // Trigger enter key event to add as tag
+                    const enterEvent = new KeyboardEvent('keydown', {
+                        key: 'Enter',
+                        code: 'Enter',
+                        keyCode: 13,
+                        bubbles: true
+                    });
+                    moveInput.dispatchEvent(enterEvent);
+                });
+
+                autocompleteDiv.appendChild(item);
+            });
+
+            const rect = moveInput.getBoundingClientRect();
+            autocompleteDiv.style.top = (rect.bottom + window.scrollY) + 'px';
+            autocompleteDiv.style.left = (rect.left + window.scrollX) + 'px';
+            autocompleteDiv.style.minWidth = rect.width + 'px';
+            document.body.appendChild(autocompleteDiv);
+        });
+
+        moveInput.addEventListener('blur', () => {
+            setTimeout(() => {
+                if (autocompleteDiv) autocompleteDiv.remove();
+            }, 200);
+        });
     } else {
         console.warn('[MoveAutocomplete] Global module not loaded, falling back to old implementation');
         // Fallback to old implementation if module not loaded
