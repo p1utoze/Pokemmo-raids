@@ -1424,12 +1424,58 @@ input.player-check:checked::after {
     gap: 8px;
 }
 
+/* Type title row with pin star */
+.type-title-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
 .type-title {
     margin: 0;
     font-size: 18px;
     font-weight: 600;
     text-transform: capitalize;
     color: #e6eef6;
+}
+
+/* Pin Star Styles */
+.pin-star {
+    flex-shrink: 0;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background: transparent;
+    border: none;
+    font-size: 20px;
+    color: rgba(255, 193, 7, 0.3);
+    transition: all 0.2s ease;
+}
+
+.pin-star::before {
+    content: '★';
+    display: block;
+}
+
+.pin-star:checked {
+    color: #ffc107;
+}
+
+.pin-star:hover {
+    color: rgba(255, 193, 7, 0.7);
+    transform: scale(1.15) translate(0, -2px);
+}
+
+.pin-star:checked:hover {
+    color: #ffb300;
+}
+
+.pin-star-display {
+    flex-shrink: 0;
+    font-size: 18px;
+    color: #ffc107;
+    pointer-events: none;
 }
 
 .type-meta {
@@ -2081,6 +2127,45 @@ button[type="reset"]:hover {
 .editable-move-input:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+}
+
+/* Editable usage select field */
+.editable-usage {
+    width: 100%;
+    padding: 6px 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    color: #e6eef6;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.editable-usage:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+/* Editable text inputs (pokemon name, held item, notes) */
+.editable-pokemon-name,
+.editable-held-item,
+.editable-notes {
+    width: 100%;
+    padding: 6px 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    color: #e6eef6;
+    font-size: 13px;
+}
+
+.editable-pokemon-name:focus,
+.editable-held-item:focus,
+.editable-notes:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: rgba(255, 255, 255, 0.08);
 }
 
 /* Site Footer */

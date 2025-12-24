@@ -37,6 +37,13 @@ function renderMovesList() {
         });
     });
 
+    // Attach autocomplete to move name inputs
+    if (window.MovesAutocomplete) {
+        document.querySelectorAll('.move-name').forEach(input => {
+            window.MovesAutocomplete.attachToInput(input);
+        });
+    }
+
     // Attach delete listeners
     document.querySelectorAll('.delete-move').forEach(btn => {
         btn.addEventListener('click', (e) => {
@@ -170,6 +177,14 @@ function renderVariationCarousel() {
         });
     });
 
+    // Attach autocomplete to move inputs
+    if (window.MovesAutocomplete) {
+        document.querySelectorAll('.poke-move').forEach(moveInput => {
+            const pokemonInput = moveInput.closest('tr')?.querySelector('.poke-name');
+            window.MovesAutocomplete.attachToInput(moveInput, pokemonInput);
+        });
+    }
+
     document.querySelectorAll('.delete-poke').forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.preventDefault();
@@ -195,145 +210,156 @@ document.addEventListener('DOMContentLoaded', function () {
     const action = document.getElementById('raidBossAction').value;
     const bossId = document.getElementById('raidBossId').value;
 
-    // Initialize moves and phases data
-    try {
-        movesData = JSON.parse(document.getElementById('movesJSON').value || '[]');
-    } catch (e) {
-        movesData = [];
-    }
-    try {
-        phasesData = JSON.parse(document.getElementById('phaseEffectsJSON').value || '[]');
-    } catch (e) {
-        phasesData = [];
-    }
-
-    renderMovesList();
-    renderPhasesList();
-
-    // Initialize variations data robustly: prefer inlined JSON blob (#raid-boss-data), fallback to hidden input
-    try {
-        const bossDataElem = document.getElementById('raid-boss-data');
-        if (bossDataElem && bossDataElem.textContent && bossDataElem.textContent.trim().length > 0) {
-            const bossObj = JSON.parse(bossDataElem.textContent);
-            variationsData = bossObj.variations || JSON.parse(document.getElementById('bossVariations').value || '[]');
-        } else {
-            variationsData = JSON.parse(document.getElementById('bossVariations').value || '[]');
+    // Wait for MovesAutocomplete to initialize before rendering
+    const initializeAdmin = async () => {
+        // Wait for MovesAutocomplete to be ready
+        if (window.MovesAutocomplete && !window.MovesAutocomplete.isReady) {
+            await window.MovesAutocomplete.init();
         }
-    } catch (e) {
-        variationsData = [];
-    }
 
-    if (!Array.isArray(variationsData)) variationsData = [];
-    if (variationsData.length === 0) variationsData = [{ players: { P1: [], P2: [], P3: [], P4: [] } }];
-    currentVariationIndex = 0;
-    renderVariationCarousel();
-
-    // Carousel navigation
-    document.getElementById('prevVariationBtn').addEventListener('click', (e) => {
-        e.preventDefault();
-        if (currentVariationIndex > 0) {
-            currentVariationIndex--;
-            renderVariationCarousel();
+        // Initialize moves and phases data
+        try {
+            movesData = JSON.parse(document.getElementById('movesJSON').value || '[]');
+        } catch (e) {
+            movesData = [];
         }
-    });
-
-    document.getElementById('nextVariationBtn').addEventListener('click', (e) => {
-        e.preventDefault();
-        if (currentVariationIndex < variationsData.length - 1) {
-            currentVariationIndex++;
-            renderVariationCarousel();
+        try {
+            phasesData = JSON.parse(document.getElementById('phaseEffectsJSON').value || '[]');
+        } catch (e) {
+            phasesData = [];
         }
-    });
 
-    // Add variation button
-    document.getElementById('addVariationBtn').addEventListener('click', (e) => {
-        e.preventDefault();
-        variationsData.push({
-            players: { P1: [], P2: [], P3: [], P4: [] },
-            health_remaining: [],
-            notes: []
-        });
-        currentVariationIndex = variationsData.length - 1;
-        renderVariationCarousel();
-        updateVariationsJSON();
-    });
+        renderMovesList();
+        renderPhasesList();
 
-    // Delete variation button
-    document.getElementById('deleteVariationBtn').addEventListener('click', (e) => {
-        e.preventDefault();
-        if (variationsData.length <= 1) {
-            alert('Cannot delete the last variation. Delete the entire boss instead.');
-            return;
-        }
-        if (confirm('Delete this variation?')) {
-            variationsData.splice(currentVariationIndex, 1);
-            if (currentVariationIndex >= variationsData.length) {
-                currentVariationIndex = variationsData.length - 1;
+        // Initialize variations data robustly: prefer inlined JSON blob (#raid-boss-data), fallback to hidden input
+        try {
+            const bossDataElem = document.getElementById('raid-boss-data');
+            if (bossDataElem && bossDataElem.textContent && bossDataElem.textContent.trim().length > 0) {
+                const bossObj = JSON.parse(bossDataElem.textContent);
+                variationsData = bossObj.variations || JSON.parse(document.getElementById('bossVariations').value || '[]');
+            } else {
+                variationsData = JSON.parse(document.getElementById('bossVariations').value || '[]');
             }
+        } catch (e) {
+            variationsData = [];
+        }
+
+        if (!Array.isArray(variationsData)) variationsData = [];
+        if (variationsData.length === 0) variationsData = [{ players: { P1: [], P2: [], P3: [], P4: [] } }];
+        currentVariationIndex = 0;
+        renderVariationCarousel();
+
+        // Carousel navigation
+        document.getElementById('prevVariationBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            if (currentVariationIndex > 0) {
+                currentVariationIndex--;
+                renderVariationCarousel();
+            }
+        });
+
+        document.getElementById('nextVariationBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            if (currentVariationIndex < variationsData.length - 1) {
+                currentVariationIndex++;
+                renderVariationCarousel();
+            }
+        });
+
+        // Add variation button
+        document.getElementById('addVariationBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            variationsData.push({
+                players: { P1: [], P2: [], P3: [], P4: [] },
+                health_remaining: [],
+                notes: []
+            });
+            currentVariationIndex = variationsData.length - 1;
             renderVariationCarousel();
             updateVariationsJSON();
-        }
-    });
+        });
 
-
-    // Add move button
-    document.getElementById('addMoveBtn').addEventListener('click', (e) => {
-        e.preventDefault();
-        movesData.push({ name: '', type: '' });
-        renderMovesList();
-        updateMovesJSON();
-    });
-
-    // Add phase button
-    document.getElementById('addPhaseBtn').addEventListener('click', (e) => {
-        e.preventDefault();
-        phasesData.push({ health: 100, effect: '' });
-        renderPhasesList();
-        updatePhasesJSON();
-    });
-
-    saveBtn.addEventListener('click', async () => {
-        const formData = new FormData(form);
-        const payload = {
-            boss_name: formData.get('boss_name'),
-            stars: parseInt(formData.get('stars')),
-            description: formData.get('description'),
-            ability: formData.get('ability'),
-            held_item: formData.get('held_item'),
-            speed_evs: parseInt(formData.get('speed_evs')),
-            base_stats: {
-                speed: parseInt(formData.get('base_stats_speed')),
-                defense: parseInt(formData.get('base_stats_defense')),
-                special_defense: parseInt(formData.get('base_stats_spdef'))
-            },
-            moves: JSON.parse(formData.get('moves') || '[]'),
-            phase_effects: JSON.parse(formData.get('phase_effects') || '[]'),
-            variations: JSON.parse(formData.get('variations') || '[]')
-        };
-
-        if (action === 'edit') {
-            payload.id = parseInt(bossId);
-        }
-
-        try {
-            const method = action === 'create' ? 'POST' : 'PUT';
-            const response = await fetch('/api/admin/raid-bosses?season=' + encodeURIComponent(season), {
-                method: method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            if (response.ok) {
-                window.location.href = '/admin?tab=raid-bosses';
-            } else {
-                alert('Failed to save boss');
+        // Delete variation button
+        document.getElementById('deleteVariationBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            if (variationsData.length <= 1) {
+                alert('Cannot delete the last variation. Delete the entire boss instead.');
+                return;
             }
-        } catch (err) {
-            console.error(err);
-            alert('Error saving boss');
-        }
-    });
+            if (confirm('Delete this variation?')) {
+                variationsData.splice(currentVariationIndex, 1);
+                if (currentVariationIndex >= variationsData.length) {
+                    currentVariationIndex = variationsData.length - 1;
+                }
+                renderVariationCarousel();
+                updateVariationsJSON();
+            }
+        });
 
-    cancelBtn.addEventListener('click', () => {
-        window.history.back();
-    });
+
+        // Add move button
+        document.getElementById('addMoveBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            movesData.push({ name: '', type: '' });
+            renderMovesList();
+            updateMovesJSON();
+        });
+
+        // Add phase button
+        document.getElementById('addPhaseBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            phasesData.push({ health: 100, effect: '' });
+            renderPhasesList();
+            updatePhasesJSON();
+        });
+
+        saveBtn.addEventListener('click', async () => {
+            const formData = new FormData(form);
+            const payload = {
+                boss_name: formData.get('boss_name'),
+                stars: parseInt(formData.get('stars')),
+                description: formData.get('description'),
+                ability: formData.get('ability'),
+                held_item: formData.get('held_item'),
+                speed_evs: parseInt(formData.get('speed_evs')),
+                base_stats: {
+                    speed: parseInt(formData.get('base_stats_speed')),
+                    defense: parseInt(formData.get('base_stats_defense')),
+                    special_defense: parseInt(formData.get('base_stats_spdef'))
+                },
+                moves: JSON.parse(formData.get('moves') || '[]'),
+                phase_effects: JSON.parse(formData.get('phase_effects') || '[]'),
+                variations: JSON.parse(formData.get('variations') || '[]')
+            };
+
+            if (action === 'edit') {
+                payload.id = parseInt(bossId);
+            }
+
+            try {
+                const method = action === 'create' ? 'POST' : 'PUT';
+                const response = await fetch('/api/admin/raid-bosses?season=' + encodeURIComponent(season), {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (response.ok) {
+                    window.location.href = '/admin?tab=raid-bosses';
+                } else {
+                    alert('Failed to save boss');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Error saving boss');
+            }
+        });
+
+        cancelBtn.addEventListener('click', () => {
+            window.history.back();
+        });
+    };
+
+    // Call the initialization function
+    initializeAdmin();
 });

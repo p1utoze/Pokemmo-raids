@@ -5,12 +5,20 @@
  */
 
 let checklistData = {};
+let currentSeason = '';
 const STORAGE_KEY = 'pokemmoraids_checklist_state';
 
 // Initialize checklist on page load
 document.addEventListener('DOMContentLoaded', function () {
     loadChecklist();
 });
+
+/**
+ * Get the current season
+ */
+function getCurrentSeason() {
+    return currentSeason || checklistData.season || '';
+}
 
 /**
  * Fetch checklist data from the API and render it
@@ -23,6 +31,7 @@ async function loadChecklist() {
             throw new Error('Failed to load checklist');
         }
         checklistData = await response.json();
+        currentSeason = checklistData.season || '';
         renderChecklist();
 
         // Restore checkbox states from localStorage for all users
@@ -83,6 +92,55 @@ function renderChecklist() {
         const typeSection = createTypeSection(typeData, typeIndex);
         container.appendChild(typeSection);
     });
+
+    // Add event listener for pin star checkboxes
+    const pinStars = container.querySelectorAll('.pin-star');
+    pinStars.forEach(pinStar => {
+        pinStar.addEventListener('change', async function (e) {
+            e.stopPropagation(); // Prevent collapse toggle
+            const typeName = this.dataset.typeName;
+            const isPinned = this.checked;
+
+            try {
+                const season = getCurrentSeason();
+                const response = await fetch(`/api/admin/type-settings?season=${season}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        type_name: typeName,
+                        min_required: checklistData.types.find(t => t.type_name === typeName)?.min_required || 0,
+                        is_pinned: isPinned
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to update pin status');
+                }
+
+                // Update local data and re-render to resort
+                const typeData = checklistData.types.find(t => t.type_name === typeName);
+                if (typeData) {
+                    typeData.is_pinned = isPinned;
+                }
+
+                // Resort types array
+                checklistData.types.sort((a, b) => {
+                    if (a.is_pinned !== b.is_pinned) {
+                        return a.is_pinned ? -1 : 1;
+                    }
+                    return a.type_name.localeCompare(b.type_name);
+                });
+
+                // Re-render checklist
+                renderChecklist();
+
+            } catch (error) {
+                console.error('Error updating pin status:', error);
+                this.checked = !isPinned; // Revert on error
+                alert('Failed to update pin status');
+            }
+        });
+    });
 }
 
 /**
@@ -113,12 +171,22 @@ function createTypeSection(typeData, typeIndex) {
     // Header with collapse toggle
     const header = document.createElement('div');
     header.className = `type-header ${isMinMet ? 'min-met' : 'min-pending'}`;
+
+    const userRole = document.body.dataset.userRole;
+    const canEdit = userRole === 'admin' || userRole === 'mod' || userRole === 'author';
+    const pinStarHtml = canEdit
+        ? `<input type="checkbox" class="pin-star" data-type-name="${typeData.type_name}" ${typeData.is_pinned ? 'checked' : ''} title="Pin this type to top">`
+        : (typeData.is_pinned ? `<span class="pin-star-display" title="Pinned type">★</span>` : '');
+
     header.innerHTML = `
         <button class="collapse-btn" data-type-name="${typeData.type_name}">
             <span class="chevron">▼</span>
         </button>
         <div class="type-info">
-            <h3 class="type-title">${typeData.type_name}</h3>
+            <div class="type-title-row">
+                <h3 class="type-title">${typeData.type_name}</h3>
+                ${pinStarHtml}
+            </div>
             <div class="type-meta">
                 <span class="single-badge">${typeData.completed}/${typeData.count}</span>
                 <small class="min-sub" title="${typeData.min_required > 0 ? `Min required: ${typeData.min_required}` : ''}">${typeData.min_required > 0 ? `(min ${typeData.min_required})` : ''}</small>

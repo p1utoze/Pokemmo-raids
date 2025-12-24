@@ -889,6 +889,28 @@ function createMoveTag(moveName, container) {
 
 // Helper function to setup move autocomplete
 function setupMoveAutocomplete(moveInput, container, pokemonName) {
+    // Use the global MovesAutocomplete module if available
+    if (window.MovesAutocomplete) {
+        window.MovesAutocomplete.attachToInput(moveInput);
+
+        // Handle Enter key to add move
+        moveInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const moveValue = moveInput.value.trim();
+                if (moveValue) {
+                    const tags = container.querySelectorAll('.move-tag');
+                    if (tags.length < 4) {
+                        addMoveTag(moveValue, container, moveInput);
+                        moveInput.value = '';
+                    }
+                }
+            }
+        });
+        return;
+    }
+
+    // Fallback to old implementation
     const suggestions = document.getElementById('move-suggestions');
 
     moveInput.addEventListener('input', (e) => {

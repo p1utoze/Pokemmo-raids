@@ -8,6 +8,7 @@ window.MovesAutocomplete = (function () {
     let allMovesMap = null;
     let fuseMoves = null;
     let currentPokemonData = null;
+    let isReady = false;
 
     /**
      * Initialize the module by loading all moves from moves.json
@@ -31,10 +32,12 @@ window.MovesAutocomplete = (function () {
                 includeScore: true
             });
 
+            isReady = true;
             console.log('[MovesAutocomplete] Initialized with', allMoves.length, 'moves');
             return true;
         } catch (error) {
             console.error('[MovesAutocomplete] Failed to load moves.json:', error);
+            isReady = false;
             return false;
         }
     }
@@ -186,7 +189,8 @@ window.MovesAutocomplete = (function () {
         searchMoves,
         showAutocomplete,
         removeAutocomplete,
-        attachToInput
+        attachToInput,
+        get isReady() { return isReady; }
     };
 })();
 

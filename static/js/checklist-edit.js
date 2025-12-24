@@ -117,6 +117,14 @@ window.addChecklistEditButtons = function () {
         editBtn.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
+
+            // Check if section is collapsed and expand it if needed
+            const content = section.querySelector('.type-content');
+            if (content && content.style.display === 'none') {
+                const typeName = typeId.replace('type-', '');
+                toggleTypeContent(typeName);
+            }
+
             if (window.typeEditModes[typeId]) {
                 window.exitTypeEditMode(typeId);
             } else {
@@ -216,32 +224,45 @@ window.enterTypeEditMode = function (typeId) {
 
 /**
  * Make a single row editable
+ * Table structure: [0: checkbox, 1: name, 2: usage, 3: types, 4: ability, 5: held_item, 6: moves, 7: notes]
  */
 window.makeRowEditable = function (row, typeId, rowIdx) {
     const cells = row.querySelectorAll('td');
     if (cells.length < 8) return;
 
     // Skip checkbox cell (0)
-    // Pokemon name (1)
+
+    // Pokemon name (1) - editable
     const nameCell = cells[1];
-    const originalName = nameCell.textContent;
+    const originalName = nameCell.textContent.trim();
     nameCell.innerHTML = `<input type="text" class="editable-pokemon-name" value="${escapeHtml(originalName)}" placeholder="Pokemon">`;
     const nameInput = nameCell.querySelector('input');
 
-    // Type (2) - skip, display only
-    // Secondary type (3) - skip, display only
-    // Ability (4) - skip, display only
+    // Usage (2) - editable dropdown
+    const usageCell = cells[2];
+    const originalUsage = usageCell.textContent.trim();
+    usageCell.innerHTML = `
+        <select class="editable-usage">
+            <option value="Physical" ${originalUsage === 'Physical' ? 'selected' : ''}>Physical</option>
+            <option value="Special" ${originalUsage === 'Special' ? 'selected' : ''}>Special</option>
+            <option value="Support" ${originalUsage === 'Support' ? 'selected' : ''}>Support</option>
+            <option value="Mixed" ${originalUsage === 'Mixed' ? 'selected' : ''}>Mixed</option>
+        </select>
+    `;
 
-    // Held Item (5)
+    // Types (3) - display only, skip
+    // Ability (4) - display only, skip
+
+    // Held Item (5) - editable
     const itemCell = cells[5];
-    const originalItem = itemCell.textContent === '—' ? '' : itemCell.textContent;
+    const originalItem = itemCell.textContent === '—' ? '' : itemCell.textContent.trim();
     itemCell.innerHTML = `<input type="text" class="editable-held-item" value="${escapeHtml(originalItem)}" placeholder="Item">`;
     const itemInput = itemCell.querySelector('input');
     if (typeof attachItemAutocomplete === 'function') {
         attachItemAutocomplete(itemInput);
     }
 
-    // Moves (6) - Multi-select
+    // Moves (6) - editable multi-select
     const movesCell = cells[6];
     const originalMoves = [];
     movesCell.querySelectorAll('li').forEach(li => {
@@ -264,6 +285,7 @@ window.makeRowEditable = function (row, typeId, rowIdx) {
         const moveInput = document.createElement('input');
         moveInput.type = 'text';
         moveInput.className = 'editable-move-input';
+        moveInput.placeholder = 'Add move...';
 
         // Check if pokemon name is valid
         const isPokemonValid = () => {
@@ -317,10 +339,11 @@ window.makeRowEditable = function (row, typeId, rowIdx) {
     movesCell.appendChild(movesContainer);
     movesCell.dataset.movesData = JSON.stringify(originalMoves);
 
-    // Notes (7)
+    // Notes (7) - editable input
     const notesCell = cells[7];
-    const originalNotes = notesCell.textContent === '—' ? '' : notesCell.textContent;
-    notesCell.innerHTML = `<input type="text" class="editable-notes" value="${escapeHtml(originalNotes)}" placeholder="Notes">`;
+    const noteTextarea = notesCell.querySelector('.notes-textarea');
+    const originalNotes = noteTextarea ? noteTextarea.value : '';
+    notesCell.innerHTML = `<input type="text" class="editable-notes" value="${escapeHtml(originalNotes)}" placeholder="Add notes...">`;
 
     // Attach Pokemon autocomplete AFTER all inputs are created
     attachChecklistPokemonAutocomplete(nameInput);
@@ -453,42 +476,25 @@ async function saveTypeChanges(typeId) {
     const updateData = [];
 
     // Extract data from editable inputs BEFORE any DOM manipulation
+    // Table structure: [0: checkbox, 1: name, 2: usage, 3: types, 4: ability, 5: held_item, 6: moves, 7: notes]
     rows.forEach((row, index) => {
         const cells = row.querySelectorAll('td');
-        // console.log(`Row ${index}: Found ${cells.length} cells`);
 
-        // Extract pokemon key from checkbox dataset (format: "{name}-{usage}")
+        // Extract pokemon key from checkbox dataset
         const checkbox = cells[0]?.querySelector('.pokemon-checkbox');
         if (!checkbox || !checkbox.dataset.pokemonName || !checkbox.dataset.pokemonUsage) {
-            // console.log(`Row ${index}: No checkbox data found, skipping`);
             return;
         }
 
         const pokemonNameInput = cells[1]?.querySelector('.editable-pokemon-name');
+        const usageSelect = cells[2]?.querySelector('.editable-usage');
         const heldItemInput = cells[5]?.querySelector('.editable-held-item');
         const movesContainer = cells[6]?.querySelector('.moves-container');
         const notesInput = cells[7]?.querySelector('.editable-notes');
 
-        // console.log(`Row ${index} inputs:`, {
-        //     pokemonId: pokemonId,
-        //     pokemonNameInput: pokemonNameInput?.value,
-        //     heldItemInput: heldItemInput?.value,
-        //     movesContainer: !!movesContainer,
-        //     notesInput: notesInput?.value
-        // });
-
-        if (!pokemonNameInput) {
-            // console.log(`Row ${index}: No pokemon name input found, skipping`);
-            return;
-        }
-
-        if (!heldItemInput) {
-            // console.log(`Row ${index}: No held item input found, skipping`);
-            return;
-        }
-
-        if (!notesInput) {
-            // console.log(`Row ${index}: No notes input found, skipping`);
+        // Validate required inputs exist
+        if (!pokemonNameInput || !usageSelect || !heldItemInput || !notesInput) {
+            console.warn(`Row ${index}: Missing required input fields, skipping`);
             return;
         }
 
@@ -501,48 +507,45 @@ async function saveTypeChanges(typeId) {
         }
 
         const rowData = {
-            name: checkbox.dataset.pokemonName,
-            usage: checkbox.dataset.pokemonUsage,
+            old_name: checkbox.dataset.pokemonName,      // OLD name for matching
+            old_usage: checkbox.dataset.pokemonUsage,    // OLD usage for matching
+            name: pokemonNameInput.value.trim(),         // NEW name
+            usage: usageSelect.value,                    // NEW usage
             held_item: heldItemInput.value.trim(),
             moves: moves.join(', '),
             notes: notesInput.value.trim()
         };
 
-        // console.log(`Row ${index} extracted data:`, rowData);
+        console.log(`Row ${index}: Extracted ${moves.length} moves:`, moves, '-> joined:', rowData.moves);
         updateData.push(rowData);
     });
 
-    // Send to server
-    // console.log('Saving checklist data:', updateData);
-
     if (updateData.length === 0) {
-        console.warn('⚠️ No pokemon data extracted for saving!');
-        alert('No changes to save. Make sure you have edit fields filled in.');
+        console.warn('No pokemon data extracted for saving!');
+        alert('No changes to save. Make sure the rows are in edit mode.');
         return;
     }
 
     try {
         const payload = { pokemon: updateData };
-        // console.log('Full payload to send:', JSON.stringify(payload, null, 2));
+        console.log('Saving', updateData.length, 'pokemon records with full data:', JSON.stringify(updateData, null, 2));
 
         // Save pokemon data
         const response = await fetch('/api/checklist/save', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            credentials: 'same-origin',  // Include cookies for authentication
+            credentials: 'same-origin',
             body: JSON.stringify(payload)
         });
 
-        // console.log('Response status:', response.status);
-
         if (!response.ok) {
             const errorText = await response.text();
-            console.error('Server error response:', errorText);
-            throw new Error(`Server error: ${response.status} - ${errorText}`);
+            console.error('Server error:', errorText);
+            throw new Error(`Server error: ${response.status}`);
         }
 
         const result = await response.json();
-        // console.log('Save successful:', result);
+        console.log('Checklist saved successfully');
 
         // Save min_required setting if changed
         const minRequiredInput = document.getElementById(`min-required-${typeId}`);
