@@ -31,6 +31,26 @@ jobs:
         run: |
           echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
+      - name: Check if image already exists
+        id: check_image
+        run: |
+          IMAGE_URL="ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ env.LATEST_TAG }}"
+          if docker manifest inspect "$IMAGE_URL" > /dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "::warning::Image $IMAGE_URL already exists in registry"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "Image $IMAGE_URL does not exist, proceeding with build"
+          fi
+
+      - name: Stop if image exists
+        if: steps.check_image.outputs.exists == 'true'
+        run: |
+          echo "::error::Docker image for tag ${{ env.LATEST_TAG }} already exists in GitHub Container Registry"
+          echo "::error::Reason: Preventing duplicate builds for the same version tag"
+          echo "::error::Action: Either create a new version tag or manually delete the existing image"
+          exit 1
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
         with:
