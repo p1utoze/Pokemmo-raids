@@ -112,7 +112,7 @@
 <script type="application/json" id="team-data">{{ team_data|safe }}</script>
 <script type="application/json" id="boss-data">{{ bossJSON|safe }}</script>
 <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
-<script src="/static/js/boss-edit.js"></script>
+<script src="/static/js/boss-edit.js?v={{ commit_hash }}"></script>
 <script>
     // Auto-enter edit mode and add initial empty row
     document.addEventListener('DOMContentLoaded', () => {

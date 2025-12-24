@@ -124,6 +124,7 @@ type App struct {
 	mongoClient   *mongo.Client
 	adminDB       *sql.DB
 	defaultSeason string // code form e.g. "christmas_2024"
+	commitHash    string // for cache busting static assets
 }
 
 var app *App
@@ -570,7 +571,8 @@ func (a *App) writePlayerCell(sb *strings.Builder, players []Player, playerIdx, 
 
 func main() {
 	app = &App{
-		templates: make(map[string]*pongo2.Template),
+		templates:  make(map[string]*pongo2.Template),
+		commitHash: getEnvOrDefault("GIT_COMMIT_HASH", "dev"),
 	}
 
 	if err := app.loadData(); err != nil {
@@ -657,7 +659,7 @@ func (a *App) loadTemplates() error {
 // indexHandler renders the main page with all bosses
 func (a *App) indexHandler(w http.ResponseWriter, r *http.Request) {
 	role := getRoleFromRequest(r)
-	renderTemplate(w, a.templates["index.html"], pongo2.Context{"season": a.season, "user_role": role})
+	renderTemplate(w, a.templates["index.html"], pongo2.Context{"season": a.season, "user_role": role, "commit_hash": a.commitHash})
 }
 
 // bossHandler renders a specific boss page
@@ -1336,7 +1338,7 @@ func (a *App) adminPageHandler(w http.ResponseWriter, r *http.Request) {
 	for _, s := range a.seasons {
 		seasons = append(seasons, seasonVM{Code: seasonCode(s), Label: seasonLabel(s)})
 	}
-	renderTemplate(w, tpl, pongo2.Context{"seasons": seasons, "user_role": role})
+	renderTemplate(w, tpl, pongo2.Context{"seasons": seasons, "user_role": role, "commit_hash": a.commitHash})
 }
 
 // adminRaidBossBuildHandler renders the raid boss builder page (similar to build_team.html but admin-only)
@@ -1541,7 +1543,7 @@ func (a *App) authLoginHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "login page not available", http.StatusInternalServerError)
 			return
 		}
-		renderTemplate(w, tpl, pongo2.Context{})
+		renderTemplate(w, tpl, pongo2.Context{"commit_hash": a.commitHash})
 		return
 	}
 	// POST
@@ -1650,7 +1652,7 @@ func (a *App) authChangePasswordHandler(w http.ResponseWriter, r *http.Request) 
 
 	switch r.Method {
 	case http.MethodGet:
-		renderTemplate(w, a.templates["auth_change_password.html"], pongo2.Context{"user_role": role})
+		renderTemplate(w, a.templates["auth_change_password.html"], pongo2.Context{"user_role": role, "commit_hash": a.commitHash})
 	case http.MethodPost:
 		current := strings.TrimSpace(r.FormValue("current_password"))
 		newPass := strings.TrimSpace(r.FormValue("new_password"))
@@ -1659,6 +1661,7 @@ func (a *App) authChangePasswordHandler(w http.ResponseWriter, r *http.Request) 
 		if current == "" || newPass == "" || confirm == "" {
 			renderTemplate(w, a.templates["auth_change_password.html"], pongo2.Context{
 				"user_role": role,
+				"commit_hash": a.commitHash,
 				"error":     "All fields are required.",
 			})
 			return
@@ -1666,6 +1669,7 @@ func (a *App) authChangePasswordHandler(w http.ResponseWriter, r *http.Request) 
 		if newPass != confirm {
 			renderTemplate(w, a.templates["auth_change_password.html"], pongo2.Context{
 				"user_role": role,
+				"commit_hash": a.commitHash,
 				"error":     "New passwords do not match.",
 			})
 			return
@@ -1673,6 +1677,7 @@ func (a *App) authChangePasswordHandler(w http.ResponseWriter, r *http.Request) 
 		if len(newPass) < 8 {
 			renderTemplate(w, a.templates["auth_change_password.html"], pongo2.Context{
 				"user_role": role,
+				"commit_hash": a.commitHash,
 				"error":     "New password must be at least 8 characters.",
 			})
 			return
@@ -1687,6 +1692,7 @@ func (a *App) authChangePasswordHandler(w http.ResponseWriter, r *http.Request) 
 		if err := bcryptCompareHash(hash, current); err != nil {
 			renderTemplate(w, a.templates["auth_change_password.html"], pongo2.Context{
 				"user_role": role,
+				"commit_hash": a.commitHash,
 				"error":     "Current password is incorrect.",
 			})
 			return
@@ -1709,6 +1715,7 @@ func (a *App) authChangePasswordHandler(w http.ResponseWriter, r *http.Request) 
 
 		renderTemplate(w, a.templates["auth_change_password.html"], pongo2.Context{
 			"user_role": role,
+			"commit_hash": a.commitHash,
 			"success":   "Password updated successfully.",
 		})
 	default:
@@ -1742,18 +1749,18 @@ func (a *App) authResetHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "reset page not available", http.StatusInternalServerError)
 			return
 		}
-		renderTemplate(w, tpl, pongo2.Context{"token": token})
+		renderTemplate(w, tpl, pongo2.Context{"token": token, "commit_hash": a.commitHash})
 	case http.MethodPost:
 		token := strings.TrimSpace(r.FormValue("token"))
 		newPassword := strings.TrimSpace(r.FormValue("new_password"))
 		if token == "" || newPassword == "" {
 			tpl, _ := pongo2.FromFile(templatesPath + "auth_reset.html")
-			renderTemplate(w, tpl, pongo2.Context{"token": token, "error": "Token and password are required"})
+			renderTemplate(w, tpl, pongo2.Context{"token": token, "commit_hash": a.commitHash, "error": "Token and password are required"})
 			return
 		}
 		if len(newPassword) < 8 {
 			tpl, _ := pongo2.FromFile(templatesPath + "auth_reset.html")
-			renderTemplate(w, tpl, pongo2.Context{"token": token, "error": "Password must be at least 8 characters"})
+			renderTemplate(w, tpl, pongo2.Context{"token": token, "commit_hash": a.commitHash, "error": "Password must be at least 8 characters"})
 			return
 		}
 		var username string
@@ -1761,24 +1768,24 @@ func (a *App) authResetHandler(w http.ResponseWriter, r *http.Request) {
 		row := a.adminDB.QueryRow("SELECT username, expires_at FROM password_resets WHERE token = ?", token)
 		if err := row.Scan(&username, &expires); err != nil {
 			tpl, _ := pongo2.FromFile(templatesPath + "auth_reset.html")
-			renderTemplate(w, tpl, pongo2.Context{"token": token, "error": "Invalid or already used reset token"})
+			renderTemplate(w, tpl, pongo2.Context{"token": token, "commit_hash": a.commitHash, "error": "Invalid or already used reset token"})
 			return
 		}
 		if time.Now().Unix() > expires {
 			tpl, _ := pongo2.FromFile(templatesPath + "auth_reset.html")
-			renderTemplate(w, tpl, pongo2.Context{"token": token, "error": "Reset token has expired. Please request a new one."})
+			renderTemplate(w, tpl, pongo2.Context{"token": token, "commit_hash": a.commitHash, "error": "Reset token has expired. Please request a new one."})
 			return
 		}
 		// Update password
 		hash, err := bcryptGenerateHash(newPassword)
 		if err != nil {
 			tpl, _ := pongo2.FromFile(templatesPath + "auth_reset.html")
-			renderTemplate(w, tpl, pongo2.Context{"token": token, "error": "Failed to process password"})
+			renderTemplate(w, tpl, pongo2.Context{"token": token, "commit_hash": a.commitHash, "error": "Failed to process password"})
 			return
 		}
 		if _, err := a.adminDB.Exec("UPDATE users SET password_hash = ? WHERE username = ?", hash, username); err != nil {
 			tpl, _ := pongo2.FromFile(templatesPath + "auth_reset.html")
-			renderTemplate(w, tpl, pongo2.Context{"token": token, "error": "Failed to update password"})
+			renderTemplate(w, tpl, pongo2.Context{"token": token, "commit_hash": a.commitHash, "error": "Failed to update password"})
 			return
 		}
 		// Clean up token
