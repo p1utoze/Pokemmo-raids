@@ -79,7 +79,8 @@ window.loadChecklistEditData = async function () {
                 });
             }
         });
-        window.fuseInstances.moves = new Fuse(Array.from(allMoves), {
+        window.allMovesArray = Array.from(allMoves);
+        window.fuseInstances.moves = new Fuse(window.allMovesArray, {
             threshold: 0.3,
             includeScore: true
         });

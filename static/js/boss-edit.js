@@ -46,7 +46,11 @@ async function loadEditData() {
                 });
             }
         });
-        fuseInstances.moves = new Fuse(Array.from(allMoves), {
+        window.allMovesArray = Array.from(allMoves);
+        console.log('[BossEdit] Total moves loaded:', window.allMovesArray.length);
+        console.log('[BossEdit] Sample moves:', window.allMovesArray.slice(0, 10));
+        console.log('[BossEdit] Morning Sun included:', window.allMovesArray.includes('Morning Sun'));
+        fuseInstances.moves = new Fuse(window.allMovesArray, {
             threshold: 0.3,
             includeScore: true
         });
@@ -345,32 +349,37 @@ function attachItemAutocomplete(input) {
 
 // Attach move autocomplete (works with or without pokemon selected)
 function attachMoveAutocomplete(moveInput, pokemonInput) {
+    // Use the global MovesAutocomplete module
+    if (window.MovesAutocomplete) {
+        window.MovesAutocomplete.attachToInput(moveInput, pokemonInput);
+    } else {
+        console.warn('[MoveAutocomplete] Global module not loaded, falling back to old implementation');
+        // Fallback to old implementation if module not loaded
+        attachMoveAutocompleteLegacy(moveInput, pokemonInput);
+    }
+}
+
+// Legacy implementation as fallback
+function attachMoveAutocompleteLegacy(moveInput, pokemonInput) {
     let autocompleteDiv = null;
 
     moveInput.addEventListener('input', () => {
         const query = moveInput.value.trim();
+        console.log('[MoveAutocomplete] Query:', query);
         if (query.length < 1) {
             removeAutocomplete();
             return;
         }
 
-        // Check if a pokemon is selected to filter moves
-        const selectedPokemon = pokemonInput.value.trim();
-        let movesToSearch = [];
+        // Always use ALL moves - don't filter by pokemon
+        // This allows adding any move for custom strategies
+        const movesToSearch = window.allMovesArray || [];
+        console.log('[MoveAutocomplete] Searching all moves:', movesToSearch.length);
 
-        if (selectedPokemon) {
-            // Find the pokemon and use its specific moves
-            const pokemon = editData.monsters.find(m => m.name.toLowerCase() === selectedPokemon.toLowerCase());
-            if (pokemon && pokemon.moves) {
-                // Extract move names from objects
-                movesToSearch = pokemon.moves.map(m => typeof m === 'string' ? m : (m.name || m)).filter(Boolean);
-            } else {
-                // Fallback to all moves if pokemon not found
-                movesToSearch = Array.from(fuseInstances.moves._docs);
-            }
-        } else {
-            // No pokemon selected, search all moves
-            movesToSearch = Array.from(fuseInstances.moves._docs);
+        if (movesToSearch.length === 0) {
+            console.log('[MoveAutocomplete] No moves to search!');
+            removeAutocomplete();
+            return;
         }
 
         // Create temporary Fuse instance for the current move set
@@ -380,6 +389,7 @@ function attachMoveAutocomplete(moveInput, pokemonInput) {
         });
 
         const results = tempFuse.search(query).slice(0, 8);
+        console.log('[MoveAutocomplete] Search results:', results.length, results.map(r => r.item));
         if (results.length === 0) {
             removeAutocomplete();
             return;
