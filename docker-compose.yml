@@ -3,8 +3,6 @@ services:
     image: mongo:8.0
     container_name: pokemmo-mongodb
     restart: unless-stopped
-    ports:
-      - "27017:27017"
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_USERNAME:-pokemmo}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_PASSWORD:-pokemmo_local_dev}
@@ -24,8 +22,8 @@ services:
     image: ghcr.io/p1utoze/${IMAGE_NAME:-pokemmoraids}:${LATEST_TAG:-latest}
     container_name: pokemmo-raidbook
     restart: unless-stopped
-    ports:
-      - "80:8080"
+    expose:
+      - "8080"
     environment:
       MONGO_URI: "mongodb://${MONGO_INITDB_USERNAME:-pokemmo}:${MONGO_INITDB_PASSWORD:-pokemmo_local_dev}@mongodb:27017/?authSource=admin"
       MONGO_DB: ${MONGO_DB:-pokemmo_raids}
@@ -33,11 +31,6 @@ services:
       DATA_PATH: "${DATA_PATH:-/app/data/bosses.json}"
       ADMIN_PASSWORD: "${ADMIN_PASSWORD:-adminpass}"
       ADMIN_SECRET: "${ADMIN_SECRET:-devsecret}"
-      SMTP_HOST: "${SMTP_HOST:-smtp.example.com}"
-      SMTP_USER: "${SMTP_USER:-}"
-      SMTP_PORT: "${SMTP_PORT:-587}"
-      SMTP_PASSWORD: "${SMTP_PASSWORD:-}"
-      SMTP_FROM: "${SMTP_FROM:-}"
     volumes:
       - ./data:/app/data
       - admindb_data:/app/db
@@ -46,6 +39,20 @@ services:
     depends_on:
       mongodb:
         condition: service_healthy
+
+  nginx:
+    image: nginx:alpine
+    container_name: pokemmo-nginx
+    restart: unless-stopped
+    ports:
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+    depends_on:
+      - raidbook
+    networks:
+      - pokemmo-network
 
 volumes:
   mongodb_data:
