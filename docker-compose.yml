@@ -31,6 +31,7 @@ services:
       DATA_PATH: "${DATA_PATH:-/app/data/bosses.json}"
       ADMIN_PASSWORD: "${ADMIN_PASSWORD:-adminpass}"
       ADMIN_SECRET: "${ADMIN_SECRET:-devsecret}"
+      GIT_COMMIT_HASH: "${GIT_COMMIT_HASH:-dev}"
     volumes:
       - ./data:/app/data
       - admindb_data:/app/db

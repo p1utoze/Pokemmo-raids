@@ -74,6 +74,11 @@ jobs:
           latest_tag="$(git tag -l --sort=-v:refname | head -n 1)"
           git checkout "$latest_tag"
           echo "LATEST_TAG=$latest_tag" >> $GITHUB_ENV
+        
+      - name: Get short commit hash
+        run: |
+          git_hash=$(git rev-parse --short $LATEST_TAG)
+          echo "GIT_COMMIT_HASH=$git_hash" >> $GITHUB_ENV
   
       - name: Login to GHCR
         run: |
